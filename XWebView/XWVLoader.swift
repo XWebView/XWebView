@@ -17,7 +17,7 @@
 import Foundation
 
 public class XWVLoader: NSObject, XWVScripting {
-    private let _inventory: XWVInventory = XWVInventory()
+    private let _inventory: XWVInventory
 
     public init(inventory: XWVInventory) {
         self._inventory = inventory
@@ -25,18 +25,16 @@ public class XWVLoader: NSObject, XWVScripting {
     }
 
     func defaultMethod(namespace: String, argument: AnyObject?, _Promise: XWVScriptObject) {
-        if let plugin: AnyClass = _inventory.plugin(forNamespace: namespace) {
+        if let plugin: AnyClass = _inventory.plugin(forNamespace: namespace), let channel = scriptObject?.channel {
             let initializer = Selector(argument == nil ? "init" : "initWitArgument:")
             let args: [AnyObject]? = argument == nil ? nil : [argument!]
-            if let channel = scriptObject?.channel {
-                let object = XWVInvocation.constructOnThread(channel.thread, `class`: plugin, initializer: initializer, arguments: args) as NSObject
-                if let obj = channel.webView?.loadPlugin(object, namespace: namespace) {
-                    _Promise.callMethod("resolve", withArguments: [obj], resultHandler:nil)
-                    return
-                }
+            let object = XWVInvocation.constructOnThread(channel.thread, `class`: plugin, initializer: initializer, arguments: args) as! NSObject!
+            if object != nil, let obj = channel.webView?.loadPlugin(object, namespace: namespace) {
+                _Promise.callMethod("resolve", withArguments: [obj], resultHandler: nil)
+                return
             }
         }
-        _Promise.callMethod("reject", withArguments:nil, resultHandler:nil)
+        _Promise.callMethod("reject", withArguments: nil, resultHandler: nil)
     }
 
     public class func isSelectorForDefaultMethod(selector: Selector) -> Bool {

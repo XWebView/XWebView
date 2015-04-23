@@ -23,7 +23,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     private(set) public weak var webView: WKWebView?
     var typeInfo: XWVReflection!
 
-    private var instances: [Int: XWVScriptPlugin] = [:]
+    private var instances = [Int: XWVScriptPlugin]()
     private var userScript: WKUserScript?
 
     public init(channelID: String?, webView: WKWebView, thread: NSThread? = nil) {
@@ -66,10 +66,9 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         instances.removeAll(keepCapacity: false)
     }
 
-    public func userContentController(userContentController: WKUserContentController, didReceiveScriptMessage: WKScriptMessage) {
-        let body = didReceiveScriptMessage.body as [String: AnyObject]
-        let target = (body["$target"] as? NSNumber)?.integerValue ?? 0
-        if let opcode = body["$opcode"] as? String {
+    public func userContentController(userContentController: WKUserContentController, didReceiveScriptMessage message: WKScriptMessage) {
+        if let body = message.body as? [String: AnyObject], let opcode = body["$opcode"] as? String {
+            let target = (body["$target"] as? NSNumber)?.integerValue ?? 0
             if let object = instances[target] {
                 if opcode == "-" {
                     if target == 0 {
@@ -90,13 +89,13 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                 }  // else Unknown opcode
             } else if opcode == "+" {
                 // Create instance
-                let args = body["$operand"] as [AnyObject]?
+                let args = body["$operand"] as? [AnyObject]
                 let namespace = "\(instances[0]!.namespace)[\(target)]"
                 instances[target] = XWVScriptPlugin(namespace: namespace, channel: self, arguments: args)
             } // else Unknown opcode
         } else {
             // discard unknown message
-            println("WARNING: Unknown message: \(body)")
+            println("WARNING: Unknown message: \(message.body)")
         }
     }
 
@@ -119,7 +118,6 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     public func evaluateJavaScript(script: String) -> AnyObject? {
         assert(!NSThread.isMainThread(), "Wrong thread")
 
-        weak var weakSelf = self
         dispatch_async(dispatch_get_main_queue()) {
             [weak self] in
             self?.webView?.evaluateJavaScript(script) {

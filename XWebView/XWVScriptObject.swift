@@ -19,7 +19,7 @@ import Foundation
 public class XWVScriptObject : XWVObject {
     // Evaluate JavaScript string
     public func evaluateScript(script: String) -> AnyObject? {
-        if let result: AnyObject = channel.evaluateJavaScript("\(origin.namespace).$retainIfNeeded(\(script))") {
+        if let result: AnyObject = channel.evaluateJavaScript(scriptForRetaining(script)) {
             return wrapScriptObject(result)
         }
         return nil
@@ -27,12 +27,12 @@ public class XWVScriptObject : XWVObject {
 
     public func evaluateScript(script: String, onSuccess handler: ((AnyObject!)->Void)?) {
         if handler == nil {
-            channel.evaluateJavaScript(script, nil)
+            channel.evaluateJavaScript(script, completionHandler: nil)
         } else {
-            channel.evaluateJavaScript("\(origin.namespace).$retainIfNeeded(\(script))") {
+            channel.evaluateJavaScript(scriptForRetaining(script)) {
                 [weak self](result: AnyObject!, error: NSError!)->Void in
                 if self != nil && result != nil {
-                    handler!(self?.wrapScriptObject(result!))
+                    handler!(self!.wrapScriptObject(result!))
                 }
             }
         }
@@ -88,6 +88,9 @@ public class XWVScriptObject : XWVObject {
         evaluateScript("\(namespace)[\(index)] = \(serialize(value))", onSuccess: nil)
     }
 
+    private func scriptForRetaining(script: String) -> String {
+        return "\(origin.namespace).$retainIfNeeded(\(script))"
+    }
     private func scriptForFetchingProperty(name: String!) -> String {
         if name == nil {
             return namespace

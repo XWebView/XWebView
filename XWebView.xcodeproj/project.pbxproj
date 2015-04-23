@@ -39,6 +39,8 @@
 		EEE6F9A41AE02CF100A2EC89 /* XWVScripting.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE6F9A31AE02CF100A2EC89 /* XWVScripting.swift */; };
 		EEE6F9A61AE02E8600A2EC89 /* XWVObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE6F9A51AE02E8600A2EC89 /* XWVObject.swift */; };
 		EEE6F9A81AE02F5000A2EC89 /* XWVScriptPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE6F9A71AE02F5000A2EC89 /* XWVScriptPlugin.swift */; };
+		EEF27D541AE8F1C4004740CF /* XWVReflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0A1DDD1A52A5A300C9E6D3 /* XWVReflection.swift */; };
+		EEF27D551AE8F1F3004740CF /* XWVScripting.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE6F9A31AE02CF100A2EC89 /* XWVScripting.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -314,12 +316,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				ABD3E85E1A8CD49F00F2BAB9 /* XWVInvocationTest.m in Sources */,
+				EEF27D551AE8F1F3004740CF /* XWVScripting.swift in Sources */,
 				EE3379391AE2E298009124A4 /* XWVTestCase.swift in Sources */,
 				ABD3E8541A8CD08300F2BAB9 /* XWVInventoryTest.swift in Sources */,
 				EE30AAC41AD978DA006010A3 /* XWVLoaderTest.swift in Sources */,
 				AB023EA51A8C506600580A2A /* XWebViewTests.swift in Sources */,
 				EE3379401AE57566009124A4 /* XWVScriptingTest.swift in Sources */,
 				ABD3E8561A8CD3F900F2BAB9 /* XWVReflectionTest.swift in Sources */,
+				EEF27D541AE8F1C4004740CF /* XWVReflection.swift in Sources */,
 				EE2F487F1AE4CD360088AF67 /* FunctionPlugin.swift in Sources */,
 				EE2F487D1AE4B8F40088AF67 /* ObjectPlugin.swift in Sources */,
 				EE2F48811AE4CE690088AF67 /* ConstructorPlugin.swift in Sources */,
