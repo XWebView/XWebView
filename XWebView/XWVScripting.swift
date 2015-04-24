@@ -20,11 +20,11 @@ import Foundation
     optional func javascriptStub(stub: String) -> String
     optional func finalizeForScript()
 
-    optional class func isSelectorForConstructor(selector: Selector) -> Bool
-    optional class func isSelectorForDefaultMethod(selector: Selector) -> Bool
+    optional static func isSelectorForConstructor(selector: Selector) -> Bool
+    optional static func isSelectorForDefaultMethod(selector: Selector) -> Bool
 
-    optional class func scriptNameForKey(name: UnsafePointer<Int8>) -> String
-    optional class func scriptNameForSelector(selector: Selector) -> String
-    optional class func isSelectorExcludedFromScript(selector: Selector) -> Bool
-    optional class func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool
+    optional static func scriptNameForKey(name: UnsafePointer<Int8>) -> String
+    optional static func scriptNameForSelector(selector: Selector) -> String
+    optional static func isSelectorExcludedFromScript(selector: Selector) -> Bool
+    optional static func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool
 }

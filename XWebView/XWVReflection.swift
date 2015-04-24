@@ -18,27 +18,29 @@ import Foundation
 
 class XWVReflection {
     private struct MemberInfo {
-        let method = Selector()
-        let getter = Selector()
-        let setter = Selector()
-        var isProperty : Bool { return getter != nil }
-        var isReadonly : Bool { return setter == nil }
-        var isMethod : Bool { return method != nil }
+        let method: Selector
+        let getter: Selector
+        let setter: Selector
+        var isProperty: Bool { return getter != nil }
+        var isReadonly: Bool { return setter == nil }
+        var isMethod: Bool { return method != nil }
         init(method: Selector) {
             self.method = method
+            self.getter = nil
+            self.setter = nil
         }
         init(getter: Selector, setter: Selector) {
+            self.method = nil
             self.getter = getter
             self.setter = setter
         }
     }
 
     let plugin: AnyClass
-    private var members: [String: MemberInfo] = [:]
-    private class var exclusion : [Selector] {
-        return [Selector(".cxx_construct"), Selector(".cxx_destruct"), Selector("dealloc"), Selector("copy")] +
-            self.instanceMethods(forProtocol: XWVScripting.self)
-    }
+    private var members = [String: MemberInfo]()
+    private static let exclusion = {
+        return Set<Selector>(arrayLiteral: Selector(".cxx_construct"), Selector(".cxx_destruct"), Selector("dealloc"), Selector("copy")).union(instanceMethods(forProtocol: XWVScripting.self))
+    }()
 
     init(plugin: AnyClass) {
         self.plugin = plugin
@@ -68,7 +70,11 @@ class XWVReflection {
                     name = name[name.startIndex ..< end]
                 }
             }
-            self.members[name] = info
+            if self.members.indexForKey(name) == nil {
+                self.members[name] = info
+            } else {
+                println("WARNING: member name '\(name)' has conflict")
+            }
             return true
         }
     }
@@ -78,19 +84,19 @@ class XWVReflection {
         return members.keys.array
     }
     var allMethods: [String] {
-        return filter(members.keys.array, {(e)->Bool in return self.hasMethod(e)})
+        return filter(members.keys.array) { return self.hasMethod($0) }
     }
     var allProperties: [String] {
-        return filter(members.keys.array, {(e)->Bool in return self.hasProperty(e)})
+        return filter(members.keys.array) { return self.hasProperty($0) }
     }
     func hasMember(name: String) -> Bool {
         return members[name] != nil
     }
     func hasMethod(name: String) -> Bool {
-        return (members[name]?.method ?? Selector()) != Selector()
+        return members[name]?.method ?? Selector() != Selector()
     }
     func hasProperty(name: String) -> Bool {
-        return (members[name]?.getter ?? Selector()) != Selector()
+        return members[name]?.getter ?? Selector() != Selector()
     }
     func isReadonly(name: String) -> Bool {
         assert(hasProperty(name))
@@ -111,15 +117,8 @@ class XWVReflection {
         return members[name]?.setter ?? Selector()
     }
 
-    private func enumerate(exclusion: [Selector], callback: ((String, MemberInfo)->Bool)) -> Bool {
-        // build selector set of exclusion
-        // TODO: use the new Set collection type, need Swift 1.2 (XCode 6.3)
-        var known = [Selector: Bool]()
-        known = exclusion.reduce(known) {
-            (var known, sel)->[Selector:Bool] in
-            known.updateValue(true, forKey: sel)
-            return known
-        }
+    private func enumerate(exclusion: Set<Selector>, callback: ((String, MemberInfo)->Bool)) -> Bool {
+        var known = exclusion
 
         // enumerate properties
         let properties = class_copyPropertyList(plugin, nil);
@@ -130,11 +129,11 @@ class XWVReflection {
                 var attr = property_copyAttributeValue(prop.memory, "G")
                 let getter = Selector(attr == nil ? name : String(UTF8String: attr)!)
                 free(attr)
-                if known.indexForKey(getter) != nil {
+                if known.contains(getter) {
                     continue
-                } else {
-                    known[getter] = true
                 }
+                known.insert(getter)
+
                 // get setter if readwrite
                 var setter = Selector()
                 attr = property_copyAttributeValue(prop.memory, "R")
@@ -145,10 +144,10 @@ class XWVReflection {
                     } else {
                         setter = Selector(String(UTF8String: attr)!)
                     }
-                    if known.indexForKey(setter) != nil {
+                    if known.contains(setter) {
                         setter = Selector()
                     } else {
-                        known[setter] = true
+                        known.insert(setter)
                     }
                 }
                 free(attr)
@@ -167,29 +166,28 @@ class XWVReflection {
         if methods != nil {
             for var method = methods; method.memory != nil; method = method.successor() {
                 let sel = method_getName(method.memory)
-                if known.indexForKey(sel) != nil {
-                    continue
-                }
-                if !callback(sel.description, MemberInfo(method: sel)) {
-                    free(methods)
-                    return false
+                if !known.contains(sel) {
+                    if !callback(sel.description, MemberInfo(method: sel)) {
+                        free(methods)
+                        return false
+                    }
                 }
             }
             free(methods)
         }
         return true
     }
+}
 
-    private class func instanceMethods(forProtocol aProtocol: Protocol) -> [Selector] {
-        var selectors = [Selector]()
-        for (req, inst) in [(true, true), (false, true)] {
-            var descriptors = protocol_copyMethodDescriptionList(aProtocol.self, req, inst, nil)
-            if descriptors == nil { continue }
-            for var desc = descriptors; desc.memory.name != nil; desc = desc.successor() {
-                selectors.append(desc.memory.name)
-            }
-            free(descriptors)
+private func instanceMethods(forProtocol aProtocol: Protocol) -> [Selector] {
+    var selectors = [Selector]()
+    for (req, inst) in [(true, true), (false, true)] {
+        var descriptors = protocol_copyMethodDescriptionList(aProtocol.self, req, inst, nil)
+        if descriptors == nil { continue }
+        for var desc = descriptors; desc.memory.name != nil; desc = desc.successor() {
+            selectors.append(desc.memory.name)
         }
-        return selectors
+        free(descriptors)
     }
+    return selectors
 }

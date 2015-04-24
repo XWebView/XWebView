@@ -36,7 +36,7 @@ import Foundation
         let fm = NSFileManager.defaultManager()
         if fm.fileExistsAtPath(directory) == true {
             for i in fm.contentsOfDirectoryAtPath(directory, error: nil)! {
-                let name = i as String
+                let name = i as! String
                 if name.pathExtension == "framework" {
                     let bundlePath = directory.stringByAppendingPathComponent(name)
                     if let bundle = NSBundle(path: bundlePath) {

@@ -16,7 +16,14 @@
 
 import XCTest
 import XWebView
-/* FIXME: Add XWVRefelection.swift to XWebViewTest target cause swiftc crash
+
+/* NOTICE:
+ Because XWVReflection is not public, we have to add XWVReflection.swift
+ along with XWVScripting.swift to the test target. So we have to use
+ XWebView.XWVScripting to reference the original XWVScripting protocol
+ in all of other test cases.
+*/
+
 class ClassForReflectionTest : NSObject, XWVScripting {
     dynamic var normalProperty: String = "normal"
     let constProperty: Int = 0
@@ -62,7 +69,7 @@ class XWVReflectionTest: XCTestCase {
         XCTAssertTrue(contains(allMembers, "methodWithArgument"))
         XCTAssertTrue(contains(allMembers, "method"))
         XCTAssertTrue(contains(allMembers, "$constructor"))
-        XCTAssertTrue(contains(allMembers, "$function"))
+        XCTAssertTrue(contains(allMembers, "$default"))
     }
 
     func testAllMethods() {
@@ -71,7 +78,7 @@ class XWVReflectionTest: XCTestCase {
         XCTAssertTrue(contains(allMethods, "methodWithArgument"))
         XCTAssertTrue(contains(allMethods, "method"))
         XCTAssertTrue(contains(allMethods, "$constructor"))
-        XCTAssertTrue(contains(allMethods, "$function"))
+        XCTAssertTrue(contains(allMethods, "$default"))
     }
 
     func testAllProperties() {
@@ -87,7 +94,7 @@ class XWVReflectionTest: XCTestCase {
         XCTAssertTrue(typeInfo.hasMember("methodWithArgument"))
         XCTAssertTrue(typeInfo.hasMember("method"))
         XCTAssertTrue(typeInfo.hasMember("$constructor"))
-        XCTAssertTrue(typeInfo.hasMember("$function"))
+        XCTAssertTrue(typeInfo.hasMember("$default"))
         XCTAssertFalse(typeInfo.hasMember("nonExistingMethod"))
         XCTAssertFalse(typeInfo.hasMember("nonExistingProperty"))
     }
@@ -96,7 +103,7 @@ class XWVReflectionTest: XCTestCase {
         XCTAssertTrue(typeInfo.hasMethod("methodWithArgument"))
         XCTAssertTrue(typeInfo.hasMethod("method"))
         XCTAssertTrue(typeInfo.hasMember("$constructor"))
-        XCTAssertTrue(typeInfo.hasMember("$function"))
+        XCTAssertTrue(typeInfo.hasMember("$default"))
         XCTAssertFalse(typeInfo.hasMethod("nonExistingMethod"))
     }
 
@@ -112,14 +119,14 @@ class XWVReflectionTest: XCTestCase {
     }
 
     func testConstructor() {
-        XCTAssertEqual(typeInfo.constructor, Selector("newInstance"))
+        XCTAssertEqual(typeInfo.constructor, Selector("initWithArgument:"))
     }
 
     func testSelectorOfMethod() {
         XCTAssertEqual(typeInfo.selector(forMethod: "methodWithArgument"), Selector("methodWithArgument:"))
         XCTAssertEqual(typeInfo.selector(forMethod: "method"), Selector("method"))
-        XCTAssertEqual(typeInfo.selector(forMethod: "$constructor"), Selector("newInstance"))
-        XCTAssertEqual(typeInfo.selector(forMethod: "$function"), Selector("function"))
+        XCTAssertEqual(typeInfo.selector(forMethod: "$constructor"), Selector("initWithArgument:"))
+        XCTAssertEqual(typeInfo.selector(forMethod: "$default"), Selector("defaultMethod"))
         XCTAssertEqual(typeInfo.selector(forMethod: "nonExistMethod"), Selector())
     }
 
@@ -134,4 +141,4 @@ class XWVReflectionTest: XCTestCase {
         XCTAssertEqual(typeInfo.setter(forProperty: "constProperty"), Selector())
         XCTAssertEqual(typeInfo.setter(forProperty: "nonExistingProperty"), Selector())
     }
-}*/
+}

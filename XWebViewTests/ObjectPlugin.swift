@@ -103,7 +103,6 @@ class ObjectPlugin : XWVTestCase {
         waitForExpectationsWithTimeout(2, handler: nil)
     }
     func testCallMethodWithCallback() {
-        // FIXME: this case is not stable
         let desc = "callMethodWithCallback"
         let script = "\(namespace).methodWithCallback(function(){fulfill('\(desc)');})"
         let expectation = expectationWithDescription(desc)

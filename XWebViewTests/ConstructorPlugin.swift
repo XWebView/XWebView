@@ -19,7 +19,7 @@ import XCTest
 import XWebView
 
 class ConstructorPlugin : XWVTestCase {
-    class Plugin : NSObject, XWVScripting {
+    class Plugin : NSObject, XWebView.XWVScripting {
         dynamic var property = 123
         private var expectation: XCTestExpectation?;
         init(expectation: XCTestExpectation?) {
@@ -37,7 +37,7 @@ class ConstructorPlugin : XWVTestCase {
             return selector == Selector("initWithValue:")
         }
     }
-    class Plugin2 : NSObject, XWVScripting {
+    class Plugin2 : NSObject, XWebView.XWVScripting {
         override init() {}
         init(expectation: AnyObject?) {
             (expectation as? XWVScriptObject)?.callMethod("fulfill", withArguments: nil, resultHandler: nil)

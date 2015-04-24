@@ -18,7 +18,7 @@ import Foundation
 
 
 class XWVScriptPlugin : XWVScriptObject {
-    let object: NSObject!
+    var object: NSObject!
     private var sync = false
     private struct key {
         static let scriptObject = UnsafePointer<Void>(bitPattern: Selector("scriptObject").hashValue)
@@ -34,9 +34,9 @@ class XWVScriptPlugin : XWVScriptObject {
     init(namespace: String, channel: XWVChannel, arguments: [AnyObject]!) {
         super.init(namespace: namespace, channel: channel, origin: nil)
         let args = arguments.map(wrapScriptObject)
-        self.object = XWVInvocation.constructOnThread(channel.thread, `class`: channel.typeInfo.plugin, initializer: channel.typeInfo.constructor, arguments: args) as NSObject
+        object = XWVInvocation.constructOnThread(channel.thread, `class`: channel.typeInfo.plugin, initializer: channel.typeInfo.constructor, arguments: args) as! NSObject
+        objc_setAssociatedObject(object, key.scriptObject, self, UInt(OBJC_ASSOCIATION_ASSIGN))
         startKVO()
-        objc_setAssociatedObject(self.object, key.scriptObject, self, UInt(OBJC_ASSOCIATION_ASSIGN))
         setupInstance()
     }
     private func setupInstance() {

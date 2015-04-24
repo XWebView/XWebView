@@ -19,7 +19,7 @@ import XCTest
 import XWebView
 
 class FunctionPlugin : XWVTestCase {
-    class Plugin : NSObject, XWVScripting {
+    class Plugin : NSObject, XWebView.XWVScripting {
         dynamic var property = 123
         private var expectation: XCTestExpectation?;
         func defaultMethod() {

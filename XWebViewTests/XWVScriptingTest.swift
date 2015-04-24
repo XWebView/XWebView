@@ -19,7 +19,7 @@ import XCTest
 import XWebView
 
 class XWVScriptingTest : XWVTestCase {
-    class Plugin : NSObject, XWVScripting {
+    class Plugin : NSObject, XWebView.XWVScripting {
         let expectation: XCTestExpectation?
         init(expectation: XCTestExpectation?) {
             self.expectation = expectation

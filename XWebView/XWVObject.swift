@@ -17,25 +17,23 @@
 import Foundation
 
 public class XWVObject : NSObject {
-    public let namespace: String = ""
-    private(set) public weak var channel: XWVChannel!
+    public let namespace: String
+    public unowned let channel: XWVChannel
     weak var origin: XWVObject!
 
-    init(namespace: String, channel: XWVChannel, origin: XWVObject!) {
-        super.init()
+    init(namespace: String, channel: XWVChannel, origin: XWVObject?) {
         self.namespace = namespace
+        self.reference = 0
         self.channel = channel
-        self.origin = origin != nil ? origin : self
+        super.init()
+        self.origin = origin ?? self
     }
 
     // retain and autorelease
-    private let reference: Int = 0
-    init(reference: Int, channel: XWVChannel, origin: XWVObject) {
-        super.init()
-        self.namespace = "\(origin.namespace).$references[\(reference)]"
-        self.channel = channel
-        self.origin = origin
-        self.reference = reference
+    private let reference: Int
+    convenience init(reference: Int, channel: XWVChannel, origin: XWVObject) {
+        let namespace = "\(origin.namespace).$references[\(reference)]"
+        self.init(namespace: namespace, channel: channel, origin: origin)
     }
     deinit {
         if reference != 0 {
@@ -44,13 +42,11 @@ public class XWVObject : NSObject {
         }
     }
     func wrapScriptObject(object: AnyObject?) -> AnyObject {
-        if let dict = object as? [String: AnyObject] {
-            if dict["$sig"] as? NSNumber == 0x5857574F {
-                if let num = dict["$ref"] as? NSNumber {
-                    return XWVScriptObject(reference: num.integerValue, channel: channel, origin: self)
-                } else if let namespace = dict["$ns"] as? String {
-                    return XWVScriptObject(namespace: namespace, channel: channel, origin: self)
-                }
+        if let dict = object as? [String: AnyObject] where dict["$sig"] as? NSNumber == 0x5857574F {
+            if let num = dict["$ref"] as? NSNumber {
+                return XWVScriptObject(reference: num.integerValue, channel: channel, origin: self)
+            } else if let namespace = dict["$ns"] as? String {
+                return XWVScriptObject(namespace: namespace, channel: channel, origin: self)
             }
         }
         return object ?? NSNull()
@@ -78,7 +74,7 @@ public class XWVObject : NSObject {
         } else if let a = obj as? [AnyObject] {
             return "[" + ",".join(a.map(serialize)) + "]"
         } else if let d = obj as? [String: AnyObject] {
-            return "{" + ",".join(d.keys.map({(k: String)->String in return "'\(k)': \(self.serialize(d[k]!))"})) + "}"
+            return "{" + ",".join(d.keys.map(){return "'\($0)': \(self.serialize(d[$0]!))"}) + "}"
         } else if obj === NSNull() {
             return "null"
         } else if obj == nil {

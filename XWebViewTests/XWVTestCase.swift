@@ -19,13 +19,12 @@ import WebKit
 import XCTest
 import XWebView
 
-extension XCTestExpectation : XWVScripting {
+extension XCTestExpectation : XWebView.XWVScripting {
     public class func isSelectorExcludedFromScript(selector: Selector) -> Bool {
         return selector != Selector("fulfill") && selector != Selector("description")
     }
     public class func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool {
-        // FIXME
-        return false
+        return true
     }
 }
 
@@ -79,6 +78,6 @@ class XWVTestCaseTest : XWVTestCase {
         let desc = "selftest"
         let expectation = expectationWithDescription(desc)
         loadPlugin(Plugin(), namespace: "xwvtest", script: "fulfill('\(desc)');")
-        waitForExpectationsWithTimeout(1, nil)
+        waitForExpectationsWithTimeout(1, handler: nil)
     }
 }
