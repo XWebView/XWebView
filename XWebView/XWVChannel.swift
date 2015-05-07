@@ -93,6 +93,9 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                 let namespace = "\(instances[0]!.namespace)[\(target)]"
                 instances[target] = XWVScriptPlugin(namespace: namespace, channel: self, arguments: args)
             } // else Unknown opcode
+        } else if let obj = instances[0]!.object as? WKScriptMessageHandler {
+            // Plugin claims for raw messages
+            obj.userContentController(userContentController, didReceiveScriptMessage: message)
         } else {
             // discard unknown message
             println("WARNING: Unknown message: \(message.body)")
