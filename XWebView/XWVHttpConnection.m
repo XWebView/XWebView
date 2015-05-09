@@ -353,6 +353,9 @@ NSHTTPURLResponse *buildResponse(NSURLRequest *request, NSURL *documentRoot) {
         statusCode = 405;  // Method Not Allowed
         headers[@"Allow"] = @"GET HEAD";
     }
+    if (statusCode != 200) {
+        headers[@"Content-Length"] = @"0";
+    }
     return [[NSHTTPURLResponse alloc] initWithURL:fileURL statusCode:statusCode HTTPVersion:@"HTTP/1.1" headerFields:headers];
 }
 
