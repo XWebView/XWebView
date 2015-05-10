@@ -25,7 +25,7 @@ class XWVThread : NSThread {
 
     override func main() {
         do {
-            switch  Int(CFRunLoopRunInMode(kCFRunLoopDefaultMode, 60, Boolean(1))) {
+            switch Int(CFRunLoopRunInMode(kCFRunLoopDefaultMode, 60, Boolean(1))) {
                 case kCFRunLoopRunFinished:
                     // No input source, add a timer (which will never fire) to avoid spinning.
                     let interval = NSDate.distantFuture().timeIntervalSinceNow

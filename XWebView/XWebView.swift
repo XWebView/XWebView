@@ -70,7 +70,61 @@ public extension WKWebView {
             }
         }
     }
+}
 
+public extension WKWebView {
+    // Synchronized evaluateJavaScript
+    public func evaluateJavaScript(script: String, error: NSErrorPointer = nil) -> AnyObject? {
+        var result: AnyObject?
+        var done = false
+        let timeout = 3.0
+        if NSThread.isMainThread() {
+            evaluateJavaScript(script) {
+                (obj: AnyObject!, err: NSError!)->Void in
+                result = obj
+                if error != nil {
+                    error.memory = err
+                }
+                done = true
+            }
+            while !done {
+                let reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, timeout, Boolean(1))
+                if Int(reason) != kCFRunLoopRunHandledSource {
+                    break
+                }
+            }
+        } else {
+            let condition: NSCondition = NSCondition()
+            dispatch_async(dispatch_get_main_queue()) {
+                [weak self] in
+                self?.evaluateJavaScript(script) {
+                    (obj: AnyObject!, err: NSError!)->Void in
+                    condition.lock()
+                    result = obj
+                    if error != nil {
+                        error.memory = err
+                    }
+                    done = true
+                    condition.signal()
+                    condition.unlock()
+                }
+            }
+            condition.lock()
+            while !done {
+                if !condition.waitUntilDate(NSDate(timeIntervalSinceNow: timeout)) {
+                    break
+                }
+            }
+            condition.unlock()
+        }
+        if !done {
+            println("ERROR: Timeout to evaluate script.")
+        }
+        return result
+    }
+}
+
+public extension WKWebView {
     // WKWebView can't load file URL on device. We have to start an embedded http server for proxy.
     // Upstream WebKit has solved this issue. This function should be removed once WKWebKit adopts the fix.
     // See: https://bugs.webkit.org/show_bug.cgi?id=137153

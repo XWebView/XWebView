@@ -30,7 +30,7 @@ class ConstructorPlugin : XWVTestCase {
         }
         func finalizeForScript() {
             if property == 456 {
-                scriptObject?.evaluateScript("fulfill('finalizeForScript')", onSuccess: nil)
+                scriptObject?.webView?.evaluateJavaScript("fulfill('finalizeForScript')", completionHandler: nil)
             }
         }
         class func isSelectorForConstructor(selector: Selector) -> Bool {

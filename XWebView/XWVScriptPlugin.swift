@@ -50,7 +50,7 @@ class XWVScriptPlugin : XWVScriptObject {
             "    \(namespace).$onready();\n" +
             "    delete \(namespace).$onready;\n" +
         "}\n"
-        evaluateScript(script, onSuccess: nil)
+        webView?.evaluateJavaScript(script, completionHandler: nil)
     }
 
     deinit {
@@ -128,7 +128,7 @@ class XWVScriptPlugin : XWVScriptObject {
             assert(channel.typeInfo.hasProperty(prop))
         }
         let script = "\(namespace).$properties['\(prop)'] = \(serialize(change[NSKeyValueChangeNewKey]))"
-        evaluateScript(script, onSuccess: nil)
+        webView?.evaluateJavaScript(script, completionHandler: nil)
     }
     private func startKVO() {
         for prop in channel.typeInfo.allProperties {

@@ -15,10 +15,12 @@
 */
 
 import Foundation
+import WebKit
 
 public class XWVObject : NSObject {
     public let namespace: String
     public unowned let channel: XWVChannel
+    public var webView: WKWebView? { return channel.webView }
     weak var origin: XWVObject!
 
     init(namespace: String, channel: XWVChannel, origin: XWVObject?) {
@@ -38,7 +40,7 @@ public class XWVObject : NSObject {
     deinit {
         if reference != 0 {
             let script = "\(origin.namespace).$releaseObject(\(reference))"
-            channel.evaluateJavaScript(script, completionHandler: nil)
+            webView?.evaluateJavaScript(script, completionHandler: nil)
         }
     }
     func wrapScriptObject(object: AnyObject?) -> AnyObject {
