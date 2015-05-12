@@ -58,7 +58,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     public func unbind() {
         assert(typeInfo != nil)
         if webView?.URL != nil {
-            evaluateJavaScript("delete \(instances[0]!.namespace);", completionHandler:nil)
+            webView!.evaluateJavaScript("delete \(instances[0]!.namespace);", completionHandler:nil)
         }
         if userScript != nil {
             webView?.configuration.userContentController.removeUserScript(userScript!)
@@ -100,48 +100,5 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
             // discard unknown message
             println("WARNING: Unknown message: \(message.body)")
         }
-    }
-
-
-    public func evaluateJavaScript(script: String, completionHandler: ((AnyObject!, NSError!)->Void)?) {
-        if NSThread.isMainThread() {
-            webView?.evaluateJavaScript(script, completionHandler: completionHandler)
-        } else {
-            dispatch_async(dispatch_get_main_queue()) {
-                [weak self] in
-                self?.webView?.evaluateJavaScript(script, completionHandler: completionHandler)
-                return
-            }
-        }
-    }
-
-    // Synchronized evaluateJavaScript
-    private let condition: NSCondition = NSCondition()
-    private var result: AnyObject!
-    public func evaluateJavaScript(script: String) -> AnyObject? {
-        assert(!NSThread.isMainThread(), "Wrong thread")
-
-        dispatch_async(dispatch_get_main_queue()) {
-            [weak self] in
-            self?.webView?.evaluateJavaScript(script) {
-                [weak self] (result: AnyObject!, error: NSError!)->Void in
-                if self != nil {
-                    self?.condition.lock()
-                    self?.result = result
-                    self?.condition.signal()
-                    self?.condition.unlock()
-                }
-            }
-            return
-        }
-
-        var obj: AnyObject?
-        condition.lock()
-        condition.wait()
-        if let src = result as? NSObject {
-            obj = src.copy()
-        }
-        condition.unlock()
-        return obj
     }
 }

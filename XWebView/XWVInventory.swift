@@ -83,8 +83,8 @@ import Foundation
         if let provider = plugins[namespace] {
             // Load bundle
             if !provider.bundle.loaded {
-                var error : NSErrorPointer = nil
-                if !provider.bundle.loadAndReturnError(error) {
+                var error: NSError?
+                if !provider.bundle.loadAndReturnError(&error) {
                     println("ERROR: load bundle '\(provider.bundle.bundlePath)' failed")
                     return nil
                 }
