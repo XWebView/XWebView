@@ -16,7 +16,7 @@
 
 import WebKit
 
-public extension WKWebView {
+extension WKWebView {
     private struct key {
         static let thread = UnsafePointer<Void>(bitPattern: Selector("pluginThread").hashValue)
         static let httpd = UnsafePointer<Void>(bitPattern: Selector("pluginHTTPD").hashValue)
@@ -48,7 +48,7 @@ public extension WKWebView {
         let script = WKUserScript(
             source: code,
             injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
-            forMainFrameOnly: false)
+            forMainFrameOnly: true)
         configuration.userContentController.addUserScript(script)
         if self.URL != nil {
             evaluateJavaScript(code) { (obj, err)->Void in
@@ -72,7 +72,7 @@ public extension WKWebView {
     }
 }
 
-public extension WKWebView {
+extension WKWebView {
     // Synchronized evaluateJavaScript
     public func evaluateJavaScript(script: String, error: NSErrorPointer = nil) -> AnyObject? {
         var result: AnyObject?
@@ -124,7 +124,7 @@ public extension WKWebView {
     }
 }
 
-public extension WKWebView {
+extension WKWebView {
     // WKWebView can't load file URL on device. We have to start an embedded http server for proxy.
     // Upstream WebKit has solved this issue. This function should be removed once WKWebKit adopts the fix.
     // See: https://bugs.webkit.org/show_bug.cgi?id=137153
@@ -158,7 +158,7 @@ public extension WKWebView {
 }
 
 extension WKUserContentController {
-    func removeUserScript(script: WKUserScript) {
+    public func removeUserScript(script: WKUserScript) {
         let scripts = userScripts
         removeAllUserScripts()
         for i in scripts {
