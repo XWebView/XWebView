@@ -55,6 +55,8 @@ class XWVReflection {
                 }
                 if cls.scriptNameForKey != nil {
                     name = name.withCString(cls.scriptNameForKey!)
+                } else if name.hasPrefix("_") {
+                    return true
                 }
             } else if info.isMethod {
                 if cls.isSelectorExcludedFromScript?(info.method) ?? false {
@@ -66,6 +68,8 @@ class XWVReflection {
                     name = "$constructor"
                 } else if cls.scriptNameForSelector != nil {
                     name = cls.scriptNameForSelector!(info.method)
+                } else if name.hasPrefix("init") || name.hasPrefix("_") {
+                    return true
                 } else if let end = find(name, ":") {
                     name = name[name.startIndex ..< end]
                 }
