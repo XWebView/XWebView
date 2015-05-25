@@ -63,7 +63,8 @@ public class XWVObject : NSObject {
         if let o = obj as? XWVObject {
             return o.namespace
         } else if let s = obj as? String {
-            return "'\(s)'"
+            let d = NSJSONSerialization.dataWithJSONObject([s], options: NSJSONWritingOptions(0), error: nil)
+            return dropFirst(dropLast(NSString(data: d!, encoding: NSUTF8StringEncoding) as! String))
         } else if let n = obj as? NSNumber {
             if CFGetTypeID(n) == CFBooleanGetTypeID() {
                 return n.boolValue.description
