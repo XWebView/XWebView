@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		AB023EA51A8C506600580A2A /* XWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB023EA41A8C506600580A2A /* XWebViewTests.swift */; };
 		AB023EA61A8C506600580A2A /* XWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE62683519FA323900EFC3F8 /* XWebView.framework */; };
-		AB023EBE1A8C8BC700580A2A /* XWebView.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = EE62683519FA323900EFC3F8 /* XWebView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AB2273E51AA6FDA700F9207A /* www in Resources */ = {isa = PBXBuildFile; fileRef = AB2273E41AA6FDA700F9207A /* www */; };
 		ABD3E8541A8CD08300F2BAB9 /* XWVInventoryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD3E8531A8CD08300F2BAB9 /* XWVInventoryTest.swift */; };
 		ABD3E8561A8CD3F900F2BAB9 /* XWVReflectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD3E8551A8CD3F900F2BAB9 /* XWVReflectionTest.swift */; };
@@ -61,7 +60,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				AB023EBE1A8C8BC700580A2A /* XWebView.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +123,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		448AA85E1B1E75A60098FD05 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				EEF27EB61AFA1D89004740CF /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		AB023EA11A8C506600580A2A /* XWebViewTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -155,9 +161,9 @@
 		EE62682B19FA323900EFC3F8 = {
 			isa = PBXGroup;
 			children = (
-				EEF27EB61AFA1D89004740CF /* WebKit.framework */,
 				EE62683719FA323900EFC3F8 /* XWebView */,
 				AB023EA11A8C506600580A2A /* XWebViewTests */,
+				448AA85E1B1E75A60098FD05 /* Frameworks */,
 				EE62683619FA323900EFC3F8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -491,12 +497,13 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
 				INFOPLIST_FILE = XWebView/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				INSTALL_PATH = "@executable_path/../Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
+				SKIP_INSTALL = NO;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
 		};
@@ -508,12 +515,13 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = NO;
 				INFOPLIST_FILE = XWebView/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				INSTALL_PATH = "@executable_path/../Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
+				SKIP_INSTALL = NO;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
 		};
