@@ -31,9 +31,9 @@
 
 #import "XWVHttpConnection.h"
 
-static NSMutableURLRequest *parseRequest(NSMutableURLRequest *request, const char *line);
+static NSMutableURLRequest *parseRequest(NSMutableURLRequest *request, NSData *line);
 static NSHTTPURLResponse *buildResponse(NSURLRequest *request, NSURL *rootURL);
-static char *serializeResponse(const NSHTTPURLResponse *response, size_t *size);
+static NSData *serializeResponse(const NSHTTPURLResponse *response);
 static NSString *getMIMETypeByExtension(NSString *extension);
 
 
@@ -45,28 +45,24 @@ static NSString *getMIMETypeByExtension(NSString *extension);
 
     // output state
     NSFileHandle *_file;
-    off_t _fileSize;
-    char *_headerBuf;
-    size_t _headerSize;
-    size_t _bytesSent;
+    size_t _fileSize;
+    NSData* _outputBuf;
+    size_t _bytesRemain;
 
     // input state
     NSMutableURLRequest *_request;
-    char *_lineBuf;
-    size_t _lineSize;
-    NSUInteger _linePos;
+    NSUInteger _cursor;
+    NSMutableData *_inputBuf;
 }
 
 - (id)initWithNativeHandle:(CFSocketNativeHandle)handle {
-    if (self = [super init]) {
+    if (self = [super init])
         _socket = handle;
-        _requestQueue = [[NSMutableArray alloc] init];
-    }
     return self;
 }
 
 - (BOOL)open {
-    assert(_lineBuf == NULL);  // reopen is forbidden
+    assert(_requestQueue == nil);  // reopen is forbidden
 
     CFReadStreamRef input = NULL;
     CFWriteStreamRef output = NULL;
@@ -94,12 +90,12 @@ static NSString *getMIMETypeByExtension(NSString *extension);
 - (void)close {
     [_input  close];
     [_output close];
-    _input = NULL;
-    _output = NULL;
+    _input = nil;
+    _output = nil;
 
     _file = nil;
-    free(_lineBuf);
-    free(_headerBuf);
+    _inputBuf = nil;
+    _outputBuf = nil;
 
     if (_delegate && [_delegate respondsToSelector:@selector(didCloseConnection:)])
         [_delegate didCloseConnection:self];
@@ -119,117 +115,94 @@ static NSString *getMIMETypeByExtension(NSString *extension);
 }
 
 - (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
-#define LINE_SIZE_DEFAULT 128
-
     switch(eventCode) {
         case NSStreamEventOpenCompleted: {
             // Initialize input/output state.
             if (aStream == _input) {
-                _lineSize = LINE_SIZE_DEFAULT;
-                _lineBuf = malloc(_lineSize);
-                _linePos = 0;
+                _cursor = 0;
                 _request = nil;
+                _inputBuf = [[NSMutableData alloc] initWithLength:512];
+                _requestQueue = [[NSMutableArray alloc] init];
             } else {
                 _file = nil;
                 _fileSize = 0;
-                _headerBuf = NULL;
+                _outputBuf = nil;
             }
             break;
         }
         case NSStreamEventHasBytesAvailable: {
-            uint8_t buffer[LINE_SIZE_DEFAULT], *buf = buffer;
-            NSUInteger len = [_input read:buffer maxLength:sizeof(buffer)];
-            while (len--) {
-                char c = *(buf++);
-                if (c == '\r' && *buf == '\n') {
+            NSInteger len = [_input read:(_inputBuf.mutableBytes + _cursor) maxLength:(_inputBuf.length - _cursor)];
+            if (len <= 0)  break;
+            len += _cursor;
+            _cursor = 0;
+            uint8_t *buf = _inputBuf.mutableBytes;
+            for (int i = 1; i < len; ++i) {
+                if (buf[i] == '\n' && buf[i - 1] == '\r') {
                     // End of line
-                    ++buf; --len;
-                    _lineBuf[_linePos] = 0;
-                    _linePos = 0;
-                    if (!_lineBuf[0] && _request != nil) {
-                        // End of request headers.
+                    if (_cursor == i - 1 && _request != nil) {
+                        // End of request header.
                         [_requestQueue insertObject:_request atIndex:0];
                         _request = nil;
                     } else if (_request == nil || _request.URL != nil) {
-                        _request = parseRequest(_request, _lineBuf);
+                        NSData *line = [NSData dataWithBytesNoCopy:(buf + _cursor) length:(i - _cursor - 1)];
+                        _request = parseRequest(_request, line);
                         if (_request == nil)  // bad request
                             _request = [NSMutableURLRequest new];
                     }
-                } else {
-                    // Copy to line buffer.
-                    if (_linePos == _lineSize - 1) {
-                        // Enlarge line buffer exponentially.
-                        _lineSize <<= 1;
-                        _lineBuf = realloc(_lineBuf, _lineSize);
-                    }
-                    _lineBuf[_linePos++] = c;
+                    _cursor = i + 1;
                 }
             }
+            if (_cursor > 0) {
+                // Move unparsed data to the begining.
+                memmove(buf, buf + _cursor, len - _cursor);
+            } else {
+                // Enlarge input buffer.
+                _inputBuf.length <<= 1;
+            }
+            _cursor = len - _cursor;
             if (!_output.hasSpaceAvailable)
                 break;
         }
         case NSStreamEventHasSpaceAvailable: {
-            if (!_headerBuf) {
+            if (!_outputBuf) {
                 if (!_requestQueue.count)  break;
                 NSURLRequest *request = _requestQueue.lastObject;
                 [_requestQueue removeLastObject];
                 NSHTTPURLResponse *response = buildResponse(request, [self rootURL]);
                 if ([request.HTTPMethod compare:@"GET"] == NSOrderedSame) {
                     _file = [NSFileHandle fileHandleForReadingFromURL:response.URL error:nil];
-                    _fileSize = _file.seekToEndOfFile;
+                    _fileSize = (size_t)_file.seekToEndOfFile;
                 }
-                _headerBuf = serializeResponse(response, &_headerSize);
-                --_headerSize;  // exclude the terminator
-                _bytesSent = 0;
+                _outputBuf = serializeResponse(response);
+                _bytesRemain = _outputBuf.length + _fileSize;
             }
 
-            off_t len = 0;
-#if TARGET_OS_IPHONE
-            if (_bytesSent < _headerSize) {
-                // Send response header
-                len = [_output write:(uint8_t*)(_headerBuf + _bytesSent) maxLength:(_headerSize - _bytesSent)];
-            } else if (_file != nil) {
-                // Send file content
-                [_file seekToFileOffset:_bytesSent - _headerSize];
-                NSData *data = [_file readDataToEndOfFile];
-                len = [_output write:data.bytes maxLength:data.length];
-            }
-#else
-            if (_file != nil) {
-                // Send message body with sendfile(2) syscall rather than copy file content in user space.
-                off_t offset = 0;
-                struct sf_hdtr hdtr = {NULL, 0, NULL, 0};
-                if (_bytesSent < _headerSize) {
-                    struct iovec iovec;
-                    iovec.iov_base = _headerBuf + _bytesSent;
-                    iovec.iov_len = _headerSize - _bytesSent;
-                    hdtr.headers = &iovec;
-                    hdtr.hdr_cnt = 1;
-                } else {
-                    // Partial contents of file has been sent.
-                    offset = _fileSize - (_bytesSent - _headerSize);
+#define CHUNK_SIZE (128 * 1024)
+            NSInteger len;
+            do {
+                size_t off;
+                if (_bytesRemain > _fileSize) {
+                    // Send response header
+                    off = _outputBuf.length - (_bytesRemain - _fileSize);
+                } else if (!(off = (_fileSize - _bytesRemain) % CHUNK_SIZE)) {
+                    // Send file content
+                    [_file seekToFileOffset:(_fileSize - _bytesRemain)];
+                    _outputBuf = [_file readDataOfLength:CHUNK_SIZE];
                 }
-                if (sendfile(_file.fileDescriptor, _socket, offset, &len, &hdtr, 0) < 0 && errno != EAGAIN)
-                    len = -1;
-            } else {
-                // Response has no message body.
-                len = [_output write:(uint8_t*)(_headerBuf + _bytesSent) maxLength:(_headerSize - _bytesSent)];
+                len = [_output write:(_outputBuf.bytes + off) maxLength:(_outputBuf.length - off)];
+                _bytesRemain -= len;
+            } while (_bytesRemain && _output.hasSpaceAvailable && len > 0);
+            if (_bytesRemain == 0) {
+                // Response has been sent completely.
+                _file = nil;
+                _fileSize = 0;
+                _outputBuf = nil;
             }
-#endif
-            if (len > 0) {
-                _bytesSent += len;
-                if (_bytesSent == _headerSize + _fileSize) {
-                    // Response has been sent completely.
-                    _file = nil;
-                    _fileSize = 0;
-                    free(_headerBuf);
-                    _headerBuf = NULL;
-                }
-                break;
-            }
+            if (len >= 0)  break;
         }
-        case NSStreamEventEndEncountered:
         case NSStreamEventErrorOccurred:
+            NSLog(@"ERROR: %@", aStream.streamError.localizedDescription);
+        case NSStreamEventEndEncountered:
             [self close];
         case NSStreamEventNone:
             break;
@@ -278,34 +251,37 @@ static const char* HttpResponseReasonPhrase[5][6] = {
     }
 };
 
-NSMutableURLRequest *parseRequest(NSMutableURLRequest *request, const char *line) {
-    char *p, *q;
+NSMutableURLRequest *parseRequest(NSMutableURLRequest *request, NSData *line) {
+    const uint8_t *buf = line.bytes;
+    NSUInteger size = line.length;
+    const uint8_t *p, *q = NULL;
+
     if (!request) {
         // Parse request line
-        p = strchr(line, ' ');
-        q = strrchr(line, ' ');
-        if (!p || !q || strncmp(q + 1, HttpVersion, sizeof(HttpVersion) - 1))
+        if ((p = memchr(buf, ' ', size)) != NULL) {
+            ++p;
+            q = memchr(p, ' ', size - (p - buf));
+        }
+        if (!p || !q || memcmp(q + 1, HttpVersion, sizeof(HttpVersion) - 1))
             return nil;
         for (int i = 0; i < sizeof(HttpRequestMethodToken); ++i) {
-            if (!strncmp(line, HttpRequestMethodToken[i], p - line)) {
-                ++p;
+            const char *token = HttpRequestMethodToken[i];
+            if (!memcmp(buf, token, strlen(token) - 1)) {
                 NSString *path = [[NSString alloc] initWithBytes:p length:(q - p) encoding:NSASCIIStringEncoding];
                 NSURL *url = [[NSURL alloc] initWithScheme:@"http" host:@"" path:path];
                 request = [NSMutableURLRequest requestWithURL:url];
-                request.HTTPMethod = [NSString stringWithUTF8String:HttpRequestMethodToken[i]];
+                request.HTTPMethod = [NSString stringWithUTF8String:token];
                 break;
             }
         }
-    } else if ((p = strchr(line, ':')) != NULL) {
+    } else if ((p = memchr(buf, ':', size)) != NULL) {
         // Parse header field
-        *(p++) = 0;
-        while (isspace(*p)) ++p;
-        for (NSInteger i = strlen(p) - 1; isspace(p[i]); --i)
-            p[i] = 0;
-        NSString *name = [NSString stringWithCString:line encoding:NSASCIIStringEncoding];
-        NSString *value = [NSString stringWithCString:p encoding:NSASCIIStringEncoding];
+        NSString *name, *value;
+        name = [[NSString alloc] initWithBytes:buf length:(p - buf) encoding:NSASCIIStringEncoding];
+        while (isspace(*(++p)));
+        value = [[NSString alloc] initWithBytes:p length:(size - (p - buf)) encoding:NSASCIIStringEncoding];
 
-        if (!strcasecmp(line, "Host")) {
+        if (!strncasecmp((const char *)buf, "Host", 4)) {
             // Support origin-form only
             request.URL = [[NSURL alloc] initWithScheme:@"http" host:value path:request.URL.path];
         } else {
@@ -359,10 +335,10 @@ NSHTTPURLResponse *buildResponse(NSURLRequest *request, NSURL *documentRoot) {
     return [[NSHTTPURLResponse alloc] initWithURL:fileURL statusCode:statusCode HTTPVersion:@"HTTP/1.1" headerFields:headers];
 }
 
-char *serializeResponse(const NSHTTPURLResponse *response, size_t *size) {
+NSData *serializeResponse(const NSHTTPURLResponse *response) {
     NSDictionary *headers = response.allHeaderFields;
-    NSString *name, *value;
     NSEnumerator *enumerator;
+    NSString *name;
 
     int class = (int)response.statusCode / 100 - 1;
     assert(class >= 0 && class < 5);
@@ -377,21 +353,18 @@ char *serializeResponse(const NSHTTPURLResponse *response, size_t *size) {
     // Calculate buffer size
     size_t len = sizeof(HttpVersion) + 5 + strlen(reason) + 4;
     enumerator = [headers keyEnumerator];
-    while (name = [enumerator nextObject]) {
-        value = headers[name];
-        len += name.length + value.length + 4;
-    }
-    if (size)  *size = len;
+    while (name = [enumerator nextObject])
+        len += name.length + [headers[name] length] + 4;
 
-    char *buffer = malloc(len);
-    int pos = sprintf(buffer, "%s %3zd %s\r\n", HttpVersion, response.statusCode, reason);
+    NSMutableData *data = [[NSMutableData alloc] initWithLength:len];
+    char *buf = data.mutableBytes;
+    buf += sprintf(buf, "%s %3zd %s\r\n", HttpVersion, response.statusCode, reason);
     enumerator = [headers keyEnumerator];
-    while (name = [enumerator nextObject]) {
-        value = headers[name];
-        pos += sprintf(buffer + pos, "%s: %s\r\n", name.UTF8String, value.UTF8String);
-    }
-    sprintf(buffer + pos, "\r\n");
-    return buffer;
+    while (name = [enumerator nextObject])
+        buf += sprintf(buf, "%s: %s\r\n", name.UTF8String, [headers[name] UTF8String]);
+    sprintf(buf, "\r\n");
+    --data.length;
+    return data;
 }
 
 NSString *getMIMETypeByExtension(NSString *extension) {
