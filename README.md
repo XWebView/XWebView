@@ -1,5 +1,7 @@
 # XWebView - eXtensible WebView for iOS
 
+[![Build Status](https://travis-ci.org/XWebView/XWebView.svg?branch=master)](https://travis-ci.org/XWebView/XWebView)
+
 ## Introduction
 
 XWebView is an extensible WebView which is built on top of [WKWebView](https://developer.apple.com/library/ios/documentation/WebKit/Reference/WKWebView_Ref/), the modern WebKit framework debuted in iOS 8.0. It provides fast Web runtime with carefully designed plugin API for developing sophisticated iOS native or hybrid applications.

@@ -1,0 +1,6 @@
+language: objective-c
+osx_image: beta-xcode6.3
+#xcode_sdk: iphonesimulator8.3
+#xcode_project: XWebView.xcodeproj
+#xcode_scheme: XWebViewTests
+script: xcodebuild -scheme XWebViewTests -configuration Debug -destination 'platform=iOS simulator,name=iPhone 6' test
