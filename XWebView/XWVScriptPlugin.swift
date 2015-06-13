@@ -18,16 +18,13 @@ import Foundation
 
 
 class XWVScriptPlugin : XWVScriptObject {
+    let key = unsafeAddressOf(XWVScriptObject)
     var object: NSObject!
-    private var sync = false
-    private struct key {
-        static let scriptObject = UnsafePointer<Void>(bitPattern: Selector("scriptObject").hashValue)
-    }
 
     init(namespace: String, channel: XWVChannel, object: NSObject) {
         super.init(namespace: namespace, channel: channel, origin: nil)
         self.object = object
-        objc_setAssociatedObject(object, key.scriptObject, self, UInt(OBJC_ASSOCIATION_ASSIGN))
+        objc_setAssociatedObject(object, key, self, UInt(OBJC_ASSOCIATION_ASSIGN))
         startKVO()
     }
 
@@ -35,7 +32,7 @@ class XWVScriptPlugin : XWVScriptObject {
         super.init(namespace: namespace, channel: channel, origin: nil)
         let args = arguments.map(wrapScriptObject)
         object = XWVInvocation.constructOnThread(channel.thread, `class`: channel.typeInfo.plugin, initializer: channel.typeInfo.constructor, arguments: args) as! NSObject
-        objc_setAssociatedObject(object, key.scriptObject, self, UInt(OBJC_ASSOCIATION_ASSIGN))
+        objc_setAssociatedObject(object, key, self, UInt(OBJC_ASSOCIATION_ASSIGN))
         startKVO()
         setupInstance()
     }
@@ -43,7 +40,7 @@ class XWVScriptPlugin : XWVScriptObject {
         var script = ""
         for name in channel.typeInfo.allProperties {
             let getter = channel.typeInfo.getter(forProperty: name)
-            let val = XWVInvocation.call(object, selector: getter, arguments: nil)
+            let val = XWVInvocation.callOnThread(channel.thread, target:object, selector: getter, arguments: nil)
             script += "\(namespace)['\(name)'] = \(serialize(val));\n"
         }
         script += "if (\(namespace)['$onready'] instanceof Function) {\n" +
@@ -57,7 +54,7 @@ class XWVScriptPlugin : XWVScriptObject {
         if (object as? XWVScripting)?.finalizeForScript != nil {
             XWVInvocation.callOnThread(channel.thread, target: object, selector: Selector("finalizeForScript"), arguments: nil)
         }
-        objc_setAssociatedObject(object, key.scriptObject, nil, UInt(OBJC_ASSOCIATION_ASSIGN))
+        objc_setAssociatedObject(object, key, nil, UInt(OBJC_ASSOCIATION_ASSIGN))
         stopKVO()
     }
 
@@ -65,14 +62,24 @@ class XWVScriptPlugin : XWVScriptObject {
     func invokeNativeMethod(name: String!, withArguments arguments: [AnyObject]?) {
         let args = arguments?.map(wrapScriptObject)
         let selector = channel.typeInfo.selector(forMethod: name)
-        XWVInvocation.asyncCallOnThread(channel.thread, target: object, selector: selector, arguments: args)
+        if channel.queue != nil {
+            dispatch_async(channel.queue) {
+                XWVInvocation.call(object, selector: selector, arguments: args)
+            }
+        } else {
+            XWVInvocation.asyncCallOnThread(channel.thread, target: object, selector: selector, arguments: args)
+        }
     }
     func updateNativeProperty(name: String!, withValue value: AnyObject!) {
         let val: AnyObject = wrapScriptObject(value)
         let setter = channel.typeInfo.setter(forProperty: name)
-        sync = false
-        XWVInvocation.asyncCallOnThread(channel.thread, target: object, selector: setter, arguments: [val])
-        sync = true
+        if channel.queue != nil {
+            dispatch_async(channel.queue) {
+                XWVInvocation.call(object, selector: setter, arguments: [val])
+            }
+        } else {
+            XWVInvocation.asyncCallOnThread(channel.thread, target: object, selector: setter, arguments: [val])
+        }
     }
 
     // override methods of XWVScriptObject
@@ -111,8 +118,6 @@ class XWVScriptPlugin : XWVScriptObject {
 
     // KVO for syncing properties
     override func observeValueForKeyPath(keyPath: String, ofObject object: AnyObject, change: [NSObject : AnyObject], context: UnsafeMutablePointer<Void>) {
-        if !sync { return }
-
         var prop = keyPath
         if !channel.typeInfo.hasProperty(prop) {
             if object.dynamicType.scriptNameForKey != nil {
@@ -135,7 +140,6 @@ class XWVScriptPlugin : XWVScriptObject {
             let key = channel.typeInfo.getter(forProperty: prop).description
             object.addObserver(self, forKeyPath: key, options: NSKeyValueObservingOptions.New, context: nil)
         }
-        sync = true
     }
     private func stopKVO() {
         for prop in channel.typeInfo.allProperties {
@@ -147,6 +151,6 @@ class XWVScriptPlugin : XWVScriptObject {
 
 public extension NSObject {
     var scriptObject: XWVScriptObject? {
-        return objc_getAssociatedObject(self, XWVScriptPlugin.key.scriptObject) as? XWVScriptObject
+        return objc_getAssociatedObject(self, unsafeAddressOf(XWVScriptObject)) as? XWVScriptObject
     }
 }

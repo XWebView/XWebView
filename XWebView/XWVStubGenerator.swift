@@ -18,26 +18,28 @@ import Foundation
 
 class XWVStubGenerator {
     let typeInfo: XWVReflection
+    let channelName: String
 
-    init(reflection: XWVReflection) {
-        typeInfo = reflection
+    convenience init(channel: XWVChannel) {
+        self.init(channelName: channel.name, typeInfo: channel.typeInfo)
     }
-    convenience init(plugin: AnyClass) {
-        self.init(reflection: XWVReflection(plugin: plugin))
+    init(channelName: String, typeInfo: XWVReflection) {
+        self.channelName = channelName
+        self.typeInfo = typeInfo
     }
 
-    func generate(channelID: String, namespace: String, object: XWVScriptPlugin? = nil) -> String {
+    func generateForNamespace(namespace: String, object: XWVScriptPlugin? = nil) -> String {
         var stub = "(function(exports) {\n"
         for name in typeInfo.allMembers {
             if typeInfo.hasMethod(name) {
-                stub += "exports.\(name) = \(generateStub(forMethod: name))\n"
+                stub += "exports.\(name) = \(generateForMethod(name))\n"
             } else if typeInfo.hasProperty(name) {
                 let value = object?.serialize(object?[name]) ?? "undefined"
                 let readonly = typeInfo.isReadonly(name)
                 stub += "XWVPlugin.defineProperty(exports, '\(name)', \(value), \(!readonly));\n"
             }
         }
-        stub += "\n})(XWVPlugin.create(\(channelID), '\(namespace)'"
+        stub += "\n})(XWVPlugin.create(\(channelName), '\(namespace)'"
         if typeInfo.constructor != nil {
             var ctor = namespace.pathExtension.isEmpty ? namespace : namespace.pathExtension
             if let idx = find(ctor, "[") {
@@ -51,7 +53,7 @@ class XWVStubGenerator {
         return stub
     }
 
-    private func generateStub(forMethod name: String) -> String {
+    private func generateForMethod(name: String) -> String {
         let this = "this"
         var params = typeInfo.selector(forMethod: name).description.componentsSeparatedByString(":")
         params.removeLast()

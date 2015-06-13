@@ -52,7 +52,6 @@
         if (![[NSFileManager defaultManager] fileExistsAtPath:root isDirectory:&isDirectory] || !isDirectory) {
             return nil;
         }
-        _connections = [[NSMutableSet alloc] init];
         _documentRoot = [root copy];
     }
     return self;
@@ -77,7 +76,7 @@ static void ServerAcceptCallBack(CFSocketRef socket, CFSocketCallBackType type, 
     [conn open];
 }
 
-- (BOOL)start:(NSThread *)thread {
+- (BOOL)start {
     assert(_socket == NULL);
 
     struct sockaddr_in addr;
@@ -96,20 +95,8 @@ static void ServerAcceptCallBack(CFSocketRef socket, CFSocketCallBackType type, 
     const int yes = 1;
     setsockopt(CFSocketGetNative(_socket), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 
-    // Get the runloop of server thread
-    NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
-    if (thread != nil && thread != [NSThread currentThread]) {
-        NSInvocation *inv = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:@selector(runLoop)]];
-        inv.selector = @selector(runLoop);
-        [inv performSelector:@selector(invokeWithTarget:) onThread:thread withObject:self waitUntilDone:YES];
-        __unsafe_unretained id returnValue;
-        [inv getReturnValue:&returnValue];
-        runLoop = returnValue;
-    }
-
-    CFRunLoopSourceRef source = CFSocketCreateRunLoopSource(kCFAllocatorDefault, _socket, 0);
-    CFRunLoopAddSource(runLoop.getCFRunLoop, source, kCFRunLoopCommonModes);
-    CFRelease(source);
+    _connections = [[NSMutableSet alloc] init];
+    [NSThread detachNewThreadSelector:@selector(serverLoop:) toTarget:self withObject:nil];
     return YES;
 }
 
@@ -119,7 +106,7 @@ static void ServerAcceptCallBack(CFSocketRef socket, CFSocketCallBackType type, 
         conn.delegate = nil;
         [conn close];
     }
-    _connections = [NSMutableSet new];
+    _connections = nil;
 
     // Close server socket.
     if (_socket != NULL) {
@@ -129,8 +116,12 @@ static void ServerAcceptCallBack(CFSocketRef socket, CFSocketCallBackType type, 
     }
 }
 
-- (NSRunLoop *)runLoop {
-    return [NSRunLoop currentRunLoop];
+- (void)serverLoop:(id)unused {
+    CFRunLoopRef runLoop = CFRunLoopGetCurrent();
+    CFRunLoopSourceRef source = CFSocketCreateRunLoopSource(NULL, _socket, 0);
+    CFRunLoopAddSource(runLoop, source, kCFRunLoopCommonModes);
+    CFRelease(source);
+    CFRunLoopRun();
 }
 
 @end

@@ -95,15 +95,12 @@
 }
 
 + (void)asyncCall:(id)target selector:(SEL)selector arguments:(NSArray *)args {
-    return [XWVInvocation asyncCallOnThread:NSThread.currentThread target:target selector:selector arguments:args];
+    return [XWVInvocation asyncCallOnThread:nil target:target selector:selector arguments:args];
 }
 + (void)asyncCallOnThread:(NSThread *)thread target:(id)target selector:(SEL)selector arguments:(NSArray *)args {
     NSInvocation* inv = [NSInvocation invocationWithTarget:target selector:selector arguments:args];
     [inv retainArguments];
-    if (thread)
-        [inv performSelector:@selector(invokeWithTarget:) onThread:thread withObject:target waitUntilDone:NO];
-    else
-        [inv performSelectorInBackground:@selector(invokeWithTarget:) withObject:target];
+    [inv performSelector:@selector(invokeWithTarget:) onThread:(thread ?: NSThread.currentThread) withObject:target waitUntilDone:NO];
 }
 
 // Variadic methods
@@ -160,7 +157,7 @@
     NSInvocation* inv = [NSInvocation invocationWithTarget:target selector:selector valist:ap];
     va_end(ap);
     [inv retainArguments];
-    [inv performSelector:@selector(invokeWithTarget:) onThread:[NSThread currentThread] withObject:target waitUntilDone:NO];
+    [inv performSelector:@selector(invokeWithTarget:) onThread:NSThread.currentThread withObject:target waitUntilDone:NO];
 }
 + (void)asyncCallOnThread:(NSThread *)thread target:(id)target selector:(SEL)selector, ... {
     va_list ap;
@@ -168,10 +165,7 @@
     NSInvocation* inv = [NSInvocation invocationWithTarget:target selector:selector valist:ap];
     va_end(ap);
     [inv retainArguments];
-    if (thread)
-        [inv performSelector:@selector(invokeWithTarget:) onThread:thread withObject:target waitUntilDone:NO];
-    else
-        [inv performSelectorInBackground:@selector(invokeWithTarget:) withObject:target];
+    [inv performSelector:@selector(invokeWithTarget:) onThread:(thread ?: NSThread.currentThread) withObject:target waitUntilDone:NO];
 }
 
 @end

@@ -24,7 +24,7 @@
 @property(nonatomic, readonly) in_port_t port;
 
 - (id)initWithDocumentRoot:(NSString *)root;
-- (BOOL)start:(NSThread *)thread;
+- (BOOL)start;
 - (void)stop;
 
 @end

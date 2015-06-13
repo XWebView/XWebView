@@ -18,38 +18,55 @@ import Foundation
 import WebKit
 
 public class XWVChannel : NSObject, WKScriptMessageHandler {
-    public let id: String
-    public let thread: NSThread
+    public let name: String
+    public let thread: NSThread!
+    public let queue: dispatch_queue_t!
     private(set) public weak var webView: WKWebView?
     var typeInfo: XWVReflection!
 
     private var instances = [Int: XWVScriptPlugin]()
     private var userScript: WKUserScript?
 
-    public init(channelID: String?, webView: WKWebView, thread: NSThread? = nil) {
-        struct seq{
-            static var num: UInt32 = 0
+    private class var sequenceNumber: UInt {
+        struct sequence{
+            static var number: UInt = 0
         }
-        self.id = channelID ?? "\(++seq.num)"
+        return ++sequence.number
+    }
 
-        self.thread = thread ?? webView.pluginThread
-        super.init()
-        if (self.thread === webView.pluginThread) && !self.thread.executing {
-            self.thread.start()
-        }
-
+    public convenience init(name: String?, webView: WKWebView) {
+        let queue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL)
+        self.init(name: name, webView:webView, queue: queue)
+    }
+    public init(name: String?, webView: WKWebView, queue: dispatch_queue_t) {
+        self.name = name ?? "\(XWVChannel.sequenceNumber)"
         self.webView = webView
-        webView.configuration.userContentController.addScriptMessageHandler(self, name: "\(self.id)")
+        self.queue = queue
+        thread = nil
+        super.init()
+        setup()
+    }
+    public init(identifier: String?, webView: WKWebView, thread: NSThread) {
+        self.name = identifier ?? "\(XWVChannel.sequenceNumber)"
+        self.webView = webView
+        self.thread = thread
+        queue = nil
+        super.init()
+        setup()
+    }
+    private func setup() {
+        webView!.prepareForPlugin()
+        webView!.configuration.userContentController.addScriptMessageHandler(self, name: "\(self.name)")
     }
     deinit {
-        webView?.configuration.userContentController.removeScriptMessageHandlerForName("\(id)")
+        webView?.configuration.userContentController.removeScriptMessageHandlerForName("\(name)")
     }
 
     public func bindPlugin(object: NSObject, toNamespace namespace: String) -> XWVScriptObject? {
         assert(typeInfo == nil)
         typeInfo = XWVReflection(plugin: object.dynamicType)
         let plugin = XWVScriptPlugin(namespace: namespace, channel: self, object: object)
-        let stub = XWVStubGenerator(reflection: typeInfo).generate(id, namespace: namespace, object: plugin)
+        let stub = XWVStubGenerator(channel: self).generateForNamespace(namespace, object: plugin)
         userScript = webView?.injectScript((object as? XWVScripting)?.javascriptStub?(stub) ?? stub)
         instances[0] = plugin
         return plugin as XWVScriptObject

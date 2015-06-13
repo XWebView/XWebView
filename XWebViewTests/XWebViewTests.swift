@@ -22,15 +22,6 @@ class XWebViewTests: XWVTestCase {
     class Plugin : NSObject {
     }
 
-    func testPluginThread() {
-        XCTAssertNotNil(webview.pluginThread)
-        XCTAssertFalse(webview.pluginThread.isMainThread)
-
-        let thread = NSThread()
-        webview.pluginThread = thread
-        XCTAssertEqual(webview.pluginThread, thread)
-    }
-
     func testLoadPlugin() {
         if webview.loadPlugin(Plugin(), namespace: "xwvtest") == nil {
             XCTFail("testLoadPlugin Failed")

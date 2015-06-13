@@ -17,34 +17,12 @@
 import WebKit
 
 extension WKWebView {
-    private struct key {
-        static let thread = UnsafePointer<Void>(bitPattern: Selector("pluginThread").hashValue)
-        static let httpd = UnsafePointer<Void>(bitPattern: Selector("pluginHTTPD").hashValue)
-    }
-    public var pluginThread: NSThread {
-        get {
-            if objc_getAssociatedObject(self, key.thread) == nil {
-                prepareForPlugin()
-                let thread = XWVThread()
-                objc_setAssociatedObject(self, key.thread, thread, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
-                return thread
-            }
-            return objc_getAssociatedObject(self, key.thread) as! NSThread
-        }
-        set(thread) {
-            if objc_getAssociatedObject(self, key.thread) == nil {
-                prepareForPlugin()
-            }
-            objc_setAssociatedObject(self, key.thread, thread, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
-        }
-    }
-
     public func loadPlugin(object: NSObject, namespace: String) -> XWVScriptObject? {
-        let channel = XWVChannel(channelID: nil, webView: self, thread: nil)
+        let channel = XWVChannel(name: nil, webView: self)
         return channel.bindPlugin(object, toNamespace: namespace)
     }
 
-    internal func injectScript(code: String) -> WKUserScript {
+    func injectScript(code: String) -> WKUserScript {
         let script = WKUserScript(
             source: code,
             injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
@@ -60,13 +38,16 @@ extension WKWebView {
         return script
     }
 
-    private func prepareForPlugin() {
-        let bundle = NSBundle(forClass: XWVChannel.self)
-        if let path = bundle.pathForResource("xwebview", ofType: "js") {
-            if let code = NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding, error: nil) {
-                injectScript(code as String)
+    func prepareForPlugin() {
+        let key = unsafeAddressOf(XWVChannel)
+        if objc_getAssociatedObject(self, key) == nil {
+            let bundle = NSBundle(forClass: XWVChannel.self)
+            if let path = bundle.pathForResource("xwebview", ofType: "js"),
+                let code = NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding, error: nil) {
+                    let script = injectScript(code as String)
+                    objc_setAssociatedObject(self, key, script, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
             } else {
-                NSException.raise("EncodingError", format: "'%@.js' should be UTF-8 encoding.", arguments: getVaList([path]))
+                preconditionFailure("FATAL: Internal error")
             }
         }
     }
@@ -141,14 +122,12 @@ extension WKWebView {
             return nil
         }
 
-        var httpd = objc_getAssociatedObject(self, key.httpd) as? XWVHttpServer
+        let key = unsafeAddressOf(XWVHttpServer)
+        var httpd = objc_getAssociatedObject(self, key) as? XWVHttpServer
         if httpd == nil {
             httpd = XWVHttpServer(documentRoot: readAccessURL.path)
-            if !pluginThread.executing {
-                pluginThread.start()
-            }
-            httpd!.start(pluginThread)
-            objc_setAssociatedObject(self, key.httpd, httpd!, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
+            httpd!.start()
+            objc_setAssociatedObject(self, key, httpd!, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
         }
 
         let target = URL.path!.substringFromIndex(advance(URL.path!.startIndex, count(readAccessURL.path!)))
