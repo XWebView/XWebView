@@ -77,7 +77,7 @@ public class XWVObject : NSObject {
         } else if let a = obj as? [AnyObject] {
             return "[" + ",".join(a.map(serialize)) + "]"
         } else if let d = obj as? [String: AnyObject] {
-            return "{" + ",".join(d.keys.map(){return "'\($0)': \(self.serialize(d[$0]!))"}) + "}"
+            return "{" + ",".join(d.keys.map(){"'\($0)': \(self.serialize(d[$0]!))"}) + "}"
         } else if obj === NSNull() {
             return "null"
         } else if obj == nil {

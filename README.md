@@ -20,7 +20,7 @@ Besides mapping to an ordinary JavaScript object, a plugin object can also be ma
 
 Further more, JavaScript constructor is also supported. A plugin can have multiple instances. In this case, an initializer is mapped to the function of constructor. Meanwhile, principal object of the plugin is created as the prototype of constructor. Each instance has a pair of native and JavaScript object which share the same life cycle and states.
 
-XWebView is designed for embedding. It's easy to adopt since it's an extension of WKWebView class. Basically, creating and loading plugin objects are the only additional steps you need to handle. Additionally, XWebView offers 3 threading modes for plugin: plugin thread(default, per WebView), specified thread(under your control) and main thread(use cautiously).
+XWebView is designed for embedding. It's easy to adopt since it's an extension of WKWebView class. Basically, creating and loading plugin objects are the only additional steps you need to handle. Additionally, XWebView offers 2 threading modes for plugin: Grand Central Dispatch(GCD) and NSThread.
 
 The project lacks documentation currently, so dig more from the code :-)
 
@@ -28,9 +28,9 @@ The project lacks documentation currently, so dig more from the code :-)
 
 * Development:
   * Xcode 6.3+
-  * iOS SDK 8.1+
+  * iOS SDK 8.0+
 * Deployment:
-  * iOS 8.1+
+  * iOS 8.0+
 
 ## Quick Start
 
@@ -47,7 +47,7 @@ Here is a `HelloWorld` example to demonstrate the essential features of XWebView
   ```
   platform :ios, '8.1'
   use_frameworks!
-  pod 'XWebView', '~> 0.9.0'
+  pod 'XWebView', '~> 0.9.2'
   ```
 
   Then run `pod install` in terminal to setup a workspace for you. When finished, open the `HelloWorld.xcworkspace` created by CocoaPods.
