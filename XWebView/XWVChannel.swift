@@ -53,7 +53,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         webView.prepareForPlugin()
     }
 
-    public func bindPlugin(object: NSObject, toNamespace namespace: String) -> XWVScriptObject? {
+    public func bindPlugin(object: AnyObject, toNamespace namespace: String) -> XWVScriptObject? {
         assert(typeInfo == nil)
         webView?.configuration.userContentController.addScriptMessageHandler(self, name: name)
         typeInfo = XWVReflection(plugin: object.dynamicType)

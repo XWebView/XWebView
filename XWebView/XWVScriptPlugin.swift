@@ -19,9 +19,9 @@ import Foundation
 
 class XWVScriptPlugin : XWVScriptObject {
     let key = unsafeAddressOf(XWVScriptObject)
-    var object: NSObject!
+    var object: AnyObject!
 
-    init(namespace: String, channel: XWVChannel, object: NSObject) {
+    init(namespace: String, channel: XWVChannel, object: AnyObject) {
         super.init(namespace: namespace, channel: channel, origin: nil)
         self.object = object
         objc_setAssociatedObject(object, key, self, UInt(OBJC_ASSOCIATION_ASSIGN))
@@ -31,7 +31,7 @@ class XWVScriptPlugin : XWVScriptObject {
     init(namespace: String, channel: XWVChannel, arguments: [AnyObject]!) {
         super.init(namespace: namespace, channel: channel, origin: nil)
         let args = arguments.map(wrapScriptObject)
-        object = XWVInvocation.constructOnThread(channel.thread, `class`: channel.typeInfo.plugin, initializer: channel.typeInfo.constructor, arguments: args) as! NSObject
+        object = XWVInvocation.constructOnThread(channel.thread, `class`: channel.typeInfo.plugin, initializer: channel.typeInfo.constructor, arguments: args)
         objc_setAssociatedObject(object, key, self, UInt(OBJC_ASSOCIATION_ASSIGN))
         startKVO()
         setupInstance()

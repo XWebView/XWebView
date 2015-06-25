@@ -14,6 +14,7 @@
  limitations under the License.
  */
 
+#import "objc/runtime.h"
 #import "XWVInvocation.h"
 
 @interface NSNumber (XWVInvocation)
@@ -227,9 +228,12 @@
 
 @implementation NSInvocation (XWVInvocation)
 + (NSInvocation *)invocationWithTarget:(id)target selector:(SEL)selector arguments:(NSArray *)args {
-    NSMethodSignature *sig = [target methodSignatureForSelector:selector];
+    Class class = object_getClass(target);
+    Method method = class_getInstanceMethod(class, selector);
+    NSMethodSignature *sig = [NSMethodSignature signatureWithObjCTypes:method_getTypeEncoding(method)];
     if (sig == nil) {
-        [target doesNotRecognizeSelector:selector];
+        if (class_conformsToProtocol(class, @protocol(NSObject)) && [target isKindOfClass:NSObject.class])
+            [target doesNotRecognizeSelector:selector];
         return nil;
     }
     if ((args ? args.count : 0) < sig.numberOfArguments - 2)
