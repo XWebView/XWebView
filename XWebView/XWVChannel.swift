@@ -43,27 +43,19 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         self.webView = webView
         self.queue = queue
         thread = nil
-        super.init()
-        setup()
+        webView.prepareForPlugin()
     }
-    public init(identifier: String?, webView: WKWebView, thread: NSThread) {
-        self.name = identifier ?? "\(XWVChannel.sequenceNumber)"
+    public init(name: String?, webView: WKWebView, thread: NSThread) {
+        self.name = name ?? "\(XWVChannel.sequenceNumber)"
         self.webView = webView
         self.thread = thread
         queue = nil
-        super.init()
-        setup()
-    }
-    private func setup() {
-        webView!.prepareForPlugin()
-        webView!.configuration.userContentController.addScriptMessageHandler(self, name: "\(self.name)")
-    }
-    deinit {
-        webView?.configuration.userContentController.removeScriptMessageHandlerForName("\(name)")
+        webView.prepareForPlugin()
     }
 
     public func bindPlugin(object: NSObject, toNamespace namespace: String) -> XWVScriptObject? {
         assert(typeInfo == nil)
+        webView?.configuration.userContentController.addScriptMessageHandler(self, name: name)
         typeInfo = XWVReflection(plugin: object.dynamicType)
         let plugin = XWVScriptPlugin(namespace: namespace, channel: self, object: object)
         let stub = XWVStubGenerator(channel: self).generateForNamespace(namespace, object: plugin)
@@ -81,6 +73,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
             webView?.configuration.userContentController.removeUserScript(userScript!)
         }
         instances.removeAll(keepCapacity: false)
+        webView?.configuration.userContentController.removeScriptMessageHandlerForName(name)
     }
 
     public func userContentController(userContentController: WKUserContentController, didReceiveScriptMessage message: WKScriptMessage) {
