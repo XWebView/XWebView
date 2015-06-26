@@ -136,12 +136,14 @@ class XWVScriptPlugin : XWVScriptObject {
         webView?.evaluateJavaScript(script, completionHandler: nil)
     }
     private func startKVO() {
+        if !(object is NSObject) { return }
         for prop in channel.typeInfo.allProperties {
             let key = channel.typeInfo.getter(forProperty: prop).description
             object.addObserver(self, forKeyPath: key, options: NSKeyValueObservingOptions.New, context: nil)
         }
     }
     private func stopKVO() {
+        if !(object is NSObject) { return }
         for prop in channel.typeInfo.allProperties {
             let key = channel.typeInfo.getter(forProperty: prop).description
             object.removeObserver(self, forKeyPath: key, context: nil)
