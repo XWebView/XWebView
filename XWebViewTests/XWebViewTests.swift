@@ -38,4 +38,14 @@ class XWebViewTests: XWVTestCase {
             waitForExpectationsWithTimeout(2, handler: nil)
         }
     }
+    
+    func testLoadHTMLStringWithBaseURL() {
+        let expectation = expectationWithDescription("loadHTMLStringWithBaseURL")
+        let bundle = NSBundle(identifier:"com.github.xwebview.XWebViewTests")
+        if let baseURL = bundle?.bundleURL.URLByAppendingPathComponent("www") {
+            XCTAssert(baseURL.checkResourceIsReachableAndReturnError(nil), "Directory not found")
+            webview.loadHTMLString("<html><img id='image' onload='fulfill(\"loadHTMLStringWithBaseURL\")' src='image.png'></html>", allowingReadAccessToBaseURL: baseURL)
+            waitForExpectationsWithTimeout(2, handler: nil)
+        }
+    }
 }

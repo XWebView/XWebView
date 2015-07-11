@@ -134,6 +134,31 @@ extension WKWebView {
         let url = NSURL(scheme: "http", host: "127.0.0.1:\(httpd!.port)", path: target)
         return loadRequest(NSURLRequest(URL: url!));
     }
+    
+    // WKWebView can't load HTML String on device with baseURL. Same problem
+    // descripted above
+    public func loadHTMLString(html: String, allowingReadAccessToBaseURL baseURL: NSURL?) -> WKNavigation? {
+        if baseURL == nil {
+            return loadHTMLString(html, baseURL: nil)
+        } else {
+            let fileManager = NSFileManager.defaultManager()
+            var isDirectory: ObjCBool = false
+            if !fileManager.fileExistsAtPath(baseURL!.path!, isDirectory: &isDirectory) || !isDirectory {
+                return nil
+            }
+            
+            let key = unsafeAddressOf(XWVHttpServer)
+            var httpd = objc_getAssociatedObject(self, key) as? XWVHttpServer
+            if httpd == nil {
+                httpd = XWVHttpServer(documentRoot: baseURL!.path)
+                httpd!.start()
+                objc_setAssociatedObject(self, key, httpd!, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
+            }
+            
+            let url = NSURL(string: "http://127.0.0.1:\(httpd!.port)/")
+            return loadHTMLString(html, baseURL: url)
+        }
+    }
 }
 
 extension WKUserContentController {
