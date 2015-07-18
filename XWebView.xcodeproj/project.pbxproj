@@ -12,12 +12,10 @@
 		AB023EBE1A8C8BC700580A2A /* XWebView.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = EE62683519FA323900EFC3F8 /* XWebView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AB2273E51AA6FDA700F9207A /* www in Resources */ = {isa = PBXBuildFile; fileRef = AB2273E41AA6FDA700F9207A /* www */; };
 		ABD3E8541A8CD08300F2BAB9 /* XWVInventoryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD3E8531A8CD08300F2BAB9 /* XWVInventoryTest.swift */; };
-		ABD3E8561A8CD3F900F2BAB9 /* XWVReflectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD3E8551A8CD3F900F2BAB9 /* XWVReflectionTest.swift */; };
 		ABD3E85E1A8CD49F00F2BAB9 /* XWVInvocationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = ABD3E85D1A8CD49F00F2BAB9 /* XWVInvocationTest.m */; };
 		ABD475E31A4129FC00F3BDEB /* XWVInvocation.h in Headers */ = {isa = PBXBuildFile; fileRef = EE62691D19FA52FC00EFC3F8 /* XWVInvocation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ABF68ECD1A6B45FC0058267B /* XWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = EE62691C19FA52FC00EFC3F8 /* XWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EE0A1DD31A52775400C9E6D3 /* XWVChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */; };
-		EE0A1DDF1A52A5A300C9E6D3 /* XWVReflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0A1DDD1A52A5A300C9E6D3 /* XWVReflection.swift */; };
 		EE0A1DE01A52A5A300C9E6D3 /* XWVStubGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0A1DDE1A52A5A300C9E6D3 /* XWVStubGenerator.swift */; };
 		EE174E451A01FDDE00168D96 /* XWVInventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE174E441A01FDDE00168D96 /* XWVInventory.swift */; };
 		EE174E781A0361CB00168D96 /* xwebview.js in Resources */ = {isa = PBXBuildFile; fileRef = EE174E771A0361CB00168D96 /* xwebview.js */; };
@@ -35,10 +33,12 @@
 		EE7164911A716C9F00078FF9 /* XWVHttpServer.h in Headers */ = {isa = PBXBuildFile; fileRef = EE71648D1A716C9F00078FF9 /* XWVHttpServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EE7164921A716C9F00078FF9 /* XWVHttpServer.m in Sources */ = {isa = PBXBuildFile; fileRef = EE71648E1A716C9F00078FF9 /* XWVHttpServer.m */; };
 		EE7886761A0D0CE30013A855 /* XWVLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7886751A0D0CE30013A855 /* XWVLoader.swift */; };
+		EE92C65F1B5ACF81000FE1DA /* XWVMetaObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */; };
+		EE92C6611B5AD7DB000FE1DA /* XWVMetaObjectTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE92C6601B5AD7DB000FE1DA /* XWVMetaObjectTest.swift */; };
+		EE92C6621B5AD86E000FE1DA /* XWVMetaObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */; };
 		EEE6F9A41AE02CF100A2EC89 /* XWVScripting.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE6F9A31AE02CF100A2EC89 /* XWVScripting.swift */; };
 		EEE6F9A61AE02E8600A2EC89 /* XWVObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE6F9A51AE02E8600A2EC89 /* XWVObject.swift */; };
 		EEE6F9A81AE02F5000A2EC89 /* XWVScriptPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE6F9A71AE02F5000A2EC89 /* XWVScriptPlugin.swift */; };
-		EEF27D541AE8F1C4004740CF /* XWVReflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0A1DDD1A52A5A300C9E6D3 /* XWVReflection.swift */; };
 		EEF27D551AE8F1F3004740CF /* XWVScripting.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE6F9A31AE02CF100A2EC89 /* XWVScripting.swift */; };
 		EEF27EB71AFA1D89004740CF /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EEF27EB61AFA1D89004740CF /* WebKit.framework */; };
 /* End PBXBuildFile section */
@@ -72,10 +72,8 @@
 		AB023EA41A8C506600580A2A /* XWebViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XWebViewTests.swift; sourceTree = "<group>"; };
 		AB2273E41AA6FDA700F9207A /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
 		ABD3E8531A8CD08300F2BAB9 /* XWVInventoryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVInventoryTest.swift; sourceTree = "<group>"; };
-		ABD3E8551A8CD3F900F2BAB9 /* XWVReflectionTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVReflectionTest.swift; sourceTree = "<group>"; };
 		ABD3E85D1A8CD49F00F2BAB9 /* XWVInvocationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XWVInvocationTest.m; sourceTree = "<group>"; };
 		EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVChannel.swift; path = XWebView/XWVChannel.swift; sourceTree = "<group>"; };
-		EE0A1DDD1A52A5A300C9E6D3 /* XWVReflection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVReflection.swift; path = XWebView/XWVReflection.swift; sourceTree = "<group>"; };
 		EE0A1DDE1A52A5A300C9E6D3 /* XWVStubGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVStubGenerator.swift; path = XWebView/XWVStubGenerator.swift; sourceTree = "<group>"; };
 		EE174E441A01FDDE00168D96 /* XWVInventory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVInventory.swift; path = XWebView/XWVInventory.swift; sourceTree = "<group>"; };
 		EE174E771A0361CB00168D96 /* xwebview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = xwebview.js; path = XWebView/xwebview.js; sourceTree = "<group>"; };
@@ -97,6 +95,8 @@
 		EE71648D1A716C9F00078FF9 /* XWVHttpServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XWVHttpServer.h; path = XWebView/XWVHttpServer.h; sourceTree = "<group>"; };
 		EE71648E1A716C9F00078FF9 /* XWVHttpServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XWVHttpServer.m; path = XWebView/XWVHttpServer.m; sourceTree = "<group>"; };
 		EE7886751A0D0CE30013A855 /* XWVLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVLoader.swift; path = XWebView/XWVLoader.swift; sourceTree = "<group>"; };
+		EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVMetaObject.swift; path = XWebView/XWVMetaObject.swift; sourceTree = "<group>"; };
+		EE92C6601B5AD7DB000FE1DA /* XWVMetaObjectTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVMetaObjectTest.swift; sourceTree = "<group>"; };
 		EEE6F9A31AE02CF100A2EC89 /* XWVScripting.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVScripting.swift; path = XWebView/XWVScripting.swift; sourceTree = "<group>"; };
 		EEE6F9A51AE02E8600A2EC89 /* XWVObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVObject.swift; path = XWebView/XWVObject.swift; sourceTree = "<group>"; };
 		EEE6F9A71AE02F5000A2EC89 /* XWVScriptPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVScriptPlugin.swift; path = XWebView/XWVScriptPlugin.swift; sourceTree = "<group>"; };
@@ -128,7 +128,6 @@
 			children = (
 				AB2273E41AA6FDA700F9207A /* www */,
 				ABD3E85D1A8CD49F00F2BAB9 /* XWVInvocationTest.m */,
-				ABD3E8551A8CD3F900F2BAB9 /* XWVReflectionTest.swift */,
 				EE3379381AE2E298009124A4 /* XWVTestCase.swift */,
 				EE33793F1AE57566009124A4 /* XWVScriptingTest.swift */,
 				EE2F487C1AE4B8F40088AF67 /* ObjectPlugin.swift */,
@@ -138,6 +137,7 @@
 				ABD3E8531A8CD08300F2BAB9 /* XWVInventoryTest.swift */,
 				EE30AAC31AD978DA006010A3 /* XWVLoaderTest.swift */,
 				AB023EA21A8C506600580A2A /* Supporting Files */,
+				EE92C6601B5AD7DB000FE1DA /* XWVMetaObjectTest.swift */,
 			);
 			path = XWebViewTests;
 			sourceTree = "<group>";
@@ -172,12 +172,12 @@
 		EE62683719FA323900EFC3F8 /* XWebView */ = {
 			isa = PBXGroup;
 			children = (
+				EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */,
 				EE71648B1A716C9F00078FF9 /* XWVHttpConnection.h */,
 				EE71648C1A716C9F00078FF9 /* XWVHttpConnection.m */,
 				EE71648D1A716C9F00078FF9 /* XWVHttpServer.h */,
 				EE71648E1A716C9F00078FF9 /* XWVHttpServer.m */,
 				EE62691C19FA52FC00EFC3F8 /* XWebView.h */,
-				EE0A1DDD1A52A5A300C9E6D3 /* XWVReflection.swift */,
 				EE0A1DDE1A52A5A300C9E6D3 /* XWVStubGenerator.swift */,
 				EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */,
 				EE62692019FA52FC00EFC3F8 /* XWebView.swift */,
@@ -324,9 +324,9 @@
 				EE30AAC41AD978DA006010A3 /* XWVLoaderTest.swift in Sources */,
 				AB023EA51A8C506600580A2A /* XWebViewTests.swift in Sources */,
 				EE3379401AE57566009124A4 /* XWVScriptingTest.swift in Sources */,
-				ABD3E8561A8CD3F900F2BAB9 /* XWVReflectionTest.swift in Sources */,
-				EEF27D541AE8F1C4004740CF /* XWVReflection.swift in Sources */,
+				EE92C6621B5AD86E000FE1DA /* XWVMetaObject.swift in Sources */,
 				EE2F487F1AE4CD360088AF67 /* FunctionPlugin.swift in Sources */,
+				EE92C6611B5AD7DB000FE1DA /* XWVMetaObjectTest.swift in Sources */,
 				EE2F487D1AE4B8F40088AF67 /* ObjectPlugin.swift in Sources */,
 				EE2F48811AE4CE690088AF67 /* ConstructorPlugin.swift in Sources */,
 			);
@@ -337,12 +337,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				EEE6F9A41AE02CF100A2EC89 /* XWVScripting.swift in Sources */,
-				EE0A1DDF1A52A5A300C9E6D3 /* XWVReflection.swift in Sources */,
 				EE7886761A0D0CE30013A855 /* XWVLoader.swift in Sources */,
 				EE0A1DE01A52A5A300C9E6D3 /* XWVStubGenerator.swift in Sources */,
 				EE174E451A01FDDE00168D96 /* XWVInventory.swift in Sources */,
 				EEE6F9A81AE02F5000A2EC89 /* XWVScriptPlugin.swift in Sources */,
 				EE7164921A716C9F00078FF9 /* XWVHttpServer.m in Sources */,
+				EE92C65F1B5ACF81000FE1DA /* XWVMetaObject.swift in Sources */,
 				EEE6F9A61AE02E8600A2EC89 /* XWVObject.swift in Sources */,
 				EE62692419FA52FC00EFC3F8 /* XWVInvocation.m in Sources */,
 				EE33793E1AE56875009124A4 /* XWVScriptObject.swift in Sources */,

@@ -23,8 +23,8 @@ import Foundation
     optional static func isSelectorForConstructor(selector: Selector) -> Bool
     optional static func isSelectorForDefaultMethod(selector: Selector) -> Bool
 
-    optional static func scriptNameForKey(name: UnsafePointer<Int8>) -> String
-    optional static func scriptNameForSelector(selector: Selector) -> String
+    optional static func scriptNameForKey(name: UnsafePointer<Int8>) -> String?
+    optional static func scriptNameForSelector(selector: Selector) -> String?
     optional static func isSelectorExcludedFromScript(selector: Selector) -> Bool
     optional static func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool
 }

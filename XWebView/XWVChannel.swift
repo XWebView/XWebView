@@ -22,7 +22,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     public let thread: NSThread!
     public let queue: dispatch_queue_t!
     private(set) public weak var webView: WKWebView?
-    var typeInfo: XWVReflection!
+    var typeInfo: XWVMetaObject!
 
     private var instances = [Int: XWVScriptPlugin]()
     private var userScript: WKUserScript?
@@ -56,7 +56,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     public func bindPlugin(object: AnyObject, toNamespace namespace: String) -> XWVScriptObject? {
         assert(typeInfo == nil)
         webView?.configuration.userContentController.addScriptMessageHandler(self, name: name)
-        typeInfo = XWVReflection(plugin: object.dynamicType)
+        typeInfo = XWVMetaObject(plugin: object.dynamicType)
         let plugin = XWVScriptPlugin(namespace: namespace, channel: self, object: object)
         let stub = XWVStubGenerator(channel: self).generateForNamespace(namespace, object: plugin)
         userScript = webView?.injectScript((object as? XWVScripting)?.javascriptStub?(stub) ?? stub)
@@ -89,10 +89,10 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                         let object = instances.removeValueForKey(target)
                         assert(object != nil)
                     }
-                } else if typeInfo.hasProperty(opcode) {
+                } else if let member = typeInfo[opcode] where member.isProperty {
                     // Update property
                     object.updateNativeProperty(opcode, withValue: body["$operand"])
-                } else if typeInfo.hasMethod(opcode) {
+                } else if let member = typeInfo[opcode] where member.isMethod {
                     // Invoke method
                     let args = body["$operand"] as? [AnyObject]
                     object.invokeNativeMethod(opcode, withArguments: args)

@@ -17,36 +17,35 @@
 import Foundation
 
 class XWVStubGenerator {
-    let typeInfo: XWVReflection
+    let typeInfo: XWVMetaObject
     let channelName: String
 
     convenience init(channel: XWVChannel) {
         self.init(channelName: channel.name, typeInfo: channel.typeInfo)
     }
-    init(channelName: String, typeInfo: XWVReflection) {
+    init(channelName: String, typeInfo: XWVMetaObject) {
         self.channelName = channelName
         self.typeInfo = typeInfo
     }
 
     func generateForNamespace(namespace: String, object: XWVScriptPlugin? = nil) -> String {
         var stub = "(function(exports) {\n"
-        for name in typeInfo.allMembers {
-            if typeInfo.hasMethod(name) {
+        for (name, member) in typeInfo {
+            if member.isMethod || member.isInitializer {
                 stub += "exports.\(name) = \(generateForMethod(name))\n"
-            } else if typeInfo.hasProperty(name) {
+            } else if member.isProperty {
                 let value = object?.serialize(object?[name]) ?? "undefined"
-                let readonly = typeInfo.isReadonly(name)
-                stub += "XWVPlugin.defineProperty(exports, '\(name)', \(value), \(!readonly));\n"
+                stub += "XWVPlugin.defineProperty(exports, '\(name)', \(value), \(member.setter != nil));\n"
             }
         }
         stub += "\n})(XWVPlugin.create(\(channelName), '\(namespace)'"
-        if typeInfo.constructor != nil {
+        if typeInfo["$constructor"] != nil {
             var ctor = namespace.pathExtension.isEmpty ? namespace : namespace.pathExtension
             if let idx = find(ctor, "[") {
                 ctor = prefix(ctor, distance(ctor.startIndex, idx))
             }
             stub += ", function \(ctor)(){this.$constructor.apply(this, arguments);}"
-        } else if typeInfo.hasMethod("$default") {
+        } else if typeInfo["$default"] != nil {
             stub += ", function(){return arguments.callee.$default.apply(arguments.callee, arguments);}"
         }
         stub += "));\n"
@@ -55,7 +54,7 @@ class XWVStubGenerator {
 
     private func generateForMethod(name: String) -> String {
         let this = "this"
-        var params = typeInfo.selector(forMethod: name).description.componentsSeparatedByString(":")
+        var params = split(typeInfo[name]!.selector!.description, allowEmptySlices: true) {$0 == ":"}
         params.removeLast()
 
         // deal with parameters without external name

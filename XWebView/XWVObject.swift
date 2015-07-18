@@ -57,7 +57,7 @@ public class XWVObject : NSObject {
     func serialize(object: AnyObject?) -> String {
         var obj: AnyObject? = object
         if let val = obj as? NSValue {
-            obj = val.isObject ? val.nonretainedObjectValue : obj as? NSNumber
+            obj = val as? NSNumber ?? val.nonretainedObjectValue
         }
 
         if let o = obj as? XWVObject {
