@@ -18,10 +18,8 @@ import Foundation
 
 @objc public protocol XWVScripting : class {
     optional func javascriptStub(stub: String) -> String
+    optional func invokeDefaultMethodWithArguments(args: [AnyObject]!) -> AnyObject!
     optional func finalizeForScript()
-
-    optional static func isSelectorForConstructor(selector: Selector) -> Bool
-    optional static func isSelectorForDefaultMethod(selector: Selector) -> Bool
 
     optional static func scriptNameForKey(name: UnsafePointer<Int8>) -> String?
     optional static func scriptNameForSelector(selector: Selector) -> String?

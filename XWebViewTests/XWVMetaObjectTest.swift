@@ -18,77 +18,161 @@ import XCTest
 import XWebView
 
 /* NOTICE:
-Because XWVReflection is not public, we have to add XWVReflection.swift
+Because XWVMetaObject is not public, we have to add XWVMetaObject.swift
 along with XWVScripting.swift to the test target. So we have to use
 XWebView.XWVScripting to reference the original XWVScripting protocol
 in all of other test cases.
 */
 
-class ClassForMetaObjectTest : NSObject, XWVScripting {
-    dynamic var property: String = "normal"
-    let readonlyProperty: Int = 0
-    let excludedProperty: AnyObject? = nil
-
-    init(argument: AnyObject?) {}
-    func defaultMethod() {}
-    func method(#argument: AnyObject?) {}
-    func method() {}
-    func excludedMethod() {}
-
-    class func isSelectorForConstructor(selector: Selector) -> Bool {
-        return selector == Selector("initWithArgument:")
-    }
-    class func isSelectorForDefaultMethod(selector: Selector) -> Bool {
-        return selector == Selector("defaultMethod")
-    }
-    class func isSelectorExcludedFromScript(selector: Selector) -> Bool {
-        return selector == Selector("excludedMethod")
-    }
-    class func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool {
-        return String(UTF8String: name) == "excludedProperty"
-    }
-}
-
 class XWVMetaObjectTest: XCTestCase {
-    lazy var typeInfo = XWVMetaObject(plugin: ClassForMetaObjectTest.self)
-
-    func testMembers() {
-        XCTAssertTrue(typeInfo["property"] != nil)
-        XCTAssertTrue(typeInfo["readonlyProperty"] != nil)
-        XCTAssertTrue(typeInfo["methodWithArgument"] != nil)
-        XCTAssertTrue(typeInfo["method"] != nil)
-        XCTAssertTrue(typeInfo["$constructor"] != nil)
-        XCTAssertTrue(typeInfo["$default"] != nil)
-        XCTAssertTrue(typeInfo["excludedProperty"] == nil)
-        XCTAssertTrue(typeInfo["excludedMethod"] == nil)
+    func testForMethod() {
+        class TestForMethod {
+            @objc init() {}
+            @objc func method() {}
+            @objc func method(#argument: AnyObject?) {}
+            @objc func _method() {}
+        }
+        let meta = XWVMetaObject(plugin: TestForMethod.self)
+        if let member = meta["method"] {
+            XCTAssertTrue(member.isMethod)
+            XCTAssertTrue(member.selector == Selector("method"))
+            XCTAssertTrue(member.type == "#0a")
+        } else {
+            XCTFail()
+        }
+        if let member = meta["methodWithArgument"] {
+            XCTAssertTrue(member.isMethod)
+            XCTAssertTrue(member.selector == Selector("methodWithArgument:"))
+            XCTAssertTrue(member.type == "#1a")
+        } else {
+            XCTFail()
+        }
+        XCTAssertTrue(meta["init"] == nil)
+        XCTAssertTrue(meta["_method"] == nil)
     }
 
-    func testMethods() {
-        XCTAssertTrue(typeInfo["methodWithArgument"]!.isMethod)
-        XCTAssertTrue(typeInfo["method"]!.isMethod)
-        XCTAssertTrue(typeInfo["$constructor"]!.isInitializer)
-        XCTAssertTrue(typeInfo["$default"]!.isMethod)
+    func testForProperty() {
+        class TestForProperty {
+            @objc var property = 0
+            @objc let readonlyProperty = 0
+            @objc var _property = 0
+        }
+        let meta = XWVMetaObject(plugin: TestForProperty.self)
+        if let member = meta["property"] {
+            XCTAssertTrue(member.isProperty)
+            XCTAssertTrue(member.getter == Selector("property"))
+            XCTAssertTrue(member.setter == Selector("setProperty:"))
+        } else {
+            XCTFail()
+        }
+        if let member = meta["readonlyProperty"] {
+            XCTAssertTrue(member.isProperty)
+            XCTAssertTrue(member.getter == Selector("readonlyProperty"))
+            XCTAssertTrue(member.setter == Selector())
+        } else {
+            XCTFail()
+        }
+        XCTAssertTrue(meta["_property"] == nil)
     }
 
-    func testProperties() {
-        XCTAssertTrue(typeInfo["property"]!.isProperty)
-        XCTAssertTrue(typeInfo["readonlyProperty"]!.isProperty)
+    func testForPromise() {
+        class TestForPromise {
+            @objc func method(#promiseObject: XWVScriptObject) {}
+            @objc func method(#argument: AnyObject?, promiseObject: XWVScriptObject) {}
+        }
+        let meta = XWVMetaObject(plugin: TestForPromise.self)
+        if let member = meta["methodWithPromiseObject"] {
+            XCTAssertTrue(member.isMethod)
+            XCTAssertTrue(member.selector == Selector("methodWithPromiseObject:"))
+            XCTAssertTrue(member.type == "#1p")
+        } else {
+            XCTFail()
+        }
+        if let member = meta["methodWithArgument"] {
+            XCTAssertTrue(member.isMethod)
+            XCTAssertTrue(member.selector == Selector("methodWithArgument:promiseObject:"))
+            XCTAssertTrue(member.type == "#2p")
+        } else {
+            XCTFail()
+        }
+    }
+    func testForExclusion() {
+        class TestForExclusion: XWVScripting {
+            @objc let property = 0
+            @objc func method() {}
+            @objc class func isSelectorExcludedFromScript(selector: Selector) -> Bool {
+                return selector == Selector("method")
+            }
+            @objc class func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool {
+                return String(UTF8String: name) == "property"
+            }
+        }
+        let meta = XWVMetaObject(plugin: TestForExclusion.self)
+        XCTAssertTrue(meta["property"] == nil)
+        XCTAssertTrue(meta["method"] == nil)
     }
 
-    func testSelectorOfMethod() {
-        XCTAssertTrue(typeInfo["methodWithArgument"]?.selector == Selector("methodWithArgument:"))
-        XCTAssertTrue(typeInfo["method"]?.selector == Selector("method"))
-        XCTAssertTrue(typeInfo["$constructor"]?.selector == Selector("initWithArgument:"))
-        XCTAssertTrue(typeInfo["$default"]?.selector == Selector("defaultMethod"))
+    func testForFunction() {
+        class TestForFunction : XWVScripting {
+            @objc func defaultMethod() {}
+            @objc class func scriptNameForSelector(selector: Selector) -> String? {
+                return selector == Selector("defaultMethod") ? "" : nil
+            }
+        }
+        let meta = XWVMetaObject(plugin: TestForFunction.self)
+        if let member = meta[""] {
+            XCTAssertTrue(member.isMethod)
+            XCTAssertTrue(member.selector == Selector("defaultMethod"))
+            XCTAssertTrue(member.type == "#0a")
+        } else {
+            XCTFail()
+        }
     }
 
-    func testGetterOfProperty() {
-        XCTAssertTrue(typeInfo["property"]?.getter == Selector("property"))
-        XCTAssertTrue(typeInfo["readonlyProperty"]?.getter == Selector("readonlyProperty"))
+    func testForFunction2() {
+        class TestForFunction : XWVScripting {
+            @objc func invokeDefaultMethodWithArguments(args: [AnyObject]!) -> AnyObject! {
+                return nil
+            }
+        }
+        let meta = XWVMetaObject(plugin: TestForFunction.self)
+        if let member = meta[""] {
+            XCTAssertTrue(member.isMethod)
+            XCTAssertTrue(member.selector == Selector("invokeDefaultMethodWithArguments:"))
+            XCTAssertTrue(member.type == "")
+        } else {
+            XCTFail()
+        }
     }
 
-    func testSetterOfProperty() {
-        XCTAssertTrue(typeInfo["property"]?.setter == Selector("setProperty:"))
-        XCTAssertTrue(typeInfo["readonlyProperty"]?.setter == Selector())
+    func testForConstructor() {
+        @objc class TestForConstructor : XWVScripting {
+            @objc init(argument: AnyObject?) {}
+            @objc class func scriptNameForSelector(selector: Selector) -> String? {
+                return selector == Selector("initWithArgument:") ? "" : nil
+            }
+        }
+        let meta = XWVMetaObject(plugin: TestForConstructor.self)
+        if let member = meta[""] {
+            XCTAssertTrue(member.isInitializer)
+            XCTAssertTrue(member.selector == Selector("initWithArgument:"))
+            XCTAssertTrue(member.type == "#2p")
+        } else {
+            XCTFail()
+        }
+    }
+
+    func testForConstructor2() {
+        class TestForConstructor {
+            @objc init(byScriptWithArguments: [AnyObject]) {}
+        }
+        let meta = XWVMetaObject(plugin: TestForConstructor.self)
+        if let member = meta[""] {
+            XCTAssertTrue(member.isInitializer)
+            XCTAssertTrue(member.selector == Selector("initByScriptWithArguments:"))
+            XCTAssertTrue(member.type == "#p")
+        } else {
+            XCTFail()
+        }
     }
 }

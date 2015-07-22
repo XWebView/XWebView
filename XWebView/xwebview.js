@@ -12,220 +12,195 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- */
+*/
 
-XWVPlugin = function(channel) {
-    this.$channel = channel;
+XWVPlugin = function(channelName) {
+    var channel = webkit.messageHandlers[channelName];
+    if (!channel) throw 'channel has not established';
+
+    Object.defineProperty(this, '$channel', {'configurable': true, 'value': channel});
+    Object.defineProperty(this, '$references', {'configurable': true, 'value': []});
+    Object.defineProperty(this, '$lastRefID', {'configurable': true, 'value': 1, 'writable': true});
 }
 
-XWVPlugin.create = function(channel, namespace, base) {
-    if (!webkit.messageHandlers[channel])
-        return null;  // channel has not established
-
-    // check namespace
-    var obj = window;
-    var ns = namespace.split('.');
-    var last = ns.pop();
-    ns.forEach(function(p){
-        if (!obj[p]) obj[p] = {};
-        obj = obj[p];
-    });
-    if (obj[last] instanceof this)
-        return null;  // channel is occupied
-
-    if (base instanceof Function && base.name != "") {
-        obj[last] = base;
-        base.$lastInstID = 1;
-        base.prototype = new this(channel);
-        base.prototype.constructor = base;
-        base.destroy = function() {
-            for (var i in this) {
-                if (!isNaN(Number(i)))
-                    this[i].destroy();
-            }
-            this.prototype.destroy();
-        }
-        return base.prototype;
-    } else {
-        if (base instanceof Object)
-            this.aggregate(base, this, [channel]);
-        else
-            base = new this(channel);
-        return obj[last] = base;
+XWVPlugin.createNamespace = function(namespace, object) {
+    function callback(p, c, i, a) {
+        if (i < a.length - 1)
+            return (p[c] = p[c] || {});
+        if (p[c] instanceof XWVPlugin)
+            p[c].dispose();
+        return (p[c] = object || {});
     }
+    return namespace.split('.').reduce(callback, window);
+}
+
+XWVPlugin.createPlugin = function(channelName, namespace, base) {
+    if (typeof(base) === "string") {
+        // Plugin object is a constructor
+        return XWVPlugin.createConstructor(channelName, namespace, base);
+    }
+
+    if (base instanceof Object) {
+        // Plugin is a mixin object which contains both JavaScript and native methods/properties.
+        var properties = {};
+        Object.getOwnPropertyNames(XWVPlugin.prototype).forEach(function(p) {
+            properties[p] = Object.getOwnPropertyDescriptor(this, p);
+        }, XWVPlugin.prototype);
+        base.__proto__ = Object.create(Object.getPrototypeOf(base), properties);
+        XWVPlugin.call(base, channelName);
+    } else {
+        base = new XWVPlugin(channelName);
+    }
+    return XWVPlugin.createNamespace(namespace, base);
+}
+
+XWVPlugin.createConstructor = function(channelName, namespace, type) {
+    var ctor = function() {
+        // Instance must can be accessed by native object in global context.
+        var ctor = this.constructor;
+        while (ctor[ctor.$lastInstID] != undefined)
+            ++ctor.$lastInstID;
+        Object.defineProperty(this, '$instanceID', {'configurable': true, 'value': ctor.$lastInstID});
+        ctor[this.$instanceID] = this;
+
+        // Create and initialize native object asynchronously.
+        // So constructor should always return a Promise object.
+        Object.defineProperty(this, '$properties', {'configurable': true, 'value': {}});
+        return XWVPlugin.invokeNative.apply(this, arguments);
+    }
+
+    // Principal instance (which id is 0) is the prototype object.
+    var proto = new XWVPlugin(channelName);
+    ctor.prototype = proto;
+    ctor = ctor.bind(null, '+' + (type || '#p'));
+    proto.constructor = ctor;
+    //ctor.prototype = proto;  // comment to hide prototype object
+    ctor.$lastInstID = 1;
+    ctor.dispose = function() {
+        Object.keys(this).forEach(function(i){
+            if (this[i] instanceof XWVPlugin)
+                this[i].dispose();
+        }, this);
+        proto.dispose();
+        delete this.$lastInstID;
+    }
+    XWVPlugin.createNamespace(namespace, ctor);
+    return proto;
 }
 
 XWVPlugin.defineProperty = function(obj, prop, value, writable) {
-    var desc = {
-        'configurable': false,
-        'enumerable': true,
-        'get': function() { return this.$properties[prop]; }
-    }
+    var desc = {'configurable': false, 'enumerable': true };
     if (writable) {
-        desc.set = function(v) {
-            this.$invokeNative(prop, v);
-            this.$properties[prop] = v;
-        }
+        // For writable property, any change of its value must be synchronized to native object.
+        if (!obj.$properties)
+            Object.defineProperty(obj, '$properties', {'configurable': true, 'value': {}});
+        obj.$properties[prop] = value;
+        desc.get = function() { return this.$properties[prop]; }
+        if (obj.constructor.$lastInstID)
+            desc.set = function(v) {XWVPlugin.invokeNative.call(this, prop, v);}
+        else
+            desc.set = XWVPlugin.invokeNative.bind(obj, prop);
+    } else {
+        desc.value = value;
+        desc.writable = false;
     }
-    if (!obj.$properties)  obj.$properties = {};
-    obj.$properties[prop] = value;
     Object.defineProperty(obj, prop, desc);
 }
 
-XWVPlugin.aggregate = function(obj, constructor, args) {
-    var ctor = constructor;
-    if (typeof(ctor) === 'string' || ctor instanceof String)
-        ctor = this[ctor];
-    if (!(ctor instanceof Function) || !(ctor.prototype instanceof Object))
-        return;
-    function clone(obj) {
-        var copy = {};
-        var keys = Object.getOwnPropertyNames(obj);
-        for (var i in keys)
-            copy[keys[i]] = obj[keys[i]];
-        return copy;
+XWVPlugin.invokeNative = function(name) {
+    if (typeof(name) != 'string' && !(name instanceof String))
+        throw 'Invalid invocation';
+
+    var args = Array.prototype.slice.call(arguments, 1);
+    if (name.lastIndexOf('#') >= 0) {
+        // Parse type coding
+        var t = name.split('#');
+        name = t[0];
+        args.length = parseInt(t[1], 10) || args.length;
+        if (t[1].slice(-1) == 'p') {
+            // Return a Promise object for async operation
+            args.unshift(name);
+            return Promise((function(args, resolve, reject) {
+                args[args.length - 1] = {'resolve': resolve, 'reject': reject};
+                XWVPlugin.invokeNative.apply(this, args);
+            }).bind(this, args));
+        }
     }
-    var p = clone(ctor.prototype);
-    p.__proto__ = Object.getPrototypeOf(obj);
-    obj.__proto__ = p;
-    ctor.apply(obj, args);
+
+    var operand = [];
+    if (this.$properties && this.$properties.hasOwnProperty(name)) {
+        // Update property
+        operand = this.$retainObject(args[0]);
+        this.$properties[name] = args[0];
+    } else {
+        // Invoke method
+        args.forEach(function(v, i, a) {
+            operand[i] = this.$retainObject(v);
+        }, this);
+        // Set null for omitted arguments
+        if (operand.length < args.length)
+            operand.fill(null, operand.length, args.length);
+    }
+    this.$channel.postMessage({
+        '$opcode':  name,
+        '$operand': operand,
+        '$target':  this.$instanceID
+    });
 }
 
-XWVPlugin.prototype = {
-    $retainIfNeeded: function(obj) {
-        function isSerializable(obj) {
-            if (!(obj instanceof Object))
-                return true;
-            if (obj instanceof Function)
-                return false;
-            // TODO: support other types of object (eg. ArrayBuffer)
-            // See WebCode::CloneSerializer::dumpIfTerminal() in
-            // Source/WebCore/bindings/js/SerializedScriptValue.cpp
-            if (obj instanceof Boolean ||
-                obj instanceof Date ||
-                obj instanceof Number ||
-                obj instanceof RegExp ||
-                obj instanceof String)
-                return true;
-            for (var p of Object.getOwnPropertyNames(obj))
-                if (!arguments.callee(obj[p]))
-                    return false;
+XWVPlugin.shouldPassByValue = function(obj) {
+    // See comment in Source/WebCore/bindings/js/SerializedScriptValue.cpp
+    var terminal = [
+        ArrayBuffer, Blob, Boolean, DataView, Date,
+        File, FileList, Float32Array, Float64Array,
+        ImageData, Int16Array, Int32Array, Int8Array,
+        MessagePort, Number, RegExp, String, Uint16Array,
+        Uint32Array, Uint8Array, Uint8ClampedArray
+    ];
+    var container = [Array, Map, Object, Set];
+    if (obj instanceof Object) {
+        if (terminal.some(function(ctor) { return obj.constructor === ctor; }))
             return true;
+        if (container.some(function(ctor) { return obj.constructor === ctor; })) {
+            var self = arguments.callee;
+            return Object.getOwnPropertyNames(obj).every(function(prop) {
+                return self(obj[prop]);
+            });
         }
+        return false;
+    }
+    return true;
+}
 
-        // Only serializable objects can be passed by value.
-        return isSerializable(obj) ? obj : this.$retainObject(obj);
-    },
-    $retainObject: function(obj) {
-        if (!this.hasOwnProperty('$references')) {
-            this.$lastRefID = 1;
-            this.$references = [];
-        }
+
+XWVPlugin.prototype = {
+    $retainObject: function(obj, force) {
+        if (!force && XWVPlugin.shouldPassByValue(obj))
+            return obj;
 
         while (this.$references[this.$lastRefID] != undefined)
             ++this.$lastRefID;
         this.$references[this.$lastRefID] = obj;
-
-        return {
-            '$sig': 0x5857574F,
-            '$ref': this.$lastRefID++
-        }
+        return {'$sig': 0x5857574F, '$ref': this.$lastRefID++};
     },
     $releaseObject: function(refid) {
         delete this.$references[refid];
         this.$lastRefID = refid;
     },
+    dispose: function() {
+        this.$channel.postMessage({'$opcode': '-', '$target': this.$instanceID});
 
-    $invokeNative: function(name, args) {
-        if (typeof(name) != 'string' && !(name instanceof String)) {
-            console.error('Invalid invocation');
-            return;
-        }
-
-        var channel = this.$channel;
-        var target = this.$instanceID;
-        var operand = null;
-
-        if (name == '+') {
-            // Create instance
-            var ctor = this.constructor;
-            while (ctor[ctor.$lastInstID] != undefined)
-                ++ctor.$lastInstID;
-            target = this.$instanceID = ctor.$lastInstID;
-            ctor[target] = this;
-            // Setup properties
-            this.$properties = {};
-            for (var i in this.__proto__.$properties)
-                this.$properties[i] = this.__proto__.$properties[i];
-        } else if (name == '-') {
-            // Destroy instance
-            this.constructor.$lastInstID = target;
-            delete this.constructor[target];
-            // Cleanup object
-            delete this.$channel;
-            delete this.$properties;
-            delete this.$references;
+        delete this.$channel;
+        delete this.$properties;
+        delete this.$references;
+        delete this.$lastRefID;
+        if (this.$instanceID) {
+            // Dispose instance
+            this.constructor.$lastInstID = this.$instanceID;
+            delete this.constructor[this.$instanceID];
             delete this.$instanceID;
-            delete this.$lastRefID;
             this.__proto__ = Object.getPrototypeOf(this.__proto__);
         }
-
-        if (this.$properties && this.$properties.hasOwnProperty(name)) {
-            // Update property
-            operand = this.$retainIfNeeded(args);
-        } else if (this[name] instanceof Function || name == '+') {
-            // Invoke method
-            operand = [];
-            args.forEach(function(v, i, a) {
-                operand[i] = this.$retainIfNeeded(v);
-            }, this);
-        }
-        webkit.messageHandlers[channel].postMessage({
-            '$opcode': name,
-            '$operand': operand,
-            '$target': target
-        });
-    },
-    destroy: function() {
-        this.$invokeNative('-');
-    }
-}
-
-// A simple implementation of EventTarget interface
-XWVPlugin.EventTarget = function() {
-    this.$listeners = {}
-}
-
-XWVPlugin.EventTarget.prototype = {
-    addEventListener: function(type, listener, capture) {
-        if (!listener)  return;
-
-        var list = this.$listeners[type];
-        if (!list) {
-            list = new Array();
-            this.$listeners[type] = list;
-        } else if (list.indexOf(listener) >= 0) {
-            return;
-        }
-        list.push(listener);
-    },
-    removeEventListener: function(type, listener, capture) {
-        var list = this.$listeners[type];
-        if (!list || !listener)
-            return;
-        var i = list.indexOf(listener);
-        if (i >= 0)
-            list.splice(i, 1);
-    },
-    dispatchEvent: function(event) {
-        var list = this.$listeners[event.type];
-        if (!list)  return;
-        for (var i = 0; i < list.length; ++i) {
-            var func = list[i];
-            if (!(func instanceof Function))
-                func = func.handleEvent;
-            func(event);
-        }
-        return true;
+        this.__proto__ = Object.getPrototypeOf(this.__proto__);
     }
 }

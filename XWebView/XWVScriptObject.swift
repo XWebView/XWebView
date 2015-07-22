@@ -89,7 +89,7 @@ public class XWVScriptObject : XWVObject {
     }
 
     private func scriptForRetaining(script: String) -> String {
-        return "\(origin.namespace).$retainIfNeeded(\(script))"
+        return "\(origin.namespace).$retainObject(\(script))"
     }
     private func scriptForFetchingProperty(name: String!) -> String {
         if name == nil {

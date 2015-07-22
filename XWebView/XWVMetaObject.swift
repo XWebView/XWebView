@@ -77,12 +77,34 @@ class XWVMetaObject: CollectionType {
                 return nil
             }
         }
+        var type: String {
+            let promise: Bool
+            let arity: Int32
+            switch self {
+            case let .Method(selector, a):
+                promise = selector.description.hasSuffix(":promiseObject:") ||
+                          selector.description.hasSuffix("PromiseObject:")
+                arity = a
+            case let .Initializer(selector, a):
+                promise = true
+                arity = a < 0 ? a: a + 1
+            default:
+                promise = false
+                arity = -1
+            }
+            if !promise && arity < 0 {
+                return ""
+            }
+            return "#" + (arity >= 0 ? "\(arity)" : "") + (promise ? "p" : "a")
+        }
     }
 
     let plugin: AnyClass
     private var members = [String: Member]()
     private static let exclusion: Set<Selector> = {
-        return instanceMethods(forProtocol: XWVScripting.self).union([
+        var methods = instanceMethods(forProtocol: XWVScripting.self)
+        methods.remove(Selector("invokeDefaultMethodWithArguments:"))
+        return methods.union([
             Selector(".cxx_construct"),
             Selector(".cxx_destruct"),
             Selector("dealloc"),
@@ -94,7 +116,7 @@ class XWVMetaObject: CollectionType {
         self.plugin = plugin
         let cls: AnyClass = plugin
         enumerateExcluding(self.dynamicType.exclusion) {
-            (var name, member) -> Bool in
+            (var name, var member) -> Bool in
             switch member {
             case let .Method(selector, _):
                 if let end = find(name, ":") {
@@ -104,8 +126,9 @@ class XWVMetaObject: CollectionType {
                     if cls.isSelectorExcludedFromScript?(selector) ?? false {
                         return true
                     }
-                    if cls.isSelectorForDefaultMethod?(selector) ?? false {
-                        name = "$default"
+                    if selector == Selector("invokeDefaultMethodWithArguments:") {
+                        member = .Method(selector: selector, arity: -1)
+                        name = ""
                     } else {
                         name = cls.scriptNameForSelector?(selector) ?? name
                     }
@@ -126,12 +149,13 @@ class XWVMetaObject: CollectionType {
                 }
 
             case let .Initializer(selector, _):
-                if cls.conformsToProtocol(XWVScripting.self) {
-                    if cls.isSelectorForConstructor?(selector) ?? false  {
-                        name = "$constructor"
-                    }
+                if selector == Selector("initByScriptWithArguments:") {
+                    member = .Initializer(selector: selector, arity: -1)
+                    name = ""
+                } else if cls.conformsToProtocol(XWVScripting.self) {
+                    name = cls.scriptNameForSelector?(selector) ?? name
                 }
-                if first(name) != "$" {
+                if !name.isEmpty {
                     return true
                 }
             }

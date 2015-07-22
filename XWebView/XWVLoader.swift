@@ -24,23 +24,20 @@ public class XWVLoader: NSObject, XWVScripting {
         super.init()
     }
 
-    func defaultMethod(namespace: String, argument: AnyObject?, _Promise: XWVScriptObject) {
+    func defaultMethod(namespace: String, argument: AnyObject?, promiseObject: XWVScriptObject) {
         if let plugin: AnyClass = _inventory.plugin(forNamespace: namespace), let channel = scriptObject?.channel {
             let initializer = Selector(argument == nil ? "init" : "initWitArgument:")
             let args: [AnyObject]? = argument == nil ? nil : [argument!]
             let object = XWVInvocation.constructOnThread(channel.thread, `class`: plugin, initializer: initializer, arguments: args) as! NSObject!
             if object != nil, let obj = channel.webView?.loadPlugin(object, namespace: namespace) {
-                _Promise.callMethod("resolve", withArguments: [obj], resultHandler: nil)
+                promiseObject.callMethod("resolve", withArguments: [obj], resultHandler: nil)
                 return
             }
         }
-        _Promise.callMethod("reject", withArguments: nil, resultHandler: nil)
+        promiseObject.callMethod("reject", withArguments: nil, resultHandler: nil)
     }
 
-    public class func isSelectorForDefaultMethod(selector: Selector) -> Bool {
-        return selector == Selector("defaultMethod:argument:_Promise:")
-    }
-    public class func isSelectorExcludedFromScript(selector: Selector) -> Bool {
-        return selector != Selector("defaultMethod:argument:_Promise:")
+    public class func scriptNameForSelector(selector: Selector) -> String? {
+        return selector == Selector("defaultMethod:argument:promiseObject:") ? "" : nil
     }
 }

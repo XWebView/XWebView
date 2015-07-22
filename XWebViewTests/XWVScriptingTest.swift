@@ -50,7 +50,7 @@ class XWVScriptingTest : XWVTestCase {
 
     func testFinalizeForScript() {
         let desc = "finalizeForScript"
-        let script = "\(namespace).destroy()"
+        let script = "\(namespace).dispose()"
         let expectation = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: expectation), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)

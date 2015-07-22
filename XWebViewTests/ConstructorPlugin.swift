@@ -33,8 +33,8 @@ class ConstructorPlugin : XWVTestCase {
                 scriptObject?.webView?.evaluateJavaScript("fulfill('finalizeForScript')", completionHandler: nil)
             }
         }
-        class func isSelectorForConstructor(selector: Selector) -> Bool {
-            return selector == Selector("initWithValue:")
+        class func scriptNameForSelector(selector: Selector) -> String? {
+            return selector == Selector("initWithValue:") ? "" : nil
         }
     }
     class Plugin2 : NSObject, XWebView.XWVScripting {
@@ -42,8 +42,8 @@ class ConstructorPlugin : XWVTestCase {
         init(expectation: AnyObject?) {
             (expectation as? XWVScriptObject)?.callMethod("fulfill", withArguments: nil, resultHandler: nil)
         }
-        class func isSelectorForConstructor(selector: Selector) -> Bool {
-            return selector == Selector("initWithExpectation:")
+        class func scriptNameForSelector(selector: Selector) -> String? {
+            return selector == Selector("initWithExpectation:") ? "" : nil
         }
     }
 
@@ -51,14 +51,14 @@ class ConstructorPlugin : XWVTestCase {
 
     func testConstructor() {
         let desc = "constructor"
-        let script = "if (\(namespace) instanceof Function && \(namespace).prototype instanceof XWVPlugin) fulfill('\(desc)')"
+        let script = "if (\(namespace) instanceof Function) fulfill('\(desc)')"
         let expectation = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
     func testConstruction() {
         let desc = "construction"
-        let script = "if (new \(namespace)(456) instanceof \(namespace)) fulfill('\(desc)')"
+        let script = "if (new \(namespace)(456) instanceof Promise) fulfill('\(desc)')"
         let expectation = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
@@ -72,14 +72,14 @@ class ConstructorPlugin : XWVTestCase {
     }*/
     func testSyncProperties() {
         let desc = "syncProperties"
-        let script = "new \(namespace)(456, function(){if (this.property==456) fulfill('\(desc)');})"
+        let script = "(new \(namespace)(456)).then(function(o){if (o.property==456) fulfill('\(desc)');})"
         let expectation = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
     func testFinalizeForScript() {
         let desc = "finalizeForScript"
-        let script = "new \(namespace)(456, function(){this.destroy();})"
+        let script = "(new \(namespace)(456)).then(function(o){o.dispose();})"
         let expectation = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)

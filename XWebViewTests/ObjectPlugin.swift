@@ -38,6 +38,9 @@ class ObjectPlugin : XWVTestCase {
         func method(# callback: XWVScriptObject) {
             callback.call(arguments: nil, resultHandler: nil)
         }
+        func method(# promiseObject: XWVScriptObject) {
+            promiseObject.callMethod("resolve", withArguments: nil, resultHandler: nil)
+        }
         func windowObject() {
             if let test: AnyObject = scriptObject?.windowObject["test"] {
                 if (test as? NSNumber)?.integerValue == 234 {
@@ -105,6 +108,13 @@ class ObjectPlugin : XWVTestCase {
     func testCallMethodWithCallback() {
         let desc = "callMethodWithCallback"
         let script = "\(namespace).methodWithCallback(function(){fulfill('\(desc)');})"
+        let expectation = expectationWithDescription(desc)
+        loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
+        waitForExpectationsWithTimeout(3, handler: nil)
+    }
+    func testCallMethodWithPromise() {
+        let desc = "callMethodWithPromise"
+        let script = "\(namespace).methodWithPromiseObject().then(function(){fulfill('\(desc)');})"
         let expectation = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(3, handler: nil)

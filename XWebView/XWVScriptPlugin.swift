@@ -15,7 +15,7 @@
 */
 
 import Foundation
-
+import ObjectiveC
 
 class XWVScriptPlugin : XWVScriptObject {
     let key = unsafeAddressOf(XWVScriptObject)
@@ -28,24 +28,37 @@ class XWVScriptPlugin : XWVScriptObject {
         startKVO()
     }
 
-    init(namespace: String, channel: XWVChannel, arguments: [AnyObject]!) {
+    init(namespace: String, channel: XWVChannel, arguments: [AnyObject]?) {
         super.init(namespace: namespace, channel: channel, origin: nil)
-        let args = arguments.map(wrapScriptObject)
-        object = XWVInvocation.constructOnThread(channel.thread, `class`: channel.typeInfo.plugin, initializer: channel.typeInfo["$constructor"]!.selector!, arguments: args)
+        var args = arguments?.map(wrapScriptObject) ?? []
+        var selector = Selector()
+        var promise: XWVScriptObject?
+        if let member = channel.typeInfo[""] where member.isInitializer {
+            switch member {
+            case let .Initializer(sel, arity):
+                selector = sel
+                if arity == Int32(args.count) - 1 || arity < 0 {
+                    promise = last(args) as? XWVScriptObject
+                }
+            default: break
+            }
+        }
+        assert(selector != nil)
+        if selector == "initByScriptWithArguments:" {
+            args = [args]
+        }
+        object = XWVInvocation.constructOnThread(channel.thread, `class`: channel.typeInfo.plugin, initializer: selector, arguments: args)
         objc_setAssociatedObject(object, key, self, UInt(OBJC_ASSOCIATION_ASSIGN))
         startKVO()
-        setupInstance()
+        syncProperties()
+        promise?.callMethod("resolve", withArguments: [self], resultHandler: nil)
     }
-    private func setupInstance() {
+    private func syncProperties() {
         var script = ""
         for (name, member) in filter(channel.typeInfo, { $1.isProperty }) {
-            let val = XWVInvocation.callOnThread(channel.thread, target:object, selector: member.getter!, arguments: nil)
-            script += "\(namespace)['\(name)'] = \(serialize(val));\n"
+            let val = XWVInvocation.callOnThread(channel.thread, target: object, selector: member.getter!, arguments: nil)
+            script += "\(namespace).$properties['\(name)'] = \(serialize(val));\n"
         }
-        script += "if (\(namespace)['$onready'] instanceof Function) {\n" +
-            "    \(namespace).$onready();\n" +
-            "    delete \(namespace).$onready;\n" +
-        "}\n"
         webView?.evaluateJavaScript(script, completionHandler: nil)
     }
 
@@ -58,9 +71,12 @@ class XWVScriptPlugin : XWVScriptObject {
     }
 
     // Dispatch operation to plugin object
-    func invokeNativeMethod(name: String!, withArguments arguments: [AnyObject]?) {
+    func invokeNativeMethod(name: String, withArguments arguments: [AnyObject]?) {
         if let selector = channel.typeInfo[name]?.selector {
-            let args = arguments?.map(wrapScriptObject)
+            var args = arguments?.map(wrapScriptObject)
+            if object is XWVScripting && name.isEmpty && selector == Selector("invokeDefaultMethodWithArguments:") {
+                args = [args ?? []];
+            }
             if channel.queue != nil {
                 dispatch_async(channel.queue) {
                     XWVInvocation.call(object, selector: selector, arguments: args)
@@ -70,7 +86,7 @@ class XWVScriptPlugin : XWVScriptObject {
             }
         }
     }
-    func updateNativeProperty(name: String!, withValue value: AnyObject!) {
+    func updateNativeProperty(name: String, withValue value: AnyObject!) {
         if let setter = channel.typeInfo[name]?.setter {
             let val: AnyObject = wrapScriptObject(value)
             if channel.queue != nil {

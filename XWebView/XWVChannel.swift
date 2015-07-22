@@ -59,7 +59,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         typeInfo = XWVMetaObject(plugin: object.dynamicType)
         let plugin = XWVScriptPlugin(namespace: namespace, channel: self, object: object)
 
-        let stub = XWVStubGenerator(channel: self).generateForNamespace(namespace, object: plugin)
+        let stub = generateStub(plugin)
         let script = WKUserScript(source: (object as? XWVScripting)?.javascriptStub?(stub) ?? stub,
                                   injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
                                   forMainFrameOnly: true)
@@ -81,10 +81,10 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
             if let object = instances[target] {
                 if opcode == "-" {
                     if target == 0 {
-                        // Destroy plugin
+                        // Dispose plugin
                         unbind()
                     } else {
-                        // Destroy instance
+                        // Dispose instance
                         let object = instances.removeValueForKey(target)
                         assert(object != nil)
                     }
@@ -109,5 +109,36 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
             // discard unknown message
             println("WARNING: Unknown message: \(message.body)")
         }
+    }
+
+    private func generateStub(object: XWVScriptPlugin) -> String {
+        func generateMethod(this: String, name: String, prebind: Bool) -> String {
+            let stub = "XWVPlugin.invokeNative.bind(\(this), '\(name)')"
+            return prebind ? "\(stub);" : "function(){return \(stub).apply(null, arguments);}"
+        }
+
+        var base = "null"
+        var prebind = true
+        if let member = typeInfo[""] {
+            if member.isInitializer {
+                base = "'\(member.type)'"
+                prebind = false
+            } else {
+                base = generateMethod("arguments.callee", "\(member.type)", false)
+            }
+        }
+
+        var stub = "(function(exports) {\n"
+        for (name, member) in typeInfo {
+            if let selector = member.selector where !name.isEmpty {
+                let method = generateMethod(prebind ? "exports" : "this", "\(name)\(member.type)", prebind)
+                stub += "exports.\(name) = \(method)\n"
+            } else if member.isProperty {
+                let value = object.serialize(object[name])
+                stub += "XWVPlugin.defineProperty(exports, '\(name)', \(value), \(member.setter != nil));\n"
+            }
+        }
+        stub += "})(XWVPlugin.createPlugin('\(name)', '\(object.namespace)', \(base)));\n\n"
+        return stub
     }
 }
