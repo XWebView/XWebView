@@ -25,7 +25,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     var typeInfo: XWVMetaObject!
 
     private var instances = [Int: XWVScriptPlugin]()
-    private var userScript: WKUserScript?
+    private var userScript: XWVUserScript?
 
     private class var sequenceNumber: UInt {
         struct sequence{
@@ -54,24 +54,23 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     }
 
     public func bindPlugin(object: AnyObject, toNamespace namespace: String) -> XWVScriptObject? {
-        assert(typeInfo == nil)
-        webView?.configuration.userContentController.addScriptMessageHandler(self, name: name)
+        assert(webView != nil && typeInfo == nil)
+        webView!.configuration.userContentController.addScriptMessageHandler(self, name: name)
         typeInfo = XWVMetaObject(plugin: object.dynamicType)
         let plugin = XWVScriptPlugin(namespace: namespace, channel: self, object: object)
+
         let stub = XWVStubGenerator(channel: self).generateForNamespace(namespace, object: plugin)
-        userScript = webView?.injectScript((object as? XWVScripting)?.javascriptStub?(stub) ?? stub)
+        let script = WKUserScript(source: (object as? XWVScripting)?.javascriptStub?(stub) ?? stub,
+                                  injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
+                                  forMainFrameOnly: true)
+        userScript = XWVUserScript(webView: webView!, script: script, namespace: namespace)
+
         instances[0] = plugin
         return plugin as XWVScriptObject
     }
 
     public func unbind() {
         assert(typeInfo != nil)
-        if webView?.URL != nil {
-            webView!.evaluateJavaScript("delete \(instances[0]!.namespace);", completionHandler:nil)
-        }
-        if userScript != nil {
-            webView?.configuration.userContentController.removeUserScript(userScript!)
-        }
         instances.removeAll(keepCapacity: false)
         webView?.configuration.userContentController.removeScriptMessageHandlerForName(name)
     }

@@ -17,6 +17,7 @@
 		ABF68ECD1A6B45FC0058267B /* XWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = EE62691C19FA52FC00EFC3F8 /* XWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EE0A1DD31A52775400C9E6D3 /* XWVChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */; };
 		EE0A1DE01A52A5A300C9E6D3 /* XWVStubGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0A1DDE1A52A5A300C9E6D3 /* XWVStubGenerator.swift */; };
+		EE131CA71B5F900400A9E790 /* XWVUserScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE131CA61B5F900400A9E790 /* XWVUserScript.swift */; };
 		EE174E451A01FDDE00168D96 /* XWVInventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE174E441A01FDDE00168D96 /* XWVInventory.swift */; };
 		EE174E781A0361CB00168D96 /* xwebview.js in Resources */ = {isa = PBXBuildFile; fileRef = EE174E771A0361CB00168D96 /* xwebview.js */; };
 		EE2F487D1AE4B8F40088AF67 /* ObjectPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2F487C1AE4B8F40088AF67 /* ObjectPlugin.swift */; };
@@ -75,6 +76,7 @@
 		ABD3E85D1A8CD49F00F2BAB9 /* XWVInvocationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XWVInvocationTest.m; sourceTree = "<group>"; };
 		EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVChannel.swift; path = XWebView/XWVChannel.swift; sourceTree = "<group>"; };
 		EE0A1DDE1A52A5A300C9E6D3 /* XWVStubGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVStubGenerator.swift; path = XWebView/XWVStubGenerator.swift; sourceTree = "<group>"; };
+		EE131CA61B5F900400A9E790 /* XWVUserScript.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVUserScript.swift; path = XWebView/XWVUserScript.swift; sourceTree = "<group>"; };
 		EE174E441A01FDDE00168D96 /* XWVInventory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVInventory.swift; path = XWebView/XWVInventory.swift; sourceTree = "<group>"; };
 		EE174E771A0361CB00168D96 /* xwebview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = xwebview.js; path = XWebView/xwebview.js; sourceTree = "<group>"; };
 		EE2F487C1AE4B8F40088AF67 /* ObjectPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjectPlugin.swift; sourceTree = "<group>"; };
@@ -172,6 +174,7 @@
 		EE62683719FA323900EFC3F8 /* XWebView */ = {
 			isa = PBXGroup;
 			children = (
+				EE131CA61B5F900400A9E790 /* XWVUserScript.swift */,
 				EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */,
 				EE71648B1A716C9F00078FF9 /* XWVHttpConnection.h */,
 				EE71648C1A716C9F00078FF9 /* XWVHttpConnection.m */,
@@ -341,6 +344,7 @@
 				EE0A1DE01A52A5A300C9E6D3 /* XWVStubGenerator.swift in Sources */,
 				EE174E451A01FDDE00168D96 /* XWVInventory.swift in Sources */,
 				EEE6F9A81AE02F5000A2EC89 /* XWVScriptPlugin.swift in Sources */,
+				EE131CA71B5F900400A9E790 /* XWVUserScript.swift in Sources */,
 				EE7164921A716C9F00078FF9 /* XWVHttpServer.m in Sources */,
 				EE92C65F1B5ACF81000FE1DA /* XWVMetaObject.swift in Sources */,
 				EEE6F9A61AE02E8600A2EC89 /* XWVObject.swift in Sources */,

@@ -14,6 +14,8 @@
  limitations under the License.
 */
 
+import Foundation
+import ObjectiveC
 import WebKit
 
 extension WKWebView {
@@ -22,30 +24,17 @@ extension WKWebView {
         return channel.bindPlugin(object, toNamespace: namespace)
     }
 
-    func injectScript(code: String) -> WKUserScript {
-        let script = WKUserScript(
-            source: code,
-            injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
-            forMainFrameOnly: true)
-        configuration.userContentController.addUserScript(script)
-        if self.URL != nil {
-            evaluateJavaScript(code) { (obj, err)->Void in
-                if err != nil {
-                    println("ERROR: Failed to inject JavaScript API.\n\(err)")
-                }
-            }
-        }
-        return script
-    }
-
     func prepareForPlugin() {
         let key = unsafeAddressOf(XWVChannel)
         if objc_getAssociatedObject(self, key) == nil {
             let bundle = NSBundle(forClass: XWVChannel.self)
             if let path = bundle.pathForResource("xwebview", ofType: "js"),
-                let code = NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding, error: nil) {
-                    let script = injectScript(code as String)
-                    objc_setAssociatedObject(self, key, script, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
+                let source = NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding, error: nil) {
+                let script = WKUserScript(source: source as String,
+                                          injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
+                                          forMainFrameOnly: true)
+                let xwvplugin = XWVUserScript(webView: self, script: script, namespace: "XWVPlugin")
+                objc_setAssociatedObject(self, key, xwvplugin, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
             } else {
                 preconditionFailure("FATAL: Internal error")
             }
@@ -106,69 +95,45 @@ extension WKWebView {
 }
 
 extension WKWebView {
-    // WKWebView can't load file URL on device. We have to start an embedded http server for proxy.
-    // Upstream WebKit has solved this issue. This function should be removed once WKWebKit adopts the fix.
-    // See: https://bugs.webkit.org/show_bug.cgi?id=137153
+    // WKWebView can't load file URL on iOS 8.x devices.
+    // We have to start an embedded http server for proxy.
     public func loadFileURL(URL: NSURL, allowingReadAccessToURL readAccessURL: NSURL) -> WKNavigation? {
-        if (!URL.fileURL || !readAccessURL.fileURL) {
-            let url = URL.fileURL ? readAccessURL : URL
-            NSException.raise(NSInvalidArgumentException, format: "%@ is not a file URL", arguments: getVaList([url]))
-        }
-
+        assert(URL.fileURL && readAccessURL.fileURL)
         let fileManager = NSFileManager.defaultManager()
         var relationship: NSURLRelationship = NSURLRelationship.Other
-        var isDirectory: ObjCBool = false
-        if (!fileManager.fileExistsAtPath(readAccessURL.path!, isDirectory: &isDirectory) || !isDirectory || !fileManager.getRelationship(&relationship, ofDirectoryAtURL: readAccessURL, toItemAtURL: URL, error: nil) || relationship == NSURLRelationship.Other) {
-            return nil
-        }
+        fileManager.getRelationship(&relationship, ofDirectoryAtURL: readAccessURL, toItemAtURL: URL, error: nil)
 
+        var isDirectory: ObjCBool = false
+        if fileManager.fileExistsAtPath(readAccessURL.path!, isDirectory: &isDirectory) &&
+            isDirectory && relationship != NSURLRelationship.Other {
+            let port = startHttpd(documentRoot: readAccessURL.path!)
+            let path = URL.path![readAccessURL.path!.endIndex ..< URL.path!.endIndex]
+            let url = NSURL(string: path , relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
+            return loadRequest(NSURLRequest(URL: url!));
+        }
+        return nil
+    }
+
+    public func loadHTMLString(html: String, baseFileURL baseURL: NSURL) -> WKNavigation? {
+        assert(baseURL.fileURL)
+        let fileManager = NSFileManager.defaultManager()
+        var isDirectory: ObjCBool = false
+        if fileManager.fileExistsAtPath(baseURL.path!, isDirectory: &isDirectory) && isDirectory {
+            let port = startHttpd(documentRoot: baseURL.path!)
+            let url = NSURL(string: "http://127.0.0.1:\(port)/")
+            return loadHTMLString(html, baseURL: url)
+        }
+        return nil
+    }
+
+    private func startHttpd(documentRoot root: String) -> in_port_t {
         let key = unsafeAddressOf(XWVHttpServer)
         var httpd = objc_getAssociatedObject(self, key) as? XWVHttpServer
         if httpd == nil {
-            httpd = XWVHttpServer(documentRoot: readAccessURL.path)
+            httpd = XWVHttpServer(documentRoot: root)
             httpd!.start()
             objc_setAssociatedObject(self, key, httpd!, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
         }
-
-        let target = URL.path!.substringFromIndex(advance(URL.path!.startIndex, count(readAccessURL.path!)))
-        let url = NSURL(scheme: "http", host: "127.0.0.1:\(httpd!.port)", path: target)
-        return loadRequest(NSURLRequest(URL: url!));
-    }
-    
-    // WKWebView can't load HTML String on device with baseURL. Same problem
-    // descripted above
-    public func loadHTMLString(html: String, allowingReadAccessToBaseURL baseURL: NSURL?) -> WKNavigation? {
-        if baseURL == nil {
-            return loadHTMLString(html, baseURL: nil)
-        } else {
-            let fileManager = NSFileManager.defaultManager()
-            var isDirectory: ObjCBool = false
-            if !fileManager.fileExistsAtPath(baseURL!.path!, isDirectory: &isDirectory) || !isDirectory {
-                return nil
-            }
-            
-            let key = unsafeAddressOf(XWVHttpServer)
-            var httpd = objc_getAssociatedObject(self, key) as? XWVHttpServer
-            if httpd == nil {
-                httpd = XWVHttpServer(documentRoot: baseURL!.path)
-                httpd!.start()
-                objc_setAssociatedObject(self, key, httpd!, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
-            }
-            
-            let url = NSURL(string: "http://127.0.0.1:\(httpd!.port)/")
-            return loadHTMLString(html, baseURL: url)
-        }
-    }
-}
-
-extension WKUserContentController {
-    public func removeUserScript(script: WKUserScript) {
-        let scripts = userScripts
-        removeAllUserScripts()
-        for i in scripts {
-            if i !== script {
-                addUserScript(i as! WKUserScript)
-            }
-        }
+        return httpd!.port
     }
 }
