@@ -17,7 +17,7 @@
 import Foundation
 import ObjectiveC
 
-class XWVScriptPlugin : XWVScriptObject {
+class XWVBindingObject : XWVScriptObject {
     let key = unsafeAddressOf(XWVScriptObject)
     var object: AnyObject!
 

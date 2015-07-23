@@ -24,7 +24,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     private(set) public weak var webView: WKWebView?
     var typeInfo: XWVMetaObject!
 
-    private var instances = [Int: XWVScriptPlugin]()
+    private var instances = [Int: XWVBindingObject]()
     private var userScript: XWVUserScript?
 
     private class var sequenceNumber: UInt {
@@ -57,7 +57,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         assert(webView != nil && typeInfo == nil)
         webView!.configuration.userContentController.addScriptMessageHandler(self, name: name)
         typeInfo = XWVMetaObject(plugin: object.dynamicType)
-        let plugin = XWVScriptPlugin(namespace: namespace, channel: self, object: object)
+        let plugin = XWVBindingObject(namespace: namespace, channel: self, object: object)
 
         let stub = generateStub(plugin)
         let script = WKUserScript(source: (object as? XWVScripting)?.javascriptStub?(stub) ?? stub,
@@ -100,7 +100,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                 // Create instance
                 let args = body["$operand"] as? [AnyObject]
                 let namespace = "\(instances[0]!.namespace)[\(target)]"
-                instances[target] = XWVScriptPlugin(namespace: namespace, channel: self, arguments: args)
+                instances[target] = XWVBindingObject(namespace: namespace, channel: self, arguments: args)
             } // else Unknown opcode
         } else if let obj = instances[0]!.object as? WKScriptMessageHandler {
             // Plugin claims for raw messages
@@ -111,7 +111,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         }
     }
 
-    private func generateStub(object: XWVScriptPlugin) -> String {
+    private func generateStub(object: XWVBindingObject) -> String {
         func generateMethod(this: String, name: String, prebind: Bool) -> String {
             let stub = "XWVPlugin.invokeNative.bind(\(this), '\(name)')"
             return prebind ? "\(stub);" : "function(){return \(stub).apply(null, arguments);}"
