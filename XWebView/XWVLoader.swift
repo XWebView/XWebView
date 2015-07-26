@@ -28,7 +28,7 @@ public class XWVLoader: NSObject, XWVScripting {
         if let plugin: AnyClass = _inventory.plugin(forNamespace: namespace), let channel = scriptObject?.channel {
             let initializer = Selector(argument == nil ? "init" : "initWitArgument:")
             let args: [AnyObject]? = argument == nil ? nil : [argument!]
-            let object = XWVInvocation.constructOnThread(channel.thread, `class`: plugin, initializer: initializer, arguments: args) as! NSObject!
+            let object: AnyObject! = XWVInvocation(target: plugin.alloc()).call(initializer, withObjects: args)
             if object != nil, let obj = channel.webView?.loadPlugin(object, namespace: namespace) {
                 promiseObject.callMethod("resolve", withArguments: [obj], resultHandler: nil)
                 return

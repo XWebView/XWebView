@@ -26,6 +26,9 @@ class XWVBindingObject : XWVScriptObject {
         self.object = object
         objc_setAssociatedObject(object, key, self, UInt(OBJC_ASSOCIATION_ASSIGN))
         startKVO()
+
+        // A trick for accessing static methods of the protocol
+        XWVScripting.self
     }
 
     init(namespace: String, channel: XWVChannel, arguments: [AnyObject]?) {
@@ -39,6 +42,7 @@ class XWVBindingObject : XWVScriptObject {
                 selector = sel
                 if arity == Int32(args.count) - 1 || arity < 0 {
                     promise = last(args) as? XWVScriptObject
+                    args.removeLast()
                 }
             default: break
             }
@@ -47,7 +51,7 @@ class XWVBindingObject : XWVScriptObject {
         if selector == "initByScriptWithArguments:" {
             args = [args]
         }
-        object = XWVInvocation.constructOnThread(channel.thread, `class`: channel.typeInfo.plugin, initializer: selector, arguments: args)
+        object = XWVInvocation(target: channel.typeInfo.plugin.alloc()).call(selector, withObjects: args)
         objc_setAssociatedObject(object, key, self, UInt(OBJC_ASSOCIATION_ASSIGN))
         startKVO()
         syncProperties()
@@ -56,7 +60,7 @@ class XWVBindingObject : XWVScriptObject {
     private func syncProperties() {
         var script = ""
         for (name, member) in filter(channel.typeInfo, { $1.isProperty }) {
-            let val = XWVInvocation.callOnThread(channel.thread, target: object, selector: member.getter!, arguments: nil)
+            let val: AnyObject! = XWVInvocation(target: object).call(member.getter!, withObjects: nil)
             script += "\(namespace).$properties['\(name)'] = \(serialize(val));\n"
         }
         webView?.evaluateJavaScript(script, completionHandler: nil)
@@ -64,7 +68,7 @@ class XWVBindingObject : XWVScriptObject {
 
     deinit {
         if (object as? XWVScripting)?.finalizeForScript != nil {
-            XWVInvocation.callOnThread(channel.thread, target: object, selector: Selector("finalizeForScript"), arguments: nil)
+            XWVInvocation(target: object)[Selector("finalizeForScript")]()
         }
         objc_setAssociatedObject(object, key, nil, UInt(OBJC_ASSOCIATION_ASSIGN))
         stopKVO()
@@ -79,10 +83,11 @@ class XWVBindingObject : XWVScriptObject {
             }
             if channel.queue != nil {
                 dispatch_async(channel.queue) {
-                    XWVInvocation.call(object, selector: selector, arguments: args)
+                    XWVInvocation(target: object).call(selector, withObjects: args)
                 }
             } else {
-                XWVInvocation.asyncCallOnThread(channel.thread, target: object, selector: selector, arguments: args)
+                // FIXME: Add NSThread support back while migrate to Swift 2.0
+                XWVInvocation(target: object).call(selector, withObjects: args)
             }
         }
     }
@@ -91,10 +96,11 @@ class XWVBindingObject : XWVScriptObject {
             let val: AnyObject = wrapScriptObject(value)
             if channel.queue != nil {
                 dispatch_async(channel.queue) {
-                    XWVInvocation.call(object, selector: setter, arguments: [val])
+                    XWVInvocation(target: object).call(setter, withObjects: [val])
                 }
             } else {
-                XWVInvocation.asyncCallOnThread(channel.thread, target: object, selector: setter, arguments: [val])
+                // FIXME: Add NSThread support back while migrate to Swift 2.0
+                XWVInvocation(target: self.object)[name] = val
             }
         }
     }
@@ -102,29 +108,27 @@ class XWVBindingObject : XWVScriptObject {
     // override methods of XWVScriptObject
     override func callMethod(name: String, withArguments arguments: [AnyObject]?, resultHandler: ((AnyObject!) -> Void)?) {
         if let selector = channel.typeInfo[name]?.selector {
-            let result = XWVInvocation.call(object, selector: selector, arguments: arguments)
-            resultHandler?(result as? NSNumber ?? result.nonretainedObjectValue)
+            let result: AnyObject! = XWVInvocation(target: object).call(selector, withObjects: arguments)
+            resultHandler?(result)
         } else {
             super.callMethod(name, withArguments: arguments, resultHandler: resultHandler)
         }
     }
     override func callMethod(name: String, withArguments arguments: [AnyObject]?) -> AnyObject! {
         if let selector = channel.typeInfo[name]?.selector {
-            let result = XWVInvocation.call(object, selector: selector, arguments: arguments)
-            return result as? NSNumber ?? result.nonretainedObjectValue
+            return XWVInvocation(target: object).call(selector, withObjects: arguments)
         }
         return super.callMethod(name, withArguments: arguments)
     }
     override func value(forProperty name: String) -> AnyObject? {
         if let getter = channel.typeInfo[name]?.getter {
-            let result = XWVInvocation.call(object, selector: getter, arguments: nil)
-            return result as? NSNumber ?? result.nonretainedObjectValue
+            return XWVInvocation(target: object).call(getter, withObjects: nil)
         }
         return super.value(forProperty: name)
     }
     override func setValue(value: AnyObject?, forProperty name: String) {
         if let setter = channel.typeInfo[name]?.setter {
-            XWVInvocation.call(object, selector: setter, arguments: [value!])
+            XWVInvocation(target: object)[name] = value
         } else {
             assert(channel.typeInfo[name] == nil, "Property '\(name)' is readonly")
             super.setValue(value, forProperty: name)
@@ -136,7 +140,7 @@ class XWVBindingObject : XWVScriptObject {
         var prop = keyPath
         if channel.typeInfo[prop] == nil {
             if let scriptNameForKey = object.dynamicType.scriptNameForKey {
-                prop = scriptNameForKey((prop as NSString).UTF8String) ?? prop
+                prop = prop.withCString(scriptNameForKey) ?? prop
             }
             assert(channel.typeInfo[prop] != nil)
         }

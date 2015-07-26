@@ -12,7 +12,7 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- */
+*/
 
 #import <UIKit/UIKit.h>
 
@@ -25,4 +25,3 @@ FOUNDATION_EXPORT const unsigned char XWebViewVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <XWebView/PublicHeader.h>
 
 #import "XWVHttpServer.h"
-#import "XWVInvocation.h"
