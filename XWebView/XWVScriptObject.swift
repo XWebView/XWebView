@@ -17,27 +17,6 @@
 import Foundation
 
 public class XWVScriptObject : XWVObject {
-    // Evaluate JavaScript string
-    public func evaluateExpression(exp: String, error: NSErrorPointer = nil) -> AnyObject? {
-        if let result: AnyObject = webView?.evaluateJavaScript(scriptForRetaining(exp), error: error) {
-            return wrapScriptObject(result)
-        }
-        return nil
-    }
-
-    public func evaluateExpression(exp: String, onSuccess handler: ((AnyObject!)->Void)?) {
-        if handler == nil {
-            webView?.evaluateJavaScript(exp, completionHandler: nil)
-        } else {
-            webView?.evaluateJavaScript(scriptForRetaining(exp)) {
-                [weak self](result: AnyObject!, error: NSError!)->Void in
-                if self != nil && result != nil {
-                    handler!(self!.wrapScriptObject(result!))
-                }
-            }
-        }
-    }
-
     // JavaScript object operations
     public func construct(# arguments: [AnyObject]?, resultHandler: ((AnyObject!)->Void)?) {
         let exp = "new " + scriptForCallingMethod(nil, arguments: arguments)
@@ -88,9 +67,6 @@ public class XWVScriptObject : XWVObject {
         webView?.evaluateJavaScript("\(namespace)[\(index)] = \(serialize(value))", completionHandler: nil)
     }
 
-    private func scriptForRetaining(script: String) -> String {
-        return "\(origin.namespace).$retainObject(\(script))"
-    }
     private func scriptForFetchingProperty(name: String!) -> String {
         if name == nil {
             return namespace
@@ -112,7 +88,7 @@ public class XWVScriptObject : XWVObject {
 }
 
 extension XWVScriptObject {
-    // Subscript support
+    // Subscript as property accessor
     public subscript(name: String) -> AnyObject? {
         get {
             return value(forProperty: name)

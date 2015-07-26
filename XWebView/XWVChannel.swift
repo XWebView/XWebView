@@ -63,7 +63,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         let script = WKUserScript(source: (object as? XWVScripting)?.javascriptStub?(stub) ?? stub,
                                   injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
                                   forMainFrameOnly: true)
-        userScript = XWVUserScript(webView: webView!, script: script, namespace: namespace)
+        userScript = XWVUserScript(webView: webView!, script: script)
 
         instances[0] = plugin
         return plugin as XWVScriptObject
