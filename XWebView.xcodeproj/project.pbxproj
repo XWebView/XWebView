@@ -11,16 +11,13 @@
 		AB023EA61A8C506600580A2A /* XWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE62683519FA323900EFC3F8 /* XWebView.framework */; };
 		AB023EBE1A8C8BC700580A2A /* XWebView.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = EE62683519FA323900EFC3F8 /* XWebView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AB2273E51AA6FDA700F9207A /* www in Resources */ = {isa = PBXBuildFile; fileRef = AB2273E41AA6FDA700F9207A /* www */; };
-		ABD3E8541A8CD08300F2BAB9 /* XWVInventoryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD3E8531A8CD08300F2BAB9 /* XWVInventoryTest.swift */; };
 		ABF68ECD1A6B45FC0058267B /* XWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = EE62691C19FA52FC00EFC3F8 /* XWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EE0A1DD31A52775400C9E6D3 /* XWVChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */; };
 		EE131CA71B5F900400A9E790 /* XWVUserScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE131CA61B5F900400A9E790 /* XWVUserScript.swift */; };
-		EE174E451A01FDDE00168D96 /* XWVInventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE174E441A01FDDE00168D96 /* XWVInventory.swift */; };
 		EE174E781A0361CB00168D96 /* xwebview.js in Resources */ = {isa = PBXBuildFile; fileRef = EE174E771A0361CB00168D96 /* xwebview.js */; };
 		EE2F487D1AE4B8F40088AF67 /* ObjectPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2F487C1AE4B8F40088AF67 /* ObjectPlugin.swift */; };
 		EE2F487F1AE4CD360088AF67 /* FunctionPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2F487E1AE4CD360088AF67 /* FunctionPlugin.swift */; };
 		EE2F48811AE4CE690088AF67 /* ConstructorPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2F48801AE4CE690088AF67 /* ConstructorPlugin.swift */; };
-		EE30AAC41AD978DA006010A3 /* XWVLoaderTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE30AAC31AD978DA006010A3 /* XWVLoaderTest.swift */; };
 		EE3379391AE2E298009124A4 /* XWVTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3379381AE2E298009124A4 /* XWVTestCase.swift */; };
 		EE33793E1AE56875009124A4 /* XWVScriptObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE33793D1AE56875009124A4 /* XWVScriptObject.swift */; };
 		EE3379401AE57566009124A4 /* XWVScriptingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE33793F1AE57566009124A4 /* XWVScriptingTest.swift */; };
@@ -30,7 +27,6 @@
 		EE7164901A716C9F00078FF9 /* XWVHttpConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = EE71648C1A716C9F00078FF9 /* XWVHttpConnection.m */; };
 		EE7164911A716C9F00078FF9 /* XWVHttpServer.h in Headers */ = {isa = PBXBuildFile; fileRef = EE71648D1A716C9F00078FF9 /* XWVHttpServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EE7164921A716C9F00078FF9 /* XWVHttpServer.m in Sources */ = {isa = PBXBuildFile; fileRef = EE71648E1A716C9F00078FF9 /* XWVHttpServer.m */; };
-		EE7886761A0D0CE30013A855 /* XWVLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7886751A0D0CE30013A855 /* XWVLoader.swift */; };
 		EE92C65F1B5ACF81000FE1DA /* XWVMetaObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */; };
 		EE92C6611B5AD7DB000FE1DA /* XWVMetaObjectTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE92C6601B5AD7DB000FE1DA /* XWVMetaObjectTest.swift */; };
 		EE92C6621B5AD86E000FE1DA /* XWVMetaObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */; };
@@ -70,15 +66,12 @@
 		AB023EA31A8C506600580A2A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB023EA41A8C506600580A2A /* XWebViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XWebViewTests.swift; sourceTree = "<group>"; };
 		AB2273E41AA6FDA700F9207A /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
-		ABD3E8531A8CD08300F2BAB9 /* XWVInventoryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVInventoryTest.swift; sourceTree = "<group>"; };
 		EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVChannel.swift; path = XWebView/XWVChannel.swift; sourceTree = "<group>"; };
 		EE131CA61B5F900400A9E790 /* XWVUserScript.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVUserScript.swift; path = XWebView/XWVUserScript.swift; sourceTree = "<group>"; };
-		EE174E441A01FDDE00168D96 /* XWVInventory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVInventory.swift; path = XWebView/XWVInventory.swift; sourceTree = "<group>"; };
 		EE174E771A0361CB00168D96 /* xwebview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = xwebview.js; path = XWebView/xwebview.js; sourceTree = "<group>"; };
 		EE2F487C1AE4B8F40088AF67 /* ObjectPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjectPlugin.swift; sourceTree = "<group>"; };
 		EE2F487E1AE4CD360088AF67 /* FunctionPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FunctionPlugin.swift; sourceTree = "<group>"; };
 		EE2F48801AE4CE690088AF67 /* ConstructorPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstructorPlugin.swift; sourceTree = "<group>"; };
-		EE30AAC31AD978DA006010A3 /* XWVLoaderTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVLoaderTest.swift; sourceTree = "<group>"; };
 		EE3379381AE2E298009124A4 /* XWVTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVTestCase.swift; sourceTree = "<group>"; };
 		EE33793D1AE56875009124A4 /* XWVScriptObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVScriptObject.swift; path = XWebView/XWVScriptObject.swift; sourceTree = "<group>"; };
 		EE33793F1AE57566009124A4 /* XWVScriptingTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVScriptingTest.swift; sourceTree = "<group>"; };
@@ -91,7 +84,6 @@
 		EE71648C1A716C9F00078FF9 /* XWVHttpConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XWVHttpConnection.m; path = XWebView/XWVHttpConnection.m; sourceTree = "<group>"; };
 		EE71648D1A716C9F00078FF9 /* XWVHttpServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XWVHttpServer.h; path = XWebView/XWVHttpServer.h; sourceTree = "<group>"; };
 		EE71648E1A716C9F00078FF9 /* XWVHttpServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XWVHttpServer.m; path = XWebView/XWVHttpServer.m; sourceTree = "<group>"; };
-		EE7886751A0D0CE30013A855 /* XWVLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVLoader.swift; path = XWebView/XWVLoader.swift; sourceTree = "<group>"; };
 		EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVMetaObject.swift; path = XWebView/XWVMetaObject.swift; sourceTree = "<group>"; };
 		EE92C6601B5AD7DB000FE1DA /* XWVMetaObjectTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVMetaObjectTest.swift; sourceTree = "<group>"; };
 		EEDF305F1B6555B900A21659 /* XWVInvocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVInvocation.swift; path = XWebView/XWVInvocation.swift; sourceTree = "<group>"; };
@@ -132,8 +124,6 @@
 				EE2F487E1AE4CD360088AF67 /* FunctionPlugin.swift */,
 				EE2F48801AE4CE690088AF67 /* ConstructorPlugin.swift */,
 				AB023EA41A8C506600580A2A /* XWebViewTests.swift */,
-				ABD3E8531A8CD08300F2BAB9 /* XWVInventoryTest.swift */,
-				EE30AAC31AD978DA006010A3 /* XWVLoaderTest.swift */,
 				EE92C6601B5AD7DB000FE1DA /* XWVMetaObjectTest.swift */,
 				AB023EA21A8C506600580A2A /* Supporting Files */,
 			);
@@ -180,8 +170,6 @@
 				EE62691C19FA52FC00EFC3F8 /* XWebView.h */,
 				EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */,
 				EE62692019FA52FC00EFC3F8 /* XWebView.swift */,
-				EE174E441A01FDDE00168D96 /* XWVInventory.swift */,
-				EE7886751A0D0CE30013A855 /* XWVLoader.swift */,
 				EE174E771A0361CB00168D96 /* xwebview.js */,
 				EEE6F9A31AE02CF100A2EC89 /* XWVScripting.swift */,
 				EEE6F9A51AE02E8600A2EC89 /* XWVObject.swift */,
@@ -315,8 +303,6 @@
 			files = (
 				EEF27D551AE8F1F3004740CF /* XWVScripting.swift in Sources */,
 				EE3379391AE2E298009124A4 /* XWVTestCase.swift in Sources */,
-				ABD3E8541A8CD08300F2BAB9 /* XWVInventoryTest.swift in Sources */,
-				EE30AAC41AD978DA006010A3 /* XWVLoaderTest.swift in Sources */,
 				AB023EA51A8C506600580A2A /* XWebViewTests.swift in Sources */,
 				EE3379401AE57566009124A4 /* XWVScriptingTest.swift in Sources */,
 				EE92C6621B5AD86E000FE1DA /* XWVMetaObject.swift in Sources */,
@@ -334,8 +320,6 @@
 			files = (
 				EEE6F9A41AE02CF100A2EC89 /* XWVScripting.swift in Sources */,
 				EEDF30601B6555B900A21659 /* XWVInvocation.swift in Sources */,
-				EE7886761A0D0CE30013A855 /* XWVLoader.swift in Sources */,
-				EE174E451A01FDDE00168D96 /* XWVInventory.swift in Sources */,
 				EEE6F9A81AE02F5000A2EC89 /* XWVBindingObject.swift in Sources */,
 				EE131CA71B5F900400A9E790 /* XWVUserScript.swift in Sources */,
 				EE7164921A716C9F00078FF9 /* XWVHttpServer.m in Sources */,
