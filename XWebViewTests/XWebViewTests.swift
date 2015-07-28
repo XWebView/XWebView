@@ -30,7 +30,7 @@ class XWebViewTests: XWVTestCase {
 
     func testLoadFileURL() {
         let expectation = expectationWithDescription("loadFileURL")
-        let bundle = NSBundle(identifier:"com.github.xwebview.XWebViewTests")
+        let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")
         if let root = bundle?.bundleURL.URLByAppendingPathComponent("www") {
             let url = root.URLByAppendingPathComponent("webviewTest.html")
             XCTAssert(url.checkResourceIsReachableAndReturnError(nil), "HTML file not found")
@@ -41,7 +41,7 @@ class XWebViewTests: XWVTestCase {
 
     func testLoadHTMLStringWithBaseURL() {
         let expectation = expectationWithDescription("loadHTMLStringWithBaseURL")
-        let bundle = NSBundle(identifier:"com.github.xwebview.XWebViewTests")
+        let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")
         if let baseURL = bundle?.bundleURL.URLByAppendingPathComponent("www") {
             XCTAssert(baseURL.checkResourceIsReachableAndReturnError(nil), "Directory not found")
             webview.loadHTMLString("<html><img id='image' onload='fulfill(\"loadHTMLStringWithBaseURL\")' src='image.png'></html>", baseFileURL: baseURL)
