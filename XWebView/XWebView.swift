@@ -107,7 +107,9 @@ extension WKWebView {
         if fileManager.fileExistsAtPath(readAccessURL.path!, isDirectory: &isDirectory) &&
             isDirectory && relationship != NSURLRelationship.Other {
             let port = startHttpd(documentRoot: readAccessURL.path!)
-            let path = URL.path![readAccessURL.path!.endIndex ..< URL.path!.endIndex]
+            var path = URL.path![readAccessURL.path!.endIndex ..< URL.path!.endIndex]
+            if let query = URL.query { path += "?\(query)" }
+            if let fragment = URL.fragment { path += "#\(fragment)" }
             let url = NSURL(string: path , relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
             return loadRequest(NSURLRequest(URL: url!));
         }
