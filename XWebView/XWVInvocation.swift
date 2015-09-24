@@ -43,7 +43,7 @@ public class XWVInvocation {
 
         // Setup arguments
         assert(arguments.count + 2 <= Int(sig.numberOfArguments), "Too many arguments for calling -[\(target.dynamicType) \(selector)]")
-        var args = [[Word]](count: arguments.count, repeatedValue: [])
+        var args = [[UInt]](count: arguments.count, repeatedValue: [])
         for var i = 0; i < arguments.count; ++i {
             let type = sig.getArgumentTypeAtIndex(i + 2)
             let typeChar = Character(UnicodeScalar(UInt8(type[0])))
@@ -59,21 +59,21 @@ public class XWVInvocation {
 
             if typeChar == "f", let float = argument as? Float {
                 // Float type shouldn't be promoted to double if it is not variadic.
-                args[i] = [ Word(unsafeBitCast(float, UInt32.self)) ]
+                args[i] = [ UInt(unsafeBitCast(float, UInt32.self)) ]
             } else if let val = argument as? CVarArgType {
                 // Scalar(except float), pointer and Objective-C object types
-                args[i] = val.encode()
+                args[i] = val.encode().map{ UInt(bitPattern: $0) }
             } else if let obj: AnyObject = argument as? AnyObject {
                 // Pure swift object type
-                args[i] = [ unsafeBitCast(unsafeAddressOf(obj), Word.self) ]
+                args[i] = [ unsafeBitCast(unsafeAddressOf(obj), UInt.self) ]
             } else {
                 // Nil or unsupported type
                 assert(argument == nil, "Unsupported argument type '\(String(UTF8String: type))'")
                 var align: Int = 0
                 NSGetSizeAndAlignment(sig.getArgumentTypeAtIndex(i), nil, &align)
-                args[i] = [Word](count: align / sizeof(Word.self), repeatedValue: 0)
+                args[i] = [UInt](count: align / sizeof(UInt), repeatedValue: 0)
             }
-            args[i].withUnsafeBufferPointer() {
+            args[i].withUnsafeBufferPointer {
                 inv.setArgument(UnsafeMutablePointer($0.baseAddress), atIndex: i + 2)
             }
         }
@@ -84,18 +84,12 @@ public class XWVInvocation {
 
         // Fetch the return value
         // TODO: Methods with 'ns_returns_retained' attribute cause leak of returned object.
-        let count = (sig.methodReturnLength + sizeof(Word.self) - 1) / sizeof(Word.self)
-        var words = [Word](count: count, repeatedValue: 0)
-        words.withUnsafeMutableBufferPointer() {
-            (inout buf: UnsafeMutableBufferPointer<Word>)->Void in
-            inv.getReturnValue(buf.baseAddress)
-        }
-        if sig.methodReturnLength <= sizeof(Word) {
-            // TODO: handle 64 bit type on 32-bit OS
-            return bitCastWord(words[0], toObjCType: sig.methodReturnType)
-        }
-        assertionFailure("Unsupported return type '\(String(UTF8String: sig.methodReturnType))'");
-        return Void()
+        let buffer = UnsafeMutablePointer<UInt8>.alloc(sig.methodReturnLength)
+        inv.getReturnValue(buffer)
+        let result: Any? = bitCast(buffer, toObjCType: sig.methodReturnType)
+        buffer.destroy()
+        buffer.dealloc(sig.methodReturnLength)
+        return result
     }
 
     public func call(selector: Selector, withArguments arguments: Any!...) -> Any! {
@@ -104,7 +98,7 @@ public class XWVInvocation {
 
     // Helper for Objective-C, accept ObjC 'id' instead of Swift 'Any' type for in/out parameters .
     @objc public func call(selector: Selector, withObjects objects: [AnyObject]?) -> AnyObject! {
-        let args: [Any!] = objects?.map() { $0 !== NSNull() ? ($0 as Any) : nil } ?? []
+        let args: [Any!] = objects?.map{ $0 !== NSNull() ? ($0 as Any) : nil } ?? []
         let result = call(selector, withArguments: args)
         return self.dynamicType.convertToObjectFromAnyValue(result)
     }
@@ -147,7 +141,7 @@ extension XWVInvocation {
 
     private func getterOfName(name: String) -> Selector {
         var getter = Selector()
-        let property = class_getProperty(self.target.dynamicType, name)
+        let property = class_getProperty(target.dynamicType, name)
         if property != nil {
             let attr = property_copyAttributeValue(property, "G")
             getter = Selector(attr == nil ? name : String(UTF8String: attr)!)
@@ -157,7 +151,7 @@ extension XWVInvocation {
     }
     private func setterOfName(name: String) -> Selector {
         var setter = Selector()
-        let property = class_getProperty(self.target.dynamicType, name)
+        let property = class_getProperty(target.dynamicType, name)
         if property != nil {
             var attr = property_copyAttributeValue(property, "R")
             if attr == nil {
@@ -178,28 +172,28 @@ extension XWVInvocation {
     // Type casting and conversion, reference:
     // https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html
 
-    // Cast Word value to specified Objective-C type (not support 32-bit)
-    private func bitCastWord(word: Word, toObjCType type: UnsafePointer<Int8>) -> Any? {
+    // Cast bits to specified Objective-C type
+    private func bitCast(buffer: UnsafePointer<Void>, toObjCType type: UnsafePointer<Int8>) -> Any? {
         switch Character(UnicodeScalar(UInt8(type[0]))) {
-        case "c": return CChar(truncatingBitPattern: word)
-        case "i": return CInt(truncatingBitPattern: word)
-        case "s": return CShort(truncatingBitPattern: word)
-        case "l": return Int32(truncatingBitPattern: word)
-        case "q": return CLongLong(word)
-        case "C": return CUnsignedChar(truncatingBitPattern: word)
-        case "I": return CUnsignedInt(truncatingBitPattern: word)
-        case "S": return CUnsignedShort(truncatingBitPattern: word)
-        case "L": return UInt32(truncatingBitPattern: word)
-        case "Q": return unsafeBitCast(word, CUnsignedLongLong.self)
-        case "f": return unsafeBitCast(UInt32(truncatingBitPattern: word), CFloat.self)
-        case "d": return unsafeBitCast(word, CDouble.self)
-        case "B": return unsafeBitCast(UInt8(truncatingBitPattern: word), CBool.self)
-        case "v": return unsafeBitCast(word, Void.self)
-        case "*": return unsafeBitCast(word, UnsafePointer<CChar>.self)
-        case "@": return word != 0 ? unsafeBitCast(word, AnyObject.self) : nil
-        case "#": return unsafeBitCast(word, AnyClass.self)
-        case ":": return unsafeBitCast(word, Selector.self)
-        case "^", "?": return unsafeBitCast(word, COpaquePointer.self)
+        case "c": return UnsafePointer<CChar>(buffer).memory
+        case "i": return UnsafePointer<CInt>(buffer).memory
+        case "s": return UnsafePointer<CShort>(buffer).memory
+        case "l": return UnsafePointer<Int32>(buffer).memory
+        case "q": return UnsafePointer<CLongLong>(buffer).memory
+        case "C": return UnsafePointer<CUnsignedChar>(buffer).memory
+        case "I": return UnsafePointer<CUnsignedInt>(buffer).memory
+        case "S": return UnsafePointer<CUnsignedShort>(buffer).memory
+        case "L": return UnsafePointer<UInt32>(buffer).memory
+        case "Q": return UnsafePointer<CUnsignedLongLong>(buffer).memory
+        case "f": return UnsafePointer<CFloat>(buffer).memory
+        case "d": return UnsafePointer<CDouble>(buffer).memory
+        case "B": return UnsafePointer<CBool>(buffer).memory
+        case "v": assertionFailure("Why cast to Void type?")
+        case "*": return UnsafePointer<CChar>(buffer)
+        case "@": return UnsafePointer<AnyObject!>(buffer).memory
+        case "#": return UnsafePointer<AnyClass!>(buffer).memory
+        case ":": return UnsafePointer<Selector>(buffer).memory
+        case "^", "?": return COpaquePointer(buffer)
         default:  assertionFailure("Unknown Objective-C type encoding '\(String(UTF8String: type))'")
         }
         return Void()
@@ -223,7 +217,7 @@ extension XWVInvocation {
         case "d": return num?.doubleValue
         case "B": return num?.boolValue
         case "v": return Void()
-        case "*": return (object as? String)?.nulTerminatedUTF8.withUnsafeBufferPointer({ COpaquePointer($0.baseAddress) })
+        case "*": return (object as? String)?.nulTerminatedUTF8.withUnsafeBufferPointer{ COpaquePointer($0.baseAddress) }
         case ":": return object is String ? Selector(object as! String) : Selector()
         case "@": return object
         case "#": return object
