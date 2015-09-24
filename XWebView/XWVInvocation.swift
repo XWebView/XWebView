@@ -62,7 +62,7 @@ public class XWVInvocation {
                 args[i] = [ UInt(unsafeBitCast(float, UInt32.self)) ]
             } else if let val = argument as? CVarArgType {
                 // Scalar(except float), pointer and Objective-C object types
-                args[i] = val.encode().map{ UInt(bitPattern: $0) }
+                args[i] = val._cVarArgEncoding.map{ UInt(bitPattern: $0) }
             } else if let obj: AnyObject = argument as? AnyObject {
                 // Pure swift object type
                 args[i] = [ unsafeBitCast(unsafeAddressOf(obj), UInt.self) ]
@@ -86,10 +86,11 @@ public class XWVInvocation {
         // TODO: Methods with 'ns_returns_retained' attribute cause leak of returned object.
         let buffer = UnsafeMutablePointer<UInt8>.alloc(sig.methodReturnLength)
         inv.getReturnValue(buffer)
-        let result: Any? = bitCast(buffer, toObjCType: sig.methodReturnType)
-        buffer.destroy()
-        buffer.dealloc(sig.methodReturnLength)
-        return result
+        defer {
+            buffer.destroy()
+            buffer.dealloc(sig.methodReturnLength)
+        }
+        return bitCast(buffer, toObjCType: sig.methodReturnType)
     }
 
     public func call(selector: Selector, withArguments arguments: Any!...) -> Any! {
@@ -157,7 +158,7 @@ extension XWVInvocation {
             if attr == nil {
                 attr = property_copyAttributeValue(property, "S")
                 if attr == nil {
-                    setter = Selector("set\(String(first(name)!).uppercaseString)\(dropFirst(name)):")
+                    setter = Selector("set\(String(name.characters.first!).uppercaseString)\(String(name.characters.dropFirst())):")
                 } else {
                     setter = Selector(String(UTF8String: attr)!)
                 }
@@ -220,8 +221,8 @@ extension XWVInvocation {
         case "*": return (object as? String)?.nulTerminatedUTF8.withUnsafeBufferPointer{ COpaquePointer($0.baseAddress) }
         case ":": return object is String ? Selector(object as! String) : Selector()
         case "@": return object
-        case "#": return object
-        case "^", "?": return (object as? NSValue)?.pointerValue()
+        case "#": return object as? AnyClass
+        case "^", "?": return (object as? NSValue)?.pointerValue
         default:  assertionFailure("Unknown Objective-C type encoding '\(String(UTF8String: type))'")
         }
         return nil
@@ -252,17 +253,17 @@ extension XWVInvocation {
 
 // Additional Swift types which can be represented in C type.
 extension Bool: CVarArgType {
-    public func encode() -> [Word] {
-        return [ Word(self) ]
+    public var _cVarArgEncoding: [Int] {
+        return [ Int(self) ]
     }
 }
 extension UnicodeScalar: CVarArgType {
-    public func encode() -> [Word] {
-        return [ Word(self.value) ]
+    public var _cVarArgEncoding: [Int] {
+        return [ Int(self.value) ]
     }
 }
 extension Selector: CVarArgType {
-    public func encode() -> [Word] {
-        return [ unsafeBitCast(self, Word.self) ]
+    public var _cVarArgEncoding: [Int] {
+        return [ unsafeBitCast(self, Int.self) ]
     }
 }

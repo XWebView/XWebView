@@ -19,7 +19,7 @@ import XCTest
 import XWebView
 
 class XWVScriptingTest : XWVTestCase {
-    class Plugin : NSObject, XWebView.XWVScripting {
+    class Plugin : NSObject, XWVScripting {
         let expectation: XCTestExpectation?
         init(expectation: XCTestExpectation?) {
             self.expectation = expectation
@@ -43,7 +43,7 @@ class XWVScriptingTest : XWVTestCase {
     func testJavascriptStub() {
         let desc = "javascriptStub"
         let script = "if (window.stub) fulfill('\(desc)');"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
@@ -58,14 +58,14 @@ class XWVScriptingTest : XWVTestCase {
     func testIsSelectorExcluded() {
         let desc = "isSelectorExcluded"
         let script = "if (\(namespace).initWithExpectation == undefined) fulfill('\(desc)')"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
     func testIsKeyExcluded() {
         let desc = "isKeyExcluded"
         let script = "if (!\(namespace).hasOwnProperty('expectation')) fulfill('\(desc)')"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }

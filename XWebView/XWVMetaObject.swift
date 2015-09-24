@@ -24,28 +24,16 @@ class XWVMetaObject: CollectionType {
         case Initializer(selector: Selector, arity: Int32)
 
         var isMethod: Bool {
-            switch self {
-            case let .Method(_):
-                return true
-            default:
-                return false
-            }
+            if case .Method = self { return true }
+            return false
         }
         var isProperty: Bool {
-            switch self {
-            case let .Property(_, _):
-                return true
-            default:
-                return false
-            }
+            if case .Property = self { return true }
+            return false
         }
         var isInitializer: Bool {
-            switch self {
-            case let .Initializer(_, _):
-                return true
-            default:
-                return false
-            }
+            if case .Initializer = self { return true }
+            return false
         }
         var selector: Selector? {
             switch self {
@@ -60,22 +48,18 @@ class XWVMetaObject: CollectionType {
             }
         }
         var getter: Selector? {
-            switch self {
-            case let .Property(getter, _):
+            if case .Property(let getter, _) = self {
                 assert(getter != Selector())
                 return getter
-            default:
-                return nil
             }
+            return nil
         }
         var setter: Selector? {
-            switch self {
-            case let .Property(getter, setter):
+            if case .Property(let getter, let setter) = self {
                 assert(getter != Selector())
                 return setter
-            default:
-                return nil
             }
+            return nil
         }
         var type: String {
             let promise: Bool
@@ -85,7 +69,7 @@ class XWVMetaObject: CollectionType {
                 promise = selector.description.hasSuffix(":promiseObject:") ||
                           selector.description.hasSuffix("PromiseObject:")
                 arity = a
-            case let .Initializer(selector, a):
+            case let .Initializer(_, a):
                 promise = true
                 arity = a < 0 ? a: a + 1
             default:
@@ -114,15 +98,14 @@ class XWVMetaObject: CollectionType {
 
     init(plugin: AnyClass) {
         self.plugin = plugin
-        let cls: AnyClass = plugin
         enumerateExcluding(self.dynamicType.exclusion) {
             (var name, var member) -> Bool in
             switch member {
             case let .Method(selector, _):
-                if let end = find(name, ":") {
+                if let end = name.characters.indexOf(":") {
                     name = name[name.startIndex ..< end]
                 }
-                if cls.conformsToProtocol(XWVScripting.self) {
+                if let cls = plugin as? XWVScripting.Type {
                     if cls.isSelectorExcludedFromScript?(selector) ?? false {
                         return true
                     }
@@ -132,19 +115,19 @@ class XWVMetaObject: CollectionType {
                     } else {
                         name = cls.scriptNameForSelector?(selector) ?? name
                     }
-                } else if name.hasPrefix("_") {
+                } else if name.characters.first == "_" {
                     return true
                 }
 
-            case let .Property(_, _):
-                if cls.conformsToProtocol(XWVScripting.self) {
+            case .Property(_, _):
+                if let cls = plugin as? XWVScripting.Type {
                     if let isExcluded = cls.isKeyExcludedFromScript where name.withCString(isExcluded) {
                         return true
                     }
                     if let scriptNameForKey = cls.scriptNameForKey {
                         name = name.withCString(scriptNameForKey) ?? name
                     }
-                } else if name.hasPrefix("_") {
+                } else if name.characters.first == "_" {
                     return true
                 }
 
@@ -152,20 +135,20 @@ class XWVMetaObject: CollectionType {
                 if selector == Selector("initByScriptWithArguments:") {
                     member = .Initializer(selector: selector, arity: -1)
                     name = ""
-                } else if cls.conformsToProtocol(XWVScripting.self) {
+                } else if let cls = plugin as? XWVScripting.Type {
                     name = cls.scriptNameForSelector?(selector) ?? name
                 }
                 if !name.isEmpty {
                     return true
                 }
             }
-            assert(self.members.indexForKey(name) == nil, "Script name '\(name)' has conflict")
-            self.members[name] = member
+            assert(members.indexForKey(name) == nil, "Script name '\(name)' has conflict")
+            members[name] = member
             return true
         }
     }
 
-    private func enumerateExcluding(selectors: Set<Selector>, callback: ((String, Member)->Bool)) -> Bool {
+    private func enumerateExcluding(selectors: Set<Selector>, @noescape callback: ((String, Member)->Bool)) -> Bool {
         var known = selectors
 
         // enumerate properties
@@ -188,7 +171,7 @@ class XWVMetaObject: CollectionType {
                 if attr == nil {
                     attr = property_copyAttributeValue(prop.memory, "S")
                     if attr == nil {
-                        setter = Selector("set\(prefix(name, 1).uppercaseString)\(dropFirst(name)):")
+                        setter = Selector("set\(String(name.characters.first!).uppercaseString)\(String(name.characters.dropFirst())):")
                     } else {
                         setter = Selector(String(UTF8String: attr)!)
                     }

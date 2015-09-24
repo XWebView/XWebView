@@ -36,31 +36,34 @@ class XWVUserScript {
     }
 
     private func inject() {
+        guard let webView = webView else { return }
+
         // add to userContentController
-        webView!.configuration.userContentController.addUserScript(script)
+        webView.configuration.userContentController.addUserScript(script)
 
         // inject into current context
-        if webView!.URL != nil {
-            webView!.evaluateJavaScript(script.source) {
-                (_, error)->Void in
-                if let err = error {
-                    println("ERROR: Inject user script in context.\n\(err)")
+        if webView.URL != nil {
+            webView.evaluateJavaScript(script.source) {
+                if let error = $1 {
+                    print("ERROR: Inject user script in context.\n\(error)")
                 }
             }
         }
     }
     private func eject() {
-        if let controller = webView?.configuration.userContentController {
-            // remove from userContentController
-            let userScripts = filter(controller.userScripts) { $0 !== self.script }
-            controller.removeAllUserScripts()
-            for script in userScripts {
-                controller.addUserScript(script as! WKUserScript)
-            }
+        guard let webView = webView else { return }
+
+        // remove from userContentController
+        let controller = webView.configuration.userContentController
+        let userScripts = controller.userScripts
+        controller.removeAllUserScripts()
+        userScripts.forEach {
+            if $0 != self.script { controller.addUserScript($0) }
         }
-        if let webView = webView where webView.URL != nil && cleanup != nil {
+
+        if webView.URL != nil, let cleanup = cleanup {
             // clean up in current context
-            webView.evaluateJavaScript(cleanup!, completionHandler: nil)
+            webView.evaluateJavaScript(cleanup, completionHandler: nil)
         }
     }
 }

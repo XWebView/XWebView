@@ -19,7 +19,7 @@ import XCTest
 import XWebView
 
 class FunctionPlugin : XWVTestCase {
-    class Plugin : NSObject, XWebView.XWVScripting {
+    class Plugin : NSObject, XWVScripting {
         dynamic var property = 123
         private var expectation: XCTestExpectation?
         init(expectation: XCTestExpectation?) {
@@ -38,7 +38,7 @@ class FunctionPlugin : XWVTestCase {
     func testDefaultMethod() {
         let desc = "defaultMethod"
         let script = "if (\(namespace) instanceof Function) fulfill('\(desc)')"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
@@ -50,7 +50,7 @@ class FunctionPlugin : XWVTestCase {
     func testPropertyOfDefaultMethod() {
         let desc = "propertyOfDefaultMethod"
         let script = "if (\(namespace).property == 123) fulfill('\(desc)');"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }

@@ -15,21 +15,14 @@
 */
 
 import XCTest
-import XWebView
-
-/* NOTICE:
-Because XWVMetaObject is not public, we have to add XWVMetaObject.swift
-along with XWVScripting.swift to the test target. So we have to use
-XWebView.XWVScripting to reference the original XWVScripting protocol
-in all of other test cases.
-*/
+@testable import XWebView
 
 class XWVMetaObjectTest: XCTestCase {
     func testForMethod() {
         class TestForMethod {
             @objc init() {}
             @objc func method() {}
-            @objc func method(#argument: AnyObject?) {}
+            @objc func method(argument argument: AnyObject?) {}
             @objc func _method() {}
         }
         let meta = XWVMetaObject(plugin: TestForMethod.self)
@@ -77,8 +70,8 @@ class XWVMetaObjectTest: XCTestCase {
 
     func testForPromise() {
         class TestForPromise {
-            @objc func method(#promiseObject: XWVScriptObject) {}
-            @objc func method(#argument: AnyObject?, promiseObject: XWVScriptObject) {}
+            @objc func method(promiseObject promiseObject: XWVScriptObject) {}
+            @objc func method(argument argument: AnyObject?, promiseObject: XWVScriptObject) {}
         }
         let meta = XWVMetaObject(plugin: TestForPromise.self)
         if let member = meta["methodWithPromiseObject"] {
@@ -146,7 +139,7 @@ class XWVMetaObjectTest: XCTestCase {
     }
 
     func testForConstructor() {
-        @objc class TestForConstructor : XWVScripting {
+        class TestForConstructor : XWVScripting {
             @objc init(argument: AnyObject?) {}
             @objc class func scriptNameForSelector(selector: Selector) -> String? {
                 return selector == Selector("initWithArgument:") ? "" : nil

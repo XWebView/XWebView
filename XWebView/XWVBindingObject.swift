@@ -24,42 +24,36 @@ class XWVBindingObject : XWVScriptObject {
     init(namespace: String, channel: XWVChannel, object: AnyObject) {
         super.init(namespace: namespace, channel: channel, origin: nil)
         self.object = object
-        objc_setAssociatedObject(object, key, self, UInt(OBJC_ASSOCIATION_ASSIGN))
+        objc_setAssociatedObject(object, key, self, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
         startKVO()
-
-        // A trick for accessing static methods of the protocol
-        XWVScripting.self
     }
 
     init(namespace: String, channel: XWVChannel, arguments: [AnyObject]?) {
         super.init(namespace: namespace, channel: channel, origin: nil)
-        var args = arguments?.map(wrapScriptObject) ?? []
-        var selector = Selector()
-        var promise: XWVScriptObject?
-        if let member = channel.typeInfo[""] where member.isInitializer {
-            switch member {
-            case let .Initializer(sel, arity):
-                selector = sel
-                if arity == Int32(args.count) - 1 || arity < 0 {
-                    promise = last(args) as? XWVScriptObject
-                    args.removeLast()
-                }
-            default: break
-            }
+        let member = channel.typeInfo[""]
+        guard member != nil, case .Initializer(let selector, let arity) = member! else {
+            preconditionFailure("FATAL: Plugin is not a constructor")
         }
-        assert(selector != nil)
+
+        var args = arguments?.map(wrapScriptObject) ?? []
+        var promise: XWVScriptObject?
+        if arity == Int32(args.count) - 1 || arity < 0 {
+            promise = args.last as? XWVScriptObject
+            args.removeLast()
+        }
         if selector == "initByScriptWithArguments:" {
             args = [args]
         }
-        object = XWVInvocation(target: channel.typeInfo.plugin.alloc()).call(selector, withObjects: args)
-        objc_setAssociatedObject(object, key, self, UInt(OBJC_ASSOCIATION_ASSIGN))
+        object = XWVInvocation(target: channel.typeInfo.plugin).call(Selector("alloc")) as? AnyObject
+        object = XWVInvocation(target: object).call(selector, withObjects: args)
+        objc_setAssociatedObject(object, key, self, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
         startKVO()
         syncProperties()
         promise?.callMethod("resolve", withArguments: [self], resultHandler: nil)
     }
     private func syncProperties() {
         var script = ""
-        for (name, member) in filter(channel.typeInfo, { $1.isProperty }) {
+        for (name, member) in channel.typeInfo.filter({ $1.isProperty }) {
             let val: AnyObject! = XWVInvocation(target: object).call(member.getter!, withObjects: nil)
             script += "\(namespace).$properties['\(name)'] = \(serialize(val));\n"
         }
@@ -70,7 +64,7 @@ class XWVBindingObject : XWVScriptObject {
         if (object as? XWVScripting)?.finalizeForScript != nil {
             XWVInvocation(target: object)[Selector("finalizeForScript")]()
         }
-        objc_setAssociatedObject(object, key, nil, UInt(OBJC_ASSOCIATION_ASSIGN))
+        objc_setAssociatedObject(object, key, nil, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
         stopKVO()
     }
 
@@ -127,7 +121,7 @@ class XWVBindingObject : XWVScriptObject {
         return super.value(forProperty: name)
     }
     override func setValue(value: AnyObject?, forProperty name: String) {
-        if let setter = channel.typeInfo[name]?.setter {
+        if channel.typeInfo[name]?.setter != nil {
             XWVInvocation(target: object)[name] = value
         } else {
             assert(channel.typeInfo[name] == nil, "Property '\(name)' is readonly")
@@ -136,26 +130,26 @@ class XWVBindingObject : XWVScriptObject {
     }
 
     // KVO for syncing properties
-    override func observeValueForKeyPath(keyPath: String, ofObject object: AnyObject, change: [NSObject : AnyObject], context: UnsafeMutablePointer<Void>) {
-        var prop = keyPath
+    override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+        guard let webView = webView, var prop = keyPath else { return }
         if channel.typeInfo[prop] == nil {
-            if let scriptNameForKey = object.dynamicType.scriptNameForKey {
+            if let scriptNameForKey = (object.dynamicType as? XWVScripting.Type)?.scriptNameForKey {
                 prop = prop.withCString(scriptNameForKey) ?? prop
             }
             assert(channel.typeInfo[prop] != nil)
         }
-        let script = "\(namespace).$properties['\(prop)'] = \(serialize(change[NSKeyValueChangeNewKey]))"
-        webView?.evaluateJavaScript(script, completionHandler: nil)
+        let script = "\(namespace).$properties['\(prop)'] = \(serialize(change?[NSKeyValueChangeNewKey]))"
+        webView.evaluateJavaScript(script, completionHandler: nil)
     }
     private func startKVO() {
-        if !(object is NSObject) { return }
-        for (name, member) in filter(channel.typeInfo, { $1.isProperty }) {
+        guard object is NSObject else { return }
+        for (_, member) in channel.typeInfo.filter({ $1.isProperty }) {
             object.addObserver(self, forKeyPath: member.getter!.description, options: NSKeyValueObservingOptions.New, context: nil)
         }
     }
     private func stopKVO() {
-        if !(object is NSObject) { return }
-        for (name, member) in filter(channel.typeInfo, { $1.isProperty }) {
+        guard object is NSObject else { return }
+        for (_, member) in channel.typeInfo.filter({ $1.isProperty }) {
             object.removeObserver(self, forKeyPath: member.getter!.description, context: nil)
         }
     }

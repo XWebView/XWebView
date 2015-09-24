@@ -25,20 +25,20 @@ class ObjectPlugin : XWVTestCase {
         func method() {
             expectation?.fulfill()
         }
-        func method(# argument: AnyObject?) {
+        func method(argument argument: AnyObject?) {
             if argument as? String == "Yes" {
                 expectation?.fulfill()
             }
         }
-        func method(# Integer: Int) {
+        func method(Integer Integer: Int) {
             if Integer == 789 {
                 expectation?.fulfill()
             }
         }
-        func method(# callback: XWVScriptObject) {
+        func method(callback callback: XWVScriptObject) {
             callback.call(arguments: nil, resultHandler: nil)
         }
-        func method(# promiseObject: XWVScriptObject) {
+        func method(promiseObject promiseObject: XWVScriptObject) {
             promiseObject.callMethod("resolve", withArguments: nil, resultHandler: nil)
         }
         func windowObject() {
@@ -58,7 +58,7 @@ class ObjectPlugin : XWVTestCase {
     func testFetchProperty() {
         let desc = "fetchProperty"
         let script = "if (\(namespace).property == 123) fulfill('\(desc)');"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
@@ -67,7 +67,7 @@ class ObjectPlugin : XWVTestCase {
         let object = Plugin(expectation: nil)
         loadPlugin(object, namespace: namespace, script: "\(namespace).property = 321") {
             $0.evaluateJavaScript("\(self.namespace).property") {
-                (obj: AnyObject!, err: NSError!)->Void in
+                (obj: AnyObject?, err: NSError?)->Void in
                 if (obj as? NSNumber)?.integerValue == 321 && object.property == 321 {
                     expectation.fulfill()
                 }
@@ -81,7 +81,7 @@ class ObjectPlugin : XWVTestCase {
         loadPlugin(object, namespace: namespace, script: "") {
             object.property = 321
             $0.evaluateJavaScript("\(self.namespace).property") {
-                (obj: AnyObject!, err: NSError!)->Void in
+                (obj: AnyObject?, err: NSError?)->Void in
                 if (obj as? NSNumber)?.integerValue == 321 {
                     expectation.fulfill()
                 }
@@ -108,14 +108,14 @@ class ObjectPlugin : XWVTestCase {
     func testCallMethodWithCallback() {
         let desc = "callMethodWithCallback"
         let script = "\(namespace).methodWithCallback(function(){fulfill('\(desc)');})"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(3, handler: nil)
     }
     func testCallMethodWithPromise() {
         let desc = "callMethodWithPromise"
         let script = "\(namespace).methodWithPromiseObject().then(function(){fulfill('\(desc)');})"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(3, handler: nil)
     }
