@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "XWebView"
-  s.version      = "0.9.2"
+  s.version      = "0.9.3"
   s.summary      = "An extensible WebView (based on WKWebView) for iOS."
 
   s.description  = <<-DESC
@@ -90,7 +90,7 @@ Pod::Spec.new do |s|
   #
 
   s.source_files  = "XWebView/*.swift"
-  # s.exclude_files = "Classes/Exclude"
+  s.exclude_files = "XWebView/XWVInvocation.swift"
 
   # s.public_header_files = "Classes/**/*.h"
 
@@ -134,7 +134,7 @@ Pod::Spec.new do |s|
   # s.dependency "JSONKit", "~> 1.4"
 
   s.subspec "Invocation" do |sp|
-    sp.source_files = "XWebView/XWVInvocation.{h,m}"
+    sp.source_files = "XWebView/XWVInvocation.swift"
   end
 
   s.subspec "HttpServer" do |sp|

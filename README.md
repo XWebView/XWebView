@@ -10,7 +10,7 @@ Plugins written in Objective-C or Swift programming language can be automaticall
 
 ## Features
 
-Basically, plugins are native classes which can export their interfaces to a JavaScript environment. Calling methods and accessing properties of a plugin object in JavaScript result in same operations to the native plugin object. If you know the [Apache Cordova](https://cordova.apache.org/), you may have the concept of plugins. Well, XWebView does more in simpler form.
+Basically, plugins are native classes which can export their interfaces to a JavaScript environment. Calling methods and accessing properties of a plugin object in JavaScript result in same operations to the native plugin object. If you know the [Apache Cordova](https://cordova.apache.org/), you may have the concept of plugins. Well, XWebView does more in simpler manner.
 
 Unlike Cordova, you needn't to write JavaScript stubs for XWebView plugins commonly. The generated stubs are suitable for most cases. Stubs are generated dynamically in runtime by type information which is provided by compiler. You still have opportunity to override stubs for special cases.
 
@@ -24,13 +24,10 @@ XWebView is designed for embedding. It's easy to adopt since it's an extension o
 
 For more documents, please go to the project [Wiki](../../wiki).
 
-## System Requirements:
+## Minimum Requirements:
 
-* Development:
-  * Xcode 6.3+
-  * iOS SDK 8.0+
-* Deployment:
-  * iOS 8.0+
+* Development:  Xcode 6.3
+* Deployment:   iOS 8.0
 
 ## License
 
