@@ -107,7 +107,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
             obj.userContentController(userContentController, didReceiveScriptMessage: message)
         } else {
             // discard unknown message
-            println("WARNING: Unknown message: \(message.body)")
+            print("WARNING: Unknown message: \(message.body)")
         }
     }
 
@@ -124,14 +124,14 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                 base = "'\(member.type)'"
                 prebind = false
             } else {
-                base = generateMethod("arguments.callee", "\(member.type)", false)
+                base = generateMethod("arguments.callee", name: "\(member.type)", prebind: false)
             }
         }
 
         var stub = "(function(exports) {\n"
         for (name, member) in typeInfo {
-            if let selector = member.selector where !name.isEmpty {
-                let method = generateMethod(prebind ? "exports" : "this", "\(name)\(member.type)", prebind)
+            if member.isMethod && !name.isEmpty {
+                let method = generateMethod(prebind ? "exports" : "this", name: "\(name)\(member.type)", prebind: prebind)
                 stub += "exports.\(name) = \(method)\n"
             } else if member.isProperty {
                 let value = object.serialize(object[name])

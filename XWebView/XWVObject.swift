@@ -63,7 +63,7 @@ public class XWVObject : NSObject {
             webView?.evaluateJavaScript(exp, completionHandler: nil)
         } else {
             webView?.evaluateJavaScript(scriptForRetaining(exp)) {
-                [weak self](result: AnyObject!, error: NSError!)->Void in
+                [weak self](result: AnyObject?, error: NSError?)->Void in
                 if self != nil && result != nil {
                     handler!(self!.wrapScriptObject(result!))
                 }
@@ -94,8 +94,9 @@ public class XWVObject : NSObject {
         if let o = obj as? XWVObject {
             return o.namespace
         } else if let s = obj as? String {
-            let d = NSJSONSerialization.dataWithJSONObject([s], options: NSJSONWritingOptions(0), error: nil)
-            return dropFirst(dropLast(NSString(data: d!, encoding: NSUTF8StringEncoding) as! String))
+            let d = try? NSJSONSerialization.dataWithJSONObject([s], options: NSJSONWritingOptions(rawValue: 0))
+            let json = NSString(data: d!, encoding: NSUTF8StringEncoding)!
+            return json.substringWithRange(NSMakeRange(1, json.length - 2))
         } else if let n = obj as? NSNumber {
             if CFGetTypeID(n) == CFBooleanGetTypeID() {
                 return n.boolValue.description
@@ -103,12 +104,12 @@ public class XWVObject : NSObject {
             return n.stringValue
         } else if let date = obj as? NSDate {
             return "(new Date(\(date.timeIntervalSince1970 * 1000)))"
-        } else if let date = obj as? NSData {
+        } else if let _ = obj as? NSData {
             // TODO: map to Uint8Array object
         } else if let a = obj as? [AnyObject] {
-            return "[" + ",".join(a.map(serialize)) + "]"
+            return "[" + a.map(serialize).joinWithSeparator(", ") + "]"
         } else if let d = obj as? [String: AnyObject] {
-            return "{" + ",".join(d.keys.map(){"'\($0)': \(self.serialize(d[$0]!))"}) + "}"
+            return "{" + d.keys.map{"'\($0)': \(self.serialize(d[$0]!))"}.joinWithSeparator(", ") + "}"
         } else if obj === NSNull() {
             return "null"
         } else if obj == nil {

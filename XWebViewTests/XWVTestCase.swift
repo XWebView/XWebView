@@ -19,7 +19,7 @@ import WebKit
 import XCTest
 import XWebView
 
-extension XCTestExpectation : XWebView.XWVScripting {
+extension XCTestExpectation : XWVScripting {
     public class func isSelectorExcludedFromScript(selector: Selector) -> Bool {
         return selector != Selector("fulfill") && selector != Selector("description")
     }
@@ -50,7 +50,7 @@ class XWVTestCase : XCTestCase, WKNavigationDelegate {
         super.tearDown()
     }
 
-    override func expectationWithDescription(description: String!) -> XCTestExpectation! {
+    override func expectationWithDescription(description: String) -> XCTestExpectation {
         let e = super.expectationWithDescription(description)
         webview.loadPlugin(e, namespace: "\(namespaceForExpectation).\(description)")
         return e
@@ -76,7 +76,7 @@ class XWVTestCaseTest : XWVTestCase {
     }
     func testXWVTestCase() {
         let desc = "selftest"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(), namespace: "xwvtest", script: "fulfill('\(desc)');")
         waitForExpectationsWithTimeout(1, handler: nil)
     }

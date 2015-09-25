@@ -18,7 +18,7 @@ import XCTest
 import XWebView
 
 class InvocationTarget: NSObject {
-    @objc class ObjectForLeakTest {
+    class ObjectForLeakTest {
         let expectation: XCTestExpectation
         init(expectation: XCTestExpectation) {
             self.expectation = expectation

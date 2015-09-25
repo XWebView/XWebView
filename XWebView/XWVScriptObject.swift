@@ -18,11 +18,11 @@ import Foundation
 
 public class XWVScriptObject : XWVObject {
     // JavaScript object operations
-    public func construct(# arguments: [AnyObject]?, resultHandler: ((AnyObject!)->Void)?) {
+    public func construct(arguments arguments: [AnyObject]?, resultHandler: ((AnyObject!)->Void)?) {
         let exp = "new " + scriptForCallingMethod(nil, arguments: arguments)
         evaluateExpression(exp, onSuccess: resultHandler)
     }
-    public func call(# arguments: [AnyObject]?, resultHandler: ((AnyObject!)->Void)?) {
+    public func call(arguments arguments: [AnyObject]?, resultHandler: ((AnyObject!)->Void)?) {
         let exp = scriptForCallingMethod(nil, arguments: arguments)
         evaluateExpression(exp, onSuccess: resultHandler)
     }
@@ -31,10 +31,10 @@ public class XWVScriptObject : XWVObject {
         evaluateExpression(exp, onSuccess: resultHandler)
     }
 
-    public func construct(# arguments: [AnyObject]?) -> AnyObject! {
+    public func construct(arguments arguments: [AnyObject]?) -> AnyObject! {
         return evaluateExpression("new \(scriptForCallingMethod(nil, arguments: arguments))")
     }
-    public func call(# arguments: [AnyObject]?) -> AnyObject! {
+    public func call(arguments arguments: [AnyObject]?) -> AnyObject! {
         return evaluateExpression(scriptForCallingMethod(nil, arguments: arguments))
     }
     public func callMethod(name: String, withArguments arguments: [AnyObject]?) -> AnyObject! {
@@ -72,7 +72,7 @@ public class XWVScriptObject : XWVObject {
             return namespace
         } else if name.isEmpty {
             return "\(namespace)['']"
-        } else if let idx = name.toInt() {
+        } else if let idx = Int(name) {
             return "\(namespace)[\(idx)]"
         } else {
             return "\(namespace).\(name)"
@@ -83,7 +83,7 @@ public class XWVScriptObject : XWVObject {
     }
     private func scriptForCallingMethod(name: String!, arguments: [AnyObject]?) -> String {
         let args = arguments?.map(serialize) ?? []
-        return scriptForFetchingProperty(name) + "(" + ", ".join(args) + ")"
+        return scriptForFetchingProperty(name) + "(" + args.joinWithSeparator(", ") + ")"
     }
 }
 

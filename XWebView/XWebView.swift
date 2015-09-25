@@ -26,19 +26,17 @@ extension WKWebView {
 
     func prepareForPlugin() {
         let key = unsafeAddressOf(XWVChannel)
-        if objc_getAssociatedObject(self, key) == nil {
-            let bundle = NSBundle(forClass: XWVChannel.self)
-            if let path = bundle.pathForResource("xwebview", ofType: "js"),
-                let source = NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding, error: nil) {
-                let script = WKUserScript(source: source as String,
-                                          injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
-                                          forMainFrameOnly: true)
-                let xwvplugin = XWVUserScript(webView: self, script: script, namespace: "XWVPlugin")
-                objc_setAssociatedObject(self, key, xwvplugin, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
-            } else {
-                preconditionFailure("FATAL: Internal error")
-            }
+        if objc_getAssociatedObject(self, key) != nil { return }
+
+        let bundle = NSBundle(forClass: XWVChannel.self)
+        guard let path = bundle.pathForResource("xwebview", ofType: "js"),
+            let source = try? NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding) else {
+            preconditionFailure("FATAL: Internal error")
         }
+        let time = WKUserScriptInjectionTime.AtDocumentStart
+        let script = WKUserScript(source: source as String, injectionTime: time, forMainFrameOnly: true)
+        let xwvplugin = XWVUserScript(webView: self, script: script, namespace: "XWVPlugin")
+        objc_setAssociatedObject(self, key, xwvplugin, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
 }
 
@@ -50,7 +48,7 @@ extension WKWebView {
         let timeout = 3.0
         if NSThread.isMainThread() {
             evaluateJavaScript(script) {
-                (obj: AnyObject!, err: NSError!)->Void in
+                (obj: AnyObject?, err: NSError?)->Void in
                 result = obj
                 if error != nil {
                     error.memory = err
@@ -58,8 +56,8 @@ extension WKWebView {
                 done = true
             }
             while !done {
-                let reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, timeout, Boolean(1))
-                if Int(reason) != kCFRunLoopRunHandledSource {
+                let reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, timeout, true)
+                if reason != CFRunLoopRunResult.HandledSource {
                     break
                 }
             }
@@ -68,7 +66,7 @@ extension WKWebView {
             dispatch_async(dispatch_get_main_queue()) {
                 [weak self] in
                 self?.evaluateJavaScript(script) {
-                    (obj: AnyObject!, err: NSError!)->Void in
+                    (obj: AnyObject?, err: NSError?)->Void in
                     condition.lock()
                     result = obj
                     if error != nil {
@@ -88,7 +86,7 @@ extension WKWebView {
             condition.unlock()
         }
         if !done {
-            println("ERROR: Timeout to evaluate script.")
+            print("ERROR: Timeout to evaluate script.")
         }
         return result
     }
@@ -97,11 +95,34 @@ extension WKWebView {
 extension WKWebView {
     // WKWebView can't load file URL on iOS 8.x devices.
     // We have to start an embedded http server for proxy.
-    public func loadFileURL(URL: NSURL, allowingReadAccessToURL readAccessURL: NSURL) -> WKNavigation? {
-        assert(URL.fileURL && readAccessURL.fileURL)
+    // When running on iOS 8.x, we provide the same API as on iOS 9.
+    // On iOS 9 and above, we do nothing.
+
+    // Swift 2 doesn't support override +load method of NSObject, override +initialize instead.
+    // See http://nshipster.com/swift-objc-runtime/
+    private static var initialized: dispatch_once_t = 0
+    public override class func initialize() {
+        //if #available(iOS 9, *) { return }
+        guard self == WKWebView.self else { return }
+        dispatch_once(&initialized) {
+            let selector = Selector("loadFileURL:allowingReadAccessToURL:")
+            let method = class_getInstanceMethod(self, Selector("_loadFileURL:allowingReadAccessToURL:"))
+            assert(method != nil)
+            if class_addMethod(self, selector, method_getImplementation(method), method_getTypeEncoding(method)) {
+                print("iOS 8.x")
+                method_exchangeImplementations(
+                    class_getInstanceMethod(self, Selector("loadHTMLString:baseURL:")),
+                    class_getInstanceMethod(self, Selector("_loadHTMLString:baseURL:"))
+                )
+            }
+        }
+    }
+
+    @objc private func _loadFileURL(URL: NSURL, allowingReadAccessToURL readAccessURL: NSURL) -> WKNavigation? {
+        precondition(URL.fileURL && readAccessURL.fileURL)
         let fileManager = NSFileManager.defaultManager()
         var relationship: NSURLRelationship = NSURLRelationship.Other
-        fileManager.getRelationship(&relationship, ofDirectoryAtURL: readAccessURL, toItemAtURL: URL, error: nil)
+        _ = try? fileManager.getRelationship(&relationship, ofDirectoryAtURL: readAccessURL, toItemAtURL: URL)
 
         var isDirectory: ObjCBool = false
         if fileManager.fileExistsAtPath(readAccessURL.path!, isDirectory: &isDirectory) &&
@@ -116,8 +137,12 @@ extension WKWebView {
         return nil
     }
 
-    public func loadHTMLString(html: String, baseFileURL baseURL: NSURL) -> WKNavigation? {
-        assert(baseURL.fileURL)
+    @objc private func _loadHTMLString(html: String, baseURL: NSURL) -> WKNavigation? {
+        guard baseURL.fileURL else {
+            // call original method implementation
+            return _loadHTMLString(html, baseURL: baseURL)
+        }
+
         let fileManager = NSFileManager.defaultManager()
         var isDirectory: ObjCBool = false
         if fileManager.fileExistsAtPath(baseURL.path!, isDirectory: &isDirectory) && isDirectory {
@@ -134,7 +159,7 @@ extension WKWebView {
         if httpd == nil {
             httpd = XWVHttpServer(documentRoot: root)
             httpd!.start()
-            objc_setAssociatedObject(self, key, httpd!, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
+            objc_setAssociatedObject(self, key, httpd!, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
         return httpd!.port
     }

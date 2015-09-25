@@ -19,7 +19,7 @@ import XCTest
 import XWebView
 
 class ConstructorPlugin : XWVTestCase {
-    class Plugin : NSObject, XWebView.XWVScripting {
+    class Plugin : NSObject, XWVScripting {
         dynamic var property = 123
         private var expectation: XCTestExpectation?;
         init(expectation: XCTestExpectation?) {
@@ -37,7 +37,7 @@ class ConstructorPlugin : XWVTestCase {
             return selector == Selector("initWithValue:") ? "" : nil
         }
     }
-    class Plugin2 : NSObject, XWebView.XWVScripting {
+    class Plugin2 : NSObject, XWVScripting {
         override init() {}
         init(expectation: AnyObject?) {
             (expectation as? XWVScriptObject)?.callMethod("fulfill", withArguments: nil, resultHandler: nil)
@@ -52,35 +52,35 @@ class ConstructorPlugin : XWVTestCase {
     func testConstructor() {
         let desc = "constructor"
         let script = "if (\(namespace) instanceof Function) fulfill('\(desc)')"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
     func testConstruction() {
         let desc = "construction"
         let script = "if (new \(namespace)(456) instanceof Promise) fulfill('\(desc)')"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
 /*  func testConstruction2() {
         let desc = "construction2"
         let script = "new \(namespace)(expectation('\(desc)'))"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin2(), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }*/
     func testSyncProperties() {
         let desc = "syncProperties"
         let script = "(new \(namespace)(456)).then(function(o){if (o.property==456) fulfill('\(desc)');})"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
     func testFinalizeForScript() {
         let desc = "finalizeForScript"
         let script = "(new \(namespace)(456)).then(function(o){o.dispose();})"
-        let expectation = expectationWithDescription(desc)
+        _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
