@@ -30,6 +30,7 @@
 #endif
 
 #import "XWVHttpConnection.h"
+#import "XWVException.h"
 
 static NSMutableURLRequest *parseRequest(NSMutableURLRequest *request, NSData *line);
 static NSHTTPURLResponse *buildResponse(NSURLRequest *request, NSURL *rootURL);
@@ -62,7 +63,7 @@ static NSString *getMIMETypeByExtension(NSString *extension);
 }
 
 - (BOOL)open {
-    assert(_requestQueue == nil);  // reopen is forbidden
+    if (_requestQueue != nil) return NO;
 
     CFReadStreamRef input = NULL;
     CFWriteStreamRef output = NULL;
@@ -84,6 +85,7 @@ static NSString *getMIMETypeByExtension(NSString *extension);
 
     if (_delegate && [_delegate respondsToSelector:@selector(didOpenConnection:)])
         [_delegate didOpenConnection:self];
+    
     return YES;
 }
 
@@ -105,7 +107,7 @@ static NSString *getMIMETypeByExtension(NSString *extension);
     NSURL *root;
     if (_delegate && [_delegate respondsToSelector:@selector(documentRoot)]) {
         root = [NSURL fileURLWithPath:_delegate.documentRoot isDirectory:YES];
-        assert(root);
+        [XWVException raiseUnlessRoot:root];
     } else {
         NSBundle *bundle = [NSBundle mainBundle];
         root = bundle.resourceURL ?: bundle.bundleURL;
@@ -341,7 +343,8 @@ NSData *serializeResponse(const NSHTTPURLResponse *response) {
     NSString *name;
 
     int class = (int)response.statusCode / 100 - 1;
-    assert(class >= 0 && class < 5);
+    [XWVException raiseUnlessBadResponse:response];
+    
     int code  = (int)response.statusCode % 100;
     if (code >= sizeof(HttpResponseReasonPhrase[class]) / sizeof(char *) ||
         HttpResponseReasonPhrase[class][code] == NULL) {
