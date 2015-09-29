@@ -16,20 +16,20 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "XWebView"
-  s.version      = "0.9.3"
+  s.version      = "0.9.4"
   s.summary      = "An extensible WebView (based on WKWebView) for iOS."
 
   s.description  = <<-DESC
-                   XWebView is an extensible WebView which is built on top of WKWebView,
-                   the modern WebKit framework debuted in iOS 8.0. It provides fast Web
-                   runtime with carefully designed plugin API for developing sophisticated
-                   iOS native or hybrid applications.
+  XWebView is an extensible WebView which is built on top of WKWebView,
+  the modern WebKit framework debuted in iOS 8.0. It provides fast Web
+  runtime with carefully designed plugin API for developing sophisticated
+  iOS native or hybrid applications.
 
-                   Plugins written in Objective-C or Swift programming language can be
-                   automatically exposed in JavaScript context. With capabilities offered
-                   by plugins, Web apps can look and behave exactly like native apps. They
-                   will be no longer a second-class citizen on iOS platform.
-                   DESC
+  Plugins written in Objective-C or Swift programming language can be
+  automatically exposed in JavaScript context. With capabilities offered
+  by plugins, Web apps can look and behave exactly like native apps. They
+  will be no longer a second-class citizen on iOS platform.
+  DESC
 
   s.homepage     = "https://github.com/XWebView/XWebView"
   # s.screenshots  = "www.example.com/screenshots_1.gif", "www.example.com/screenshots_2.gif"
@@ -55,7 +55,7 @@ Pod::Spec.new do |s|
   #  profile URL.
   #
 
-  s.authors            = { "Zhenyu Liang" => "xwebview@sofla.re", 'Jonathan Dong' => 'dongyan09@gmail.com' }
+  s.authors            = { 'Zhenyu Liang' => 'xwebview@sofla.re', 'Jonathan Dong' => 'dongyan09@gmail.com', 'David Kim' => 'david@xwebview.org', 'Fernando Martínez' => 'contact@fernandodev.com'}
   # s.social_media_url   = ""
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
