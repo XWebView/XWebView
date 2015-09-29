@@ -12,6 +12,15 @@
 		AB023EBE1A8C8BC700580A2A /* XWebView.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = EE62683519FA323900EFC3F8 /* XWebView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AB2273E51AA6FDA700F9207A /* www in Resources */ = {isa = PBXBuildFile; fileRef = AB2273E41AA6FDA700F9207A /* www */; };
 		ABF68ECD1A6B45FC0058267B /* XWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = EE62691C19FA52FC00EFC3F8 /* XWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EDAFD9ED1BB981C300DD660E /* XWVException.m in Sources */ = {isa = PBXBuildFile; fileRef = EDAFD9EC1BB981C300DD660E /* XWVException.m */; settings = {ASSET_TAGS = (); }; };
+		EDC0BA131BB9BD2800241B2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC0BA121BB9BD2800241B2D /* AppDelegate.swift */; };
+		EDC0BA151BB9BD2800241B2D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC0BA141BB9BD2800241B2D /* ViewController.swift */; };
+		EDC0BA181BB9BD2800241B2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EDC0BA161BB9BD2800241B2D /* Main.storyboard */; };
+		EDC0BA1A1BB9BD2800241B2D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EDC0BA191BB9BD2800241B2D /* Assets.xcassets */; };
+		EDC0BA1D1BB9BD2800241B2D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EDC0BA1B1BB9BD2800241B2D /* LaunchScreen.storyboard */; };
+		EDC0BA251BB9BD7600241B2D /* SamplePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC0BA231BB9BD7600241B2D /* SamplePlugin.swift */; settings = {ASSET_TAGS = (); }; };
+		EDC0BA271BB9BFBE00241B2D /* www in Resources */ = {isa = PBXBuildFile; fileRef = EDC0BA261BB9BFBE00241B2D /* www */; settings = {ASSET_TAGS = (); }; };
+		EDC0BA281BB9C15100241B2D /* XWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE62683519FA323900EFC3F8 /* XWebView.framework */; };
 		EE0A1DD31A52775400C9E6D3 /* XWVChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */; };
 		EE131CA71B5F900400A9E790 /* XWVUserScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE131CA61B5F900400A9E790 /* XWVUserScript.swift */; };
 		EE174E781A0361CB00168D96 /* xwebview.js in Resources */ = {isa = PBXBuildFile; fileRef = EE174E771A0361CB00168D96 /* xwebview.js */; };
@@ -64,6 +73,17 @@
 		AB023EA31A8C506600580A2A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB023EA41A8C506600580A2A /* XWebViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XWebViewTests.swift; sourceTree = "<group>"; };
 		AB2273E41AA6FDA700F9207A /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		EDAFD9EC1BB981C300DD660E /* XWVException.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XWVException.m; path = XWebView/XWVException.m; sourceTree = "<group>"; };
+		EDC0BA101BB9BD2700241B2D /* XWebViewExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = XWebViewExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDC0BA121BB9BD2800241B2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		EDC0BA141BB9BD2800241B2D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		EDC0BA171BB9BD2800241B2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		EDC0BA191BB9BD2800241B2D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		EDC0BA1C1BB9BD2800241B2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		EDC0BA1E1BB9BD2800241B2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EDC0BA231BB9BD7600241B2D /* SamplePlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SamplePlugin.swift; sourceTree = "<group>"; };
+		EDC0BA261BB9BFBE00241B2D /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		EDC0BA291BBAD11C00241B2D /* XWVException.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XWVException.h; path = XWebView/XWVException.h; sourceTree = "<group>"; };
 		EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVChannel.swift; path = XWebView/XWVChannel.swift; sourceTree = "<group>"; };
 		EE131CA61B5F900400A9E790 /* XWVUserScript.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVUserScript.swift; path = XWebView/XWVUserScript.swift; sourceTree = "<group>"; };
 		EE174E771A0361CB00168D96 /* xwebview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = xwebview.js; path = XWebView/xwebview.js; sourceTree = "<group>"; };
@@ -97,6 +117,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB023EA61A8C506600580A2A /* XWebView.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EDC0BA0D1BB9BD2700241B2D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDC0BA281BB9C15100241B2D /* XWebView.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,12 +164,28 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		EDC0BA111BB9BD2700241B2D /* XWebViewExample */ = {
+			isa = PBXGroup;
+			children = (
+				EDC0BA261BB9BFBE00241B2D /* www */,
+				EDC0BA231BB9BD7600241B2D /* SamplePlugin.swift */,
+				EDC0BA121BB9BD2800241B2D /* AppDelegate.swift */,
+				EDC0BA141BB9BD2800241B2D /* ViewController.swift */,
+				EDC0BA161BB9BD2800241B2D /* Main.storyboard */,
+				EDC0BA191BB9BD2800241B2D /* Assets.xcassets */,
+				EDC0BA1B1BB9BD2800241B2D /* LaunchScreen.storyboard */,
+				EDC0BA1E1BB9BD2800241B2D /* Info.plist */,
+			);
+			path = XWebViewExample;
+			sourceTree = "<group>";
+		};
 		EE62682B19FA323900EFC3F8 = {
 			isa = PBXGroup;
 			children = (
 				EEF27EB61AFA1D89004740CF /* WebKit.framework */,
 				EE62683719FA323900EFC3F8 /* XWebView */,
 				AB023EA11A8C506600580A2A /* XWebViewTests */,
+				EDC0BA111BB9BD2700241B2D /* XWebViewExample */,
 				EE62683619FA323900EFC3F8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -151,6 +195,7 @@
 			children = (
 				EE62683519FA323900EFC3F8 /* XWebView.framework */,
 				AB023EA01A8C506600580A2A /* XWebViewTests.xctest */,
+				EDC0BA101BB9BD2700241B2D /* XWebViewExample.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -158,6 +203,7 @@
 		EE62683719FA323900EFC3F8 /* XWebView */ = {
 			isa = PBXGroup;
 			children = (
+				EDC0BA291BBAD11C00241B2D /* XWVException.h */,
 				EEDF305F1B6555B900A21659 /* XWVInvocation.swift */,
 				EE131CA61B5F900400A9E790 /* XWVUserScript.swift */,
 				EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */,
@@ -168,11 +214,12 @@
 				EE62691C19FA52FC00EFC3F8 /* XWebView.h */,
 				EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */,
 				EE62692019FA52FC00EFC3F8 /* XWebView.swift */,
-				EE174E771A0361CB00168D96 /* xwebview.js */,
 				EEE6F9A31AE02CF100A2EC89 /* XWVScripting.swift */,
 				EEE6F9A51AE02E8600A2EC89 /* XWVObject.swift */,
 				EE33793D1AE56875009124A4 /* XWVScriptObject.swift */,
 				EEE6F9A71AE02F5000A2EC89 /* XWVBindingObject.swift */,
+				EDAFD9EC1BB981C300DD660E /* XWVException.m */,
+				EE174E771A0361CB00168D96 /* xwebview.js */,
 				EE62683819FA323900EFC3F8 /* Supporting Files */,
 			);
 			name = XWebView;
@@ -221,6 +268,23 @@
 			productReference = AB023EA01A8C506600580A2A /* XWebViewTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		EDC0BA0F1BB9BD2700241B2D /* XWebViewExample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EDC0BA211BB9BD2800241B2D /* Build configuration list for PBXNativeTarget "XWebViewExample" */;
+			buildPhases = (
+				EDC0BA0C1BB9BD2700241B2D /* Sources */,
+				EDC0BA0D1BB9BD2700241B2D /* Frameworks */,
+				EDC0BA0E1BB9BD2700241B2D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = XWebViewExample;
+			productName = XWebViewExample;
+			productReference = EDC0BA101BB9BD2700241B2D /* XWebViewExample.app */;
+			productType = "com.apple.product-type.application";
+		};
 		EE62683419FA323900EFC3F8 /* XWebView */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = EE62684B19FA323900EFC3F8 /* Build configuration list for PBXNativeTarget "XWebView" */;
@@ -253,6 +317,9 @@
 					AB023E9F1A8C506600580A2A = {
 						CreatedOnToolsVersion = 6.1;
 					};
+					EDC0BA0F1BB9BD2700241B2D = {
+						CreatedOnToolsVersion = 7.0;
+					};
 					EE62683419FA323900EFC3F8 = {
 						CreatedOnToolsVersion = 6.1;
 					};
@@ -273,6 +340,7 @@
 			targets = (
 				EE62683419FA323900EFC3F8 /* XWebView */,
 				AB023E9F1A8C506600580A2A /* XWebViewTests */,
+				EDC0BA0F1BB9BD2700241B2D /* XWebViewExample */,
 			);
 		};
 /* End PBXProject section */
@@ -283,6 +351,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB2273E51AA6FDA700F9207A /* www in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EDC0BA0E1BB9BD2700241B2D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDC0BA271BB9BFBE00241B2D /* www in Resources */,
+				EDC0BA1D1BB9BD2800241B2D /* LaunchScreen.storyboard in Resources */,
+				EDC0BA1A1BB9BD2800241B2D /* Assets.xcassets in Resources */,
+				EDC0BA181BB9BD2800241B2D /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -312,6 +391,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EDC0BA0C1BB9BD2700241B2D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDC0BA151BB9BD2800241B2D /* ViewController.swift in Sources */,
+				EDC0BA131BB9BD2800241B2D /* AppDelegate.swift in Sources */,
+				EDC0BA251BB9BD7600241B2D /* SamplePlugin.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EE62683019FA323900EFC3F8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -321,6 +410,7 @@
 				EEE6F9A81AE02F5000A2EC89 /* XWVBindingObject.swift in Sources */,
 				EE131CA71B5F900400A9E790 /* XWVUserScript.swift in Sources */,
 				EE7164921A716C9F00078FF9 /* XWVHttpServer.m in Sources */,
+				EDAFD9ED1BB981C300DD660E /* XWVException.m in Sources */,
 				EE92C65F1B5ACF81000FE1DA /* XWVMetaObject.swift in Sources */,
 				EEE6F9A61AE02E8600A2EC89 /* XWVObject.swift in Sources */,
 				EE33793E1AE56875009124A4 /* XWVScriptObject.swift in Sources */,
@@ -340,14 +430,31 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		EDC0BA161BB9BD2800241B2D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				EDC0BA171BB9BD2800241B2D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		EDC0BA1B1BB9BD2800241B2D /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				EDC0BA1C1BB9BD2800241B2D /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		AB023EA91A8C506600580A2A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -364,12 +471,37 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = XWebViewTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.xwebview.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		EDC0BA1F1BB9BD2800241B2D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = XWebViewExample/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = org.xwebview.XWebViewExample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		EDC0BA201BB9BD2800241B2D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = XWebViewExample/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = org.xwebview.XWebViewExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -503,6 +635,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		EDC0BA211BB9BD2800241B2D /* Build configuration list for PBXNativeTarget "XWebViewExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EDC0BA1F1BB9BD2800241B2D /* Debug */,
+				EDC0BA201BB9BD2800241B2D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		EE62682F19FA323900EFC3F8 /* Build configuration list for PBXProject "XWebView" */ = {
 			isa = XCConfigurationList;
