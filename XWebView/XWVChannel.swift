@@ -54,7 +54,10 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     }
 
     public func bindPlugin(object: AnyObject, toNamespace namespace: String) -> XWVScriptObject? {
-        assert(webView != nil && typeInfo == nil)
+        if webView == nil || typeInfo != nil {
+            return nil
+        }
+        
         webView!.configuration.userContentController.addScriptMessageHandler(self, name: name)
         typeInfo = XWVMetaObject(plugin: object.dynamicType)
         let plugin = XWVBindingObject(namespace: namespace, channel: self, object: object)
@@ -70,7 +73,11 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     }
 
     public func unbind() {
-        assert(typeInfo != nil)
+        if typeInfo == nil {
+            print("<XWV> Warning: can't unbind inexistent plugin.")
+            return
+        }
+        
         instances.removeAll(keepCapacity: false)
         webView?.configuration.userContentController.removeScriptMessageHandlerForName(name)
     }
@@ -83,10 +90,11 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                     if target == 0 {
                         // Dispose plugin
                         unbind()
+                        print("<XWV> Plugin was disposed")
                     } else {
                         // Dispose instance
                         let object = instances.removeValueForKey(target)
-                        assert(object != nil)
+                        print("<XWV> Instance \(object) was disposed")
                     }
                 } else if let member = typeInfo[opcode] where member.isProperty {
                     // Update property
@@ -107,7 +115,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
             obj.userContentController(userContentController, didReceiveScriptMessage: message)
         } else {
             // discard unknown message
-            print("WARNING: Unknown message: \(message.body)")
+            print("<XWV> WARNING: Unknown message: \(message.body)")
         }
     }
 
