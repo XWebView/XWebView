@@ -54,11 +54,10 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     }
 
     public func bindPlugin(object: AnyObject, toNamespace namespace: String) -> XWVScriptObject? {
-        if webView == nil || typeInfo != nil {
-            return nil
-        }
+        assert(typeInfo == nil)
+        guard let webView = webView else { return nil }
         
-        webView!.configuration.userContentController.addScriptMessageHandler(self, name: name)
+        webView.configuration.userContentController.addScriptMessageHandler(self, name: name)
         typeInfo = XWVMetaObject(plugin: object.dynamicType)
         let plugin = XWVBindingObject(namespace: namespace, channel: self, object: object)
 
@@ -66,18 +65,14 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         let script = WKUserScript(source: (object as? XWVScripting)?.javascriptStub?(stub) ?? stub,
                                   injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
                                   forMainFrameOnly: true)
-        userScript = XWVUserScript(webView: webView!, script: script)
+        userScript = XWVUserScript(webView: webView, script: script)
 
         instances[0] = plugin
         return plugin as XWVScriptObject
     }
 
     public func unbind() {
-        if typeInfo == nil {
-            print("<XWV> Warning: can't unbind inexistent plugin.")
-            return
-        }
-        
+        assert(typeInfo != nil, "<XWV> Error: can't unbind inexistent plugin.")
         instances.removeAll(keepCapacity: false)
         webView?.configuration.userContentController.removeScriptMessageHandlerForName(name)
     }
@@ -94,7 +89,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                     } else {
                         // Dispose instance
                         let object = instances.removeValueForKey(target)
-                        print("<XWV> Instance \(object) was disposed")
+                        assert(object != nil, "<XWV> Warning: bad instance id was received")
                     }
                 } else if let member = typeInfo[opcode] where member.isProperty {
                     // Update property
