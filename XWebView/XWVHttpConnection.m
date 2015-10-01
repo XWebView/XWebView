@@ -30,7 +30,7 @@
 #endif
 
 #import "XWVHttpConnection.h"
-#import "XWVException.h"
+
 
 static NSMutableURLRequest *parseRequest(NSMutableURLRequest *request, NSData *line);
 static NSHTTPURLResponse *buildResponse(NSURLRequest *request, NSURL *rootURL);
@@ -107,7 +107,7 @@ static NSString *getMIMETypeByExtension(NSString *extension);
     NSURL *root;
     if (_delegate && [_delegate respondsToSelector:@selector(documentRoot)]) {
         root = [NSURL fileURLWithPath:_delegate.documentRoot isDirectory:YES];
-        [XWVException raiseUnlessRoot:root];
+        NSCAssert(root != nil, @"<XWV> you must set a valid documentRoot");
     } else {
         NSBundle *bundle = [NSBundle mainBundle];
         root = bundle.resourceURL ?: bundle.bundleURL;
@@ -343,7 +343,7 @@ NSData *serializeResponse(const NSHTTPURLResponse *response) {
     NSString *name;
 
     int class = (int)response.statusCode / 100 - 1;
-    [XWVException raiseUnlessBadResponse:response];
+    NSCAssert(class >= 0 && class < 5, @"<XWV> status code must be in the range [0, 500)");
     
     int code  = (int)response.statusCode % 100;
     if (code >= sizeof(HttpResponseReasonPhrase[class]) / sizeof(char *) ||

@@ -12,7 +12,6 @@
 		AB023EBE1A8C8BC700580A2A /* XWebView.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = EE62683519FA323900EFC3F8 /* XWebView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AB2273E51AA6FDA700F9207A /* www in Resources */ = {isa = PBXBuildFile; fileRef = AB2273E41AA6FDA700F9207A /* www */; };
 		ABF68ECD1A6B45FC0058267B /* XWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = EE62691C19FA52FC00EFC3F8 /* XWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		EDAFD9ED1BB981C300DD660E /* XWVException.m in Sources */ = {isa = PBXBuildFile; fileRef = EDAFD9EC1BB981C300DD660E /* XWVException.m */; settings = {ASSET_TAGS = (); }; };
 		EDC0BA131BB9BD2800241B2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC0BA121BB9BD2800241B2D /* AppDelegate.swift */; };
 		EDC0BA151BB9BD2800241B2D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC0BA141BB9BD2800241B2D /* ViewController.swift */; };
 		EDC0BA181BB9BD2800241B2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EDC0BA161BB9BD2800241B2D /* Main.storyboard */; };
@@ -73,7 +72,6 @@
 		AB023EA31A8C506600580A2A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB023EA41A8C506600580A2A /* XWebViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XWebViewTests.swift; sourceTree = "<group>"; };
 		AB2273E41AA6FDA700F9207A /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
-		EDAFD9EC1BB981C300DD660E /* XWVException.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XWVException.m; path = XWebView/XWVException.m; sourceTree = "<group>"; };
 		EDC0BA101BB9BD2700241B2D /* XWebViewExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = XWebViewExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDC0BA121BB9BD2800241B2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		EDC0BA141BB9BD2800241B2D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -83,7 +81,6 @@
 		EDC0BA1E1BB9BD2800241B2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EDC0BA231BB9BD7600241B2D /* SamplePlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SamplePlugin.swift; sourceTree = "<group>"; };
 		EDC0BA261BB9BFBE00241B2D /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
-		EDC0BA291BBAD11C00241B2D /* XWVException.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XWVException.h; path = XWebView/XWVException.h; sourceTree = "<group>"; };
 		EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVChannel.swift; path = XWebView/XWVChannel.swift; sourceTree = "<group>"; };
 		EE131CA61B5F900400A9E790 /* XWVUserScript.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVUserScript.swift; path = XWebView/XWVUserScript.swift; sourceTree = "<group>"; };
 		EE174E771A0361CB00168D96 /* xwebview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = xwebview.js; path = XWebView/xwebview.js; sourceTree = "<group>"; };
@@ -203,7 +200,6 @@
 		EE62683719FA323900EFC3F8 /* XWebView */ = {
 			isa = PBXGroup;
 			children = (
-				EDC0BA291BBAD11C00241B2D /* XWVException.h */,
 				EEDF305F1B6555B900A21659 /* XWVInvocation.swift */,
 				EE131CA61B5F900400A9E790 /* XWVUserScript.swift */,
 				EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */,
@@ -218,7 +214,6 @@
 				EEE6F9A51AE02E8600A2EC89 /* XWVObject.swift */,
 				EE33793D1AE56875009124A4 /* XWVScriptObject.swift */,
 				EEE6F9A71AE02F5000A2EC89 /* XWVBindingObject.swift */,
-				EDAFD9EC1BB981C300DD660E /* XWVException.m */,
 				EE174E771A0361CB00168D96 /* xwebview.js */,
 				EE62683819FA323900EFC3F8 /* Supporting Files */,
 			);
@@ -410,7 +405,6 @@
 				EEE6F9A81AE02F5000A2EC89 /* XWVBindingObject.swift in Sources */,
 				EE131CA71B5F900400A9E790 /* XWVUserScript.swift in Sources */,
 				EE7164921A716C9F00078FF9 /* XWVHttpServer.m in Sources */,
-				EDAFD9ED1BB981C300DD660E /* XWVException.m in Sources */,
 				EE92C65F1B5ACF81000FE1DA /* XWVMetaObject.swift in Sources */,
 				EEE6F9A61AE02E8600A2EC89 /* XWVObject.swift in Sources */,
 				EE33793E1AE56875009124A4 /* XWVScriptObject.swift in Sources */,
