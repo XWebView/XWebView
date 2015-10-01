@@ -54,8 +54,10 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     }
 
     public func bindPlugin(object: AnyObject, toNamespace namespace: String) -> XWVScriptObject? {
-        assert(webView != nil && typeInfo == nil)
-        webView!.configuration.userContentController.addScriptMessageHandler(self, name: name)
+        assert(typeInfo == nil)
+        guard let webView = webView else { return nil }
+        
+        webView.configuration.userContentController.addScriptMessageHandler(self, name: name)
         typeInfo = XWVMetaObject(plugin: object.dynamicType)
         let plugin = XWVBindingObject(namespace: namespace, channel: self, object: object)
 
@@ -63,14 +65,14 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         let script = WKUserScript(source: (object as? XWVScripting)?.javascriptStub?(stub) ?? stub,
                                   injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
                                   forMainFrameOnly: true)
-        userScript = XWVUserScript(webView: webView!, script: script)
+        userScript = XWVUserScript(webView: webView, script: script)
 
         instances[0] = plugin
         return plugin as XWVScriptObject
     }
 
     public func unbind() {
-        assert(typeInfo != nil)
+        assert(typeInfo != nil, "<XWV> Error: can't unbind inexistent plugin.")
         instances.removeAll(keepCapacity: false)
         webView?.configuration.userContentController.removeScriptMessageHandlerForName(name)
     }
@@ -83,10 +85,11 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                     if target == 0 {
                         // Dispose plugin
                         unbind()
+                        print("<XWV> Plugin was disposed")
                     } else {
                         // Dispose instance
                         let object = instances.removeValueForKey(target)
-                        assert(object != nil)
+                        assert(object != nil, "<XWV> Warning: bad instance id was received")
                     }
                 } else if let member = typeInfo[opcode] where member.isProperty {
                     // Update property
@@ -107,7 +110,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
             obj.userContentController(userContentController, didReceiveScriptMessage: message)
         } else {
             // discard unknown message
-            print("WARNING: Unknown message: \(message.body)")
+            print("<XWV> WARNING: Unknown message: \(message.body)")
         }
     }
 

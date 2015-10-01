@@ -48,4 +48,38 @@ class XWebViewTests: XWVTestCase {
             waitForExpectationsWithTimeout(2, handler: nil)
         }
     }
+    
+    func testLoadHtmlStringWithNoBaseURL() {
+        expectationWithDescription("about:blank")
+        webview.loadHTMLString("<html><body><script>fulfill(document.documentURI);</script></body></html>", baseURL: nil)
+        waitForExpectationsWithTimeout(2, handler: nil)
+    }
+    
+    func testLoadHtmlStringWithFileAsBaseURL() {
+        let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")
+        let baseURL = bundle?.bundleURL.URLByAppendingPathComponent("www")
+        let split = "/:\\/\\/|:/"
+        expectationWithDescription("127.0.0.1")
+        webview.loadHTMLString("<html><body><script>fulfill(document.documentURI.split(\(split)));</script></body></html>", baseURL: baseURL)
+        waitForExpectationsWithTimeout(2, handler: nil)
+    }
+    
+    func testLoadHtmlStringWithHostAsBaseURL() {
+        let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")
+        let baseURL = bundle?.bundleURL.URLByAppendingPathComponent("www")
+        expectationWithDescription("www.github.com")
+        webview.loadHTMLString("<html><body><script>fulfill(document.documentURI);</script></body></html>", baseURL: baseURL)
+        waitForExpectationsWithTimeout(2, handler: nil)
+    }
+    
+    //Test for !fileURL (default implementation)
+    func testLoadHTMLStringWithBaseURL2() {
+        _ = expectationWithDescription("loadHTMLStringWithBaseURL")
+        let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")
+        if let baseURL = bundle?.bundleURL.URLByAppendingPathComponent("www") {
+            XCTAssert(baseURL.checkResourceIsReachableAndReturnError(nil), "Directory not found")
+            webview.loadHTMLString("<html><img id='image' onload='fulfill(\"loadHTMLStringWithBaseURL\")' src='image.png'></html>", baseURL: baseURL)
+            waitForExpectationsWithTimeout(2, handler: nil)
+        }
+    }
 }

@@ -68,6 +68,7 @@
 static void ServerAcceptCallBack(CFSocketRef socket, CFSocketCallBackType type, CFDataRef address, const void *data, void *info) {
     XWVHttpServer *server = (__bridge XWVHttpServer *)info;
     CFSocketNativeHandle handle = *(CFSocketNativeHandle *)data;
+
     assert(socket == server->_socket && type == kCFSocketAcceptCallBack);
 
     XWVHttpConnection * conn = [[XWVHttpConnection alloc] initWithNativeHandle:handle];
@@ -77,7 +78,7 @@ static void ServerAcceptCallBack(CFSocketRef socket, CFSocketCallBackType type, 
 }
 
 - (BOOL)start {
-    assert(_socket == NULL);
+    if (_socket != nil) return NO;
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));

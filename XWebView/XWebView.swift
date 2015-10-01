@@ -86,7 +86,7 @@ extension WKWebView {
             condition.unlock()
         }
         if !done {
-            print("ERROR: Timeout to evaluate script.")
+            print("<XWV> ERROR: Timeout to evaluate script.")
         }
         return result
     }
@@ -102,19 +102,34 @@ extension WKWebView {
     // See http://nshipster.com/swift-objc-runtime/
     private static var initialized: dispatch_once_t = 0
     public override class func initialize() {
-        //if #available(iOS 9, *) { return }
         guard self == WKWebView.self else { return }
         dispatch_once(&initialized) {
-            let selector = Selector("loadFileURL:allowingReadAccessToURL:")
-            let method = class_getInstanceMethod(self, Selector("_loadFileURL:allowingReadAccessToURL:"))
-            assert(method != nil)
-            if class_addMethod(self, selector, method_getImplementation(method), method_getTypeEncoding(method)) {
-                print("iOS 8.x")
-                method_exchangeImplementations(
-                    class_getInstanceMethod(self, Selector("loadHTMLString:baseURL:")),
-                    class_getInstanceMethod(self, Selector("_loadHTMLString:baseURL:"))
-                )
-            }
+            let loadFileURLSelector = Selector("loadFileURL:allowingReadAccessToURL:")
+            let loadHTMLStringSelector = Selector("loadHTMLString:baseURL:")
+            let customLoadHTMLStringSelector = Selector("_loadHTMLString:baseURL:")
+            let customLoadFileURLSelector = Selector("_loadFileURL:allowingReadAccessToURL:")
+            
+            let loadFileURLMethod = class_getInstanceMethod(
+                self,
+                customLoadFileURLSelector
+            )
+            let loadHTMLStringMethod = class_getInstanceMethod(
+                self,
+                customLoadHTMLStringSelector
+            )
+
+            assert(loadFileURLMethod != nil && loadHTMLStringMethod != nil)
+            
+            class_addMethod(
+                self,
+                loadFileURLSelector,
+                method_getImplementation(loadFileURLMethod),
+                method_getTypeEncoding(loadFileURLMethod)
+            )
+            method_exchangeImplementations(
+                class_getInstanceMethod(self, loadHTMLStringSelector),
+                class_getInstanceMethod(self, customLoadHTMLStringSelector)
+            )
         }
     }
 
@@ -137,6 +152,12 @@ extension WKWebView {
         return nil
     }
 
+    // Although iOS 9.x loadHTMLString and loadData can't use baseURL with file protocol access.
+    // But for Simulator you can use loadHTMLString and loadData with file:/// as baseURL and access
+    // all of your resources. Accessing local data is restricted for devices and the unique folder
+    // that you can access is tmp folder.
+    // 
+    // It continues to be necessary with you pretend to render pages such as dynamic templates.
     @objc private func _loadHTMLString(html: String, baseURL: NSURL) -> WKNavigation? {
         guard baseURL.fileURL else {
             // call original method implementation

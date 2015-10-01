@@ -30,13 +30,15 @@ extension XCTestExpectation : XWVScripting {
 
 class XWVTestCase : XCTestCase, WKNavigationDelegate {
     var webview: WKWebView!
+    private let nameForExpectation = "expectationWithDescription"
     private let namespaceForExpectation = "xwvexpectations"
     private var onReady: ((WKWebView)->Void)?
 
     override func setUp() {
         super.setUp()
-        let source = "function fulfill(name){\(namespaceForExpectation)[name].fulfill();}\n" +
-                     "function expectation(name){return \(namespaceForExpectation)[name];}\n"
+        let source = "function fulfill(name){\(namespaceForExpectation)['\(nameForExpectation)'].fulfill();}\n" +
+                     "function expectation(name){return \(namespaceForExpectation)[\(nameForExpectation)];}\n"
+        
         let script = WKUserScript(
             source: source,
             injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
@@ -49,16 +51,17 @@ class XWVTestCase : XCTestCase, WKNavigationDelegate {
         webview = nil
         super.tearDown()
     }
-
+    
     override func expectationWithDescription(description: String) -> XCTestExpectation {
         let e = super.expectationWithDescription(description)
-        webview.loadPlugin(e, namespace: "\(namespaceForExpectation).\(description)")
+        webview.loadPlugin(e, namespace: "\(namespaceForExpectation).\(nameForExpectation)")
         return e
     }
 
     func loadPlugin(object: NSObject, namespace: String, script: String) {
         loadPlugin(object, namespace: namespace, script: script, onReady: nil)
     }
+    
     func loadPlugin(object: NSObject, namespace: String, script: String, onReady: ((WKWebView)->Void)?) {
         self.onReady = onReady
         webview.loadPlugin(object, namespace: namespace)
@@ -74,6 +77,7 @@ class XWVTestCase : XCTestCase, WKNavigationDelegate {
 class XWVTestCaseTest : XWVTestCase {
     class Plugin : NSObject {
     }
+    
     func testXWVTestCase() {
         let desc = "selftest"
         _ = expectationWithDescription(desc)
