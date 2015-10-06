@@ -55,7 +55,7 @@ Pod::Spec.new do |s|
   #  profile URL.
   #
 
-  s.authors            = { "Zhenyu Liang" => "xwebview@sofla.re", 'Jonathan Dong' => 'dongyan09@gmail.com' }
+  s.authors            = { 'Zhenyu Liang' => 'xwebview@sofla.re', 'Jonathan Dong' => 'dongyan09@gmail.com', 'David Kim' => 'david@xwebview.org', 'Fernando Martínez' => 'contact@fernandodev.com'}
   # s.social_media_url   = ""
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
