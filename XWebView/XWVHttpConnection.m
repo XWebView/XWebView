@@ -62,7 +62,7 @@ static NSString *getMIMETypeByExtension(NSString *extension);
 }
 
 - (BOOL)open {
-    assert(_requestQueue == nil);  // reopen is forbidden
+    if (_requestQueue != nil) return NO;  // reopen is forbidden
 
     CFReadStreamRef input = NULL;
     CFWriteStreamRef output = NULL;
@@ -105,7 +105,7 @@ static NSString *getMIMETypeByExtension(NSString *extension);
     NSURL *root;
     if (_delegate && [_delegate respondsToSelector:@selector(documentRoot)]) {
         root = [NSURL fileURLWithPath:_delegate.documentRoot isDirectory:YES];
-        assert(root);
+        NSAssert(root != nil, @"<XWV> you must set a valid documentRoot");
     } else {
         NSBundle *bundle = [NSBundle mainBundle];
         root = bundle.resourceURL ?: bundle.bundleURL;
@@ -341,7 +341,8 @@ NSData *serializeResponse(const NSHTTPURLResponse *response) {
     NSString *name;
 
     int class = (int)response.statusCode / 100 - 1;
-    assert(class >= 0 && class < 5);
+    NSCAssert(class >= 0 && class < 5, @"<XWV> status code must be in the range [100, 599]");
+    
     int code  = (int)response.statusCode % 100;
     if (code >= sizeof(HttpResponseReasonPhrase[class]) / sizeof(char *) ||
         HttpResponseReasonPhrase[class][code] == NULL) {
