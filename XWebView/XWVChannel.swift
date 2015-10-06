@@ -56,7 +56,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     }
 
     public func bindPlugin(object: AnyObject, toNamespace namespace: String) -> XWVScriptObject? {
-        assert(typeInfo == nil, "<XWV> This channel already have an bound object")
+        assert(typeInfo == nil, "<XWV> This channel already has a bound object")
         guard let webView = webView else { return nil }
         
         webView.configuration.userContentController.addScriptMessageHandler(self, name: name)

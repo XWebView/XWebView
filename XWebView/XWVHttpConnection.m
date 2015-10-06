@@ -341,7 +341,7 @@ NSData *serializeResponse(const NSHTTPURLResponse *response) {
     NSString *name;
 
     int class = (int)response.statusCode / 100 - 1;
-    NSCAssert(class >= 0 && class < 5, @"<XWV> status code must be in the range [0, 500)");
+    NSCAssert(class >= 0 && class < 5, @"<XWV> status code must be in the range [100, 599]");
     
     int code  = (int)response.statusCode % 100;
     if (code >= sizeof(HttpResponseReasonPhrase[class]) / sizeof(char *) ||
