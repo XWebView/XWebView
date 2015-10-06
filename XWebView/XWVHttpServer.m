@@ -77,7 +77,7 @@ static void ServerAcceptCallBack(CFSocketRef socket, CFSocketCallBackType type, 
 }
 
 - (BOOL)start {
-    assert(_socket == NULL);
+    if (_socket != nil) return NO;
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
