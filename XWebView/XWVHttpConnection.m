@@ -105,7 +105,7 @@ static NSString *getMIMETypeByExtension(NSString *extension);
     NSURL *root;
     if (_delegate && [_delegate respondsToSelector:@selector(documentRoot)]) {
         root = [NSURL fileURLWithPath:_delegate.documentRoot isDirectory:YES];
-        NSCAssert(root != nil, @"<XWV> you must set a valid documentRoot");
+        NSAssert(root != nil, @"<XWV> you must set a valid documentRoot");
     } else {
         NSBundle *bundle = [NSBundle mainBundle];
         root = bundle.resourceURL ?: bundle.bundleURL;
