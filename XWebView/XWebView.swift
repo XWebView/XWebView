@@ -86,7 +86,7 @@ extension WKWebView {
             condition.unlock()
         }
         if !done {
-            print("ERROR: Timeout to evaluate script.")
+            print("<XWV> ERROR: Timeout to evaluate script.")
         }
         return result
     }
