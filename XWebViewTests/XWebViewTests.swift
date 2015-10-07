@@ -48,4 +48,28 @@ class XWebViewTests: XWVTestCase {
             waitForExpectationsWithTimeout(2, handler: nil)
         }
     }
+    
+    func testLoadHtmlStringWithNoBaseURL() {
+        expectationWithDescription("about:blank")
+        webview.loadHTMLString("<html><body><script>fulfill(document.documentURI);</script></body></html>", baseURL: nil)
+        waitForExpectationsWithTimeout(2, handler: nil)
+    }
+    
+    func testLoadHtmlStringWithFileAsBaseURL() {
+        let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")
+        let baseURL = bundle?.bundleURL.URLByAppendingPathComponent("www")
+        let split = "/:\\/\\/|:/"
+        let replace = "/\\./g"
+        expectationWithDescription("127001") //Original: http://127.0.0.1
+        webview.loadHTMLString(
+            "<html>" +
+                "<body>" +
+                    "<script>" +
+                    "fulfill(document.documentURI.split(\(split))[1].replace(\(replace),''));" +
+                    "</script>" +
+                "</body>" +
+            "</html>",
+            baseURL: baseURL)
+        waitForExpectationsWithTimeout(2, handler: nil)
+    }
 }
