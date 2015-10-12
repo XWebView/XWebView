@@ -24,8 +24,6 @@ FOUNDATION_EXPORT const unsigned char XWebViewVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <XWebView/PublicHeader.h>
 
-#import "XWVHttpServer.h"
-
 // The workaround for loading file URL on iOS 8.x.
 #import <WebKit/WKWebView.h>
 @interface WKWebView (XWebView)
