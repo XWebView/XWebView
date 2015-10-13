@@ -109,7 +109,7 @@ extension WKWebView {
             let method = class_getInstanceMethod(self, Selector("_loadFileURL:allowingReadAccessToURL:"))
             assert(method != nil)
             if class_addMethod(self, selector, method_getImplementation(method), method_getTypeEncoding(method)) {
-                print("iOS 8.x")
+                print("<XWV> INFO: Platform is iOS 8.x")
                 method_exchangeImplementations(
                     class_getInstanceMethod(self, Selector("loadHTMLString:baseURL:")),
                     class_getInstanceMethod(self, Selector("_loadHTMLString:baseURL:"))
@@ -120,21 +120,19 @@ extension WKWebView {
 
     @objc private func _loadFileURL(URL: NSURL, allowingReadAccessToURL readAccessURL: NSURL) -> WKNavigation? {
         precondition(URL.fileURL && readAccessURL.fileURL)
+
+        // readAccessURL must contain URL
         let fileManager = NSFileManager.defaultManager()
         var relationship: NSURLRelationship = NSURLRelationship.Other
         _ = try? fileManager.getRelationship(&relationship, ofDirectoryAtURL: readAccessURL, toItemAtURL: URL)
+        guard relationship != NSURLRelationship.Other else { return nil }
 
-        var isDirectory: ObjCBool = false
-        if fileManager.fileExistsAtPath(readAccessURL.path!, isDirectory: &isDirectory) &&
-            isDirectory && relationship != NSURLRelationship.Other {
-            let port = startHttpd(documentRoot: readAccessURL.path!)
-            var path = URL.path![readAccessURL.path!.endIndex ..< URL.path!.endIndex]
-            if let query = URL.query { path += "?\(query)" }
-            if let fragment = URL.fragment { path += "#\(fragment)" }
-            let url = NSURL(string: path , relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
-            return loadRequest(NSURLRequest(URL: url!));
-        }
-        return nil
+        guard let port = startHttpd(documentRoot: readAccessURL) else { return nil }
+        var path = URL.path![readAccessURL.path!.endIndex ..< URL.path!.endIndex]
+        if let query = URL.query { path += "?\(query)" }
+        if let fragment = URL.fragment { path += "#\(fragment)" }
+        let url = NSURL(string: path , relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
+        return loadRequest(NSURLRequest(URL: url!));
     }
 
     @objc private func _loadHTMLString(html: String, baseURL: NSURL) -> WKNavigation? {
@@ -143,24 +141,20 @@ extension WKWebView {
             return _loadHTMLString(html, baseURL: baseURL)
         }
 
-        let fileManager = NSFileManager.defaultManager()
-        var isDirectory: ObjCBool = false
-        if fileManager.fileExistsAtPath(baseURL.path!, isDirectory: &isDirectory) && isDirectory {
-            let port = startHttpd(documentRoot: baseURL.path!)
-            let url = NSURL(string: "http://127.0.0.1:\(port)/")
-            return loadHTMLString(html, baseURL: url)
-        }
-        return nil
+        guard let port = startHttpd(documentRoot: baseURL) else { return nil }
+        let url = NSURL(string: "http://127.0.0.1:\(port)/")
+        return loadHTMLString(html, baseURL: url)
     }
 
-    private func startHttpd(documentRoot root: String) -> in_port_t {
+    private func startHttpd(documentRoot root: NSURL) -> in_port_t? {
         let key = unsafeAddressOf(XWVHttpServer)
-        var httpd = objc_getAssociatedObject(self, key) as? XWVHttpServer
-        if httpd == nil {
-            httpd = XWVHttpServer(documentRoot: root)
-            httpd!.start()
-            objc_setAssociatedObject(self, key, httpd!, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        if let httpd = objc_getAssociatedObject(self, key) as? XWVHttpServer {
+            return httpd.port
         }
-        return httpd!.port
+
+        let httpd = XWVHttpServer(documentRoot: root)
+        guard httpd.start() else { return nil }
+        objc_setAssociatedObject(self, key, httpd, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        return httpd.port
     }
 }

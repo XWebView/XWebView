@@ -23,10 +23,8 @@
 		EE3379401AE57566009124A4 /* XWVScriptingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE33793F1AE57566009124A4 /* XWVScriptingTest.swift */; };
 		EE5BA7BD1B67DC940095AAE7 /* XWVInvocationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5BA7BC1B67DC940095AAE7 /* XWVInvocationTest.swift */; };
 		EE62692619FA52FC00EFC3F8 /* XWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE62692019FA52FC00EFC3F8 /* XWebView.swift */; };
-		EE71648F1A716C9F00078FF9 /* XWVHttpConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = EE71648B1A716C9F00078FF9 /* XWVHttpConnection.h */; };
-		EE7164901A716C9F00078FF9 /* XWVHttpConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = EE71648C1A716C9F00078FF9 /* XWVHttpConnection.m */; };
-		EE7164911A716C9F00078FF9 /* XWVHttpServer.h in Headers */ = {isa = PBXBuildFile; fileRef = EE71648D1A716C9F00078FF9 /* XWVHttpServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		EE7164921A716C9F00078FF9 /* XWVHttpServer.m in Sources */ = {isa = PBXBuildFile; fileRef = EE71648E1A716C9F00078FF9 /* XWVHttpServer.m */; };
+		EE8BA6E51BCBFFBC004421CA /* XWVHttpConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8BA6E31BCBFFBC004421CA /* XWVHttpConnection.swift */; settings = {ASSET_TAGS = (); }; };
+		EE8BA6E61BCBFFBC004421CA /* XWVHttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8BA6E41BCBFFBC004421CA /* XWVHttpServer.swift */; settings = {ASSET_TAGS = (); }; };
 		EE92C65F1B5ACF81000FE1DA /* XWVMetaObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */; };
 		EE92C6611B5AD7DB000FE1DA /* XWVMetaObjectTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE92C6601B5AD7DB000FE1DA /* XWVMetaObjectTest.swift */; };
 		EEDF30601B6555B900A21659 /* XWVInvocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEDF305F1B6555B900A21659 /* XWVInvocation.swift */; };
@@ -78,10 +76,8 @@
 		EE62691319FA52D100EFC3F8 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = XWebView/Info.plist; sourceTree = "<group>"; };
 		EE62691C19FA52FC00EFC3F8 /* XWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XWebView.h; path = XWebView/XWebView.h; sourceTree = "<group>"; };
 		EE62692019FA52FC00EFC3F8 /* XWebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWebView.swift; path = XWebView/XWebView.swift; sourceTree = "<group>"; };
-		EE71648B1A716C9F00078FF9 /* XWVHttpConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XWVHttpConnection.h; path = XWebView/XWVHttpConnection.h; sourceTree = "<group>"; };
-		EE71648C1A716C9F00078FF9 /* XWVHttpConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XWVHttpConnection.m; path = XWebView/XWVHttpConnection.m; sourceTree = "<group>"; };
-		EE71648D1A716C9F00078FF9 /* XWVHttpServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XWVHttpServer.h; path = XWebView/XWVHttpServer.h; sourceTree = "<group>"; };
-		EE71648E1A716C9F00078FF9 /* XWVHttpServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XWVHttpServer.m; path = XWebView/XWVHttpServer.m; sourceTree = "<group>"; };
+		EE8BA6E31BCBFFBC004421CA /* XWVHttpConnection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVHttpConnection.swift; path = XWebView/XWVHttpConnection.swift; sourceTree = "<group>"; };
+		EE8BA6E41BCBFFBC004421CA /* XWVHttpServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVHttpServer.swift; path = XWebView/XWVHttpServer.swift; sourceTree = "<group>"; };
 		EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVMetaObject.swift; path = XWebView/XWVMetaObject.swift; sourceTree = "<group>"; };
 		EE92C6601B5AD7DB000FE1DA /* XWVMetaObjectTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVMetaObjectTest.swift; sourceTree = "<group>"; };
 		EEDF305F1B6555B900A21659 /* XWVInvocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XWVInvocation.swift; path = XWebView/XWVInvocation.swift; sourceTree = "<group>"; };
@@ -158,13 +154,11 @@
 		EE62683719FA323900EFC3F8 /* XWebView */ = {
 			isa = PBXGroup;
 			children = (
+				EE8BA6E31BCBFFBC004421CA /* XWVHttpConnection.swift */,
+				EE8BA6E41BCBFFBC004421CA /* XWVHttpServer.swift */,
 				EEDF305F1B6555B900A21659 /* XWVInvocation.swift */,
 				EE131CA61B5F900400A9E790 /* XWVUserScript.swift */,
 				EE92C65E1B5ACF81000FE1DA /* XWVMetaObject.swift */,
-				EE71648B1A716C9F00078FF9 /* XWVHttpConnection.h */,
-				EE71648C1A716C9F00078FF9 /* XWVHttpConnection.m */,
-				EE71648D1A716C9F00078FF9 /* XWVHttpServer.h */,
-				EE71648E1A716C9F00078FF9 /* XWVHttpServer.m */,
 				EE62691C19FA52FC00EFC3F8 /* XWebView.h */,
 				EE0A1DD21A52775400C9E6D3 /* XWVChannel.swift */,
 				EE62692019FA52FC00EFC3F8 /* XWebView.swift */,
@@ -194,8 +188,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				ABF68ECD1A6B45FC0058267B /* XWebView.h in Headers */,
-				EE7164911A716C9F00078FF9 /* XWVHttpServer.h in Headers */,
-				EE71648F1A716C9F00078FF9 /* XWVHttpConnection.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,16 +309,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				EEE6F9A41AE02CF100A2EC89 /* XWVScripting.swift in Sources */,
+				EE8BA6E61BCBFFBC004421CA /* XWVHttpServer.swift in Sources */,
 				EEDF30601B6555B900A21659 /* XWVInvocation.swift in Sources */,
 				EEE6F9A81AE02F5000A2EC89 /* XWVBindingObject.swift in Sources */,
 				EE131CA71B5F900400A9E790 /* XWVUserScript.swift in Sources */,
-				EE7164921A716C9F00078FF9 /* XWVHttpServer.m in Sources */,
 				EE92C65F1B5ACF81000FE1DA /* XWVMetaObject.swift in Sources */,
+				EE8BA6E51BCBFFBC004421CA /* XWVHttpConnection.swift in Sources */,
 				EEE6F9A61AE02E8600A2EC89 /* XWVObject.swift in Sources */,
 				EE33793E1AE56875009124A4 /* XWVScriptObject.swift in Sources */,
 				EE0A1DD31A52775400C9E6D3 /* XWVChannel.swift in Sources */,
 				EE62692619FA52FC00EFC3F8 /* XWebView.swift in Sources */,
-				EE7164901A716C9F00078FF9 /* XWVHttpConnection.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,9 +337,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -364,9 +354,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = XWebViewTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.xwebview.$(PRODUCT_NAME:rfc1034identifier)";

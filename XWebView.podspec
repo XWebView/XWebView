@@ -90,7 +90,7 @@ Pod::Spec.new do |s|
   #
 
   s.source_files  = "XWebView/*.swift"
-  s.exclude_files = "XWebView/XWVInvocation.swift"
+  s.exclude_files = "XWebView/XWVInvocation.swift", "XWebView/XWVHttp*.swift"
 
   # s.public_header_files = "Classes/**/*.h"
 
@@ -138,8 +138,7 @@ Pod::Spec.new do |s|
   end
 
   s.subspec "HttpServer" do |sp|
-    sp.source_files = "XWebView/XWVHttp*.{h,m}"
-    sp.private_header_files = "XWebView/XWVHttpConnection.h"
+    sp.source_files = "XWebView/XWVHttp*.swift"
     sp.framework  = "MobileCoreServices"
   end
 end
