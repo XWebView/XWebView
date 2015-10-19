@@ -93,6 +93,20 @@ extension WKWebView {
 }
 
 extension WKWebView {
+    // Overlay support for loading file URL
+    public func loadFileURL(URL: NSURL, overlayURLs: [NSURL]? = nil) -> WKNavigation? {
+        precondition(URL.fileURL && URL.baseURL != nil, "URL must be a relative file URL.")
+        guard overlayURLs?.count > 0 else {
+            return loadFileURL(URL, allowingReadAccessToURL: URL.baseURL!)
+        }
+
+        guard let port = startHttpd(rootURL: URL.baseURL!, overlayURLs: overlayURLs) else { return nil }
+        let url = NSURL(string: URL.resourceSpecifier, relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
+        return loadRequest(NSURLRequest(URL: url!))
+    }
+}
+
+extension WKWebView {
     // WKWebView can't load file URL on iOS 8.x devices.
     // We have to start an embedded http server for proxy.
     // When running on iOS 8.x, we provide the same API as on iOS 9.
@@ -127,12 +141,12 @@ extension WKWebView {
         _ = try? fileManager.getRelationship(&relationship, ofDirectoryAtURL: readAccessURL, toItemAtURL: URL)
         guard relationship != NSURLRelationship.Other else { return nil }
 
-        guard let port = startHttpd(documentRoot: readAccessURL) else { return nil }
+        guard let port = startHttpd(rootURL: readAccessURL) else { return nil }
         var path = URL.path![readAccessURL.path!.endIndex ..< URL.path!.endIndex]
         if let query = URL.query { path += "?\(query)" }
         if let fragment = URL.fragment { path += "#\(fragment)" }
         let url = NSURL(string: path , relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
-        return loadRequest(NSURLRequest(URL: url!));
+        return loadRequest(NSURLRequest(URL: url!))
     }
 
     @objc private func _loadHTMLString(html: String, baseURL: NSURL) -> WKNavigation? {
@@ -141,18 +155,21 @@ extension WKWebView {
             return _loadHTMLString(html, baseURL: baseURL)
         }
 
-        guard let port = startHttpd(documentRoot: baseURL) else { return nil }
+        guard let port = startHttpd(rootURL: baseURL) else { return nil }
         let url = NSURL(string: "http://127.0.0.1:\(port)/")
         return loadHTMLString(html, baseURL: url)
     }
 
-    private func startHttpd(documentRoot root: NSURL) -> in_port_t? {
+    private func startHttpd(rootURL rootURL: NSURL, overlayURLs: [NSURL]? = nil) -> in_port_t? {
         let key = unsafeAddressOf(XWVHttpServer)
         if let httpd = objc_getAssociatedObject(self, key) as? XWVHttpServer {
-            return httpd.port
+            if httpd.rootURL == rootURL && httpd.overlayURLs == overlayURLs ?? [] {
+                return httpd.port
+            }
+            httpd.stop()
         }
 
-        let httpd = XWVHttpServer(documentRoot: root)
+        let httpd = XWVHttpServer(rootURL: rootURL, overlayURLs: overlayURLs)
         guard httpd.start() else { return nil }
         objc_setAssociatedObject(self, key, httpd, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return httpd.port
