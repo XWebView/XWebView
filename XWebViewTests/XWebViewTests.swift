@@ -39,6 +39,26 @@ class XWebViewTests: XWVTestCase {
         }
     }
 
+    func testLoadFileURLWithOverlay() {
+        _ = expectationWithDescription("loadFileURLWithOverlay")
+        let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")
+        if let root = bundle?.bundleURL.URLByAppendingPathComponent("www") {
+            // create overlay file in library directory
+            let library = try! NSFileManager.defaultManager().URLForDirectory(
+                NSSearchPathDirectory.LibraryDirectory,
+                inDomain: NSSearchPathDomainMask.UserDomainMask,
+                appropriateForURL: nil,
+                create: true)
+            var url = library.URLByAppendingPathComponent("webviewTest.html")
+            let content = "<html><script type='text/javascript'>fulfill('loadFileURLWithOverlay');</script></html>"
+            try! content.writeToURL(url, atomically: false, encoding: NSUTF8StringEncoding)
+
+            url = NSURL(string: "webviewTest.html", relativeToURL: root)!
+            webview.loadFileURL(url, overlayURLs: [library])
+            waitForExpectationsWithTimeout(2, handler: nil)
+        }
+    }
+
     func testLoadHTMLStringWithBaseURL() {
         _ = expectationWithDescription("loadHTMLStringWithBaseURL")
         let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")

@@ -25,19 +25,28 @@ import CoreServices
 class XWVHttpServer : NSObject {
     private var socket: CFSocketRef!
     private var connections = Set<XWVHttpConnection>()
-    private var documentRoot: NSURL
+    private let overlays: [NSURL]
     private(set) var port: in_port_t = 0
 
-    init(documentRoot: NSURL) {
-        // documentRoot must be a directory
-        precondition(documentRoot.fileURL)
-        let fileManager = NSFileManager.defaultManager()
-        var isDirectory: ObjCBool = false
-        let result = fileManager.fileExistsAtPath(documentRoot.path!, isDirectory: &isDirectory)
-        precondition(result && isDirectory)
+    var rootURL: NSURL {
+        return overlays.last!
+    }
+    var overlayURLs: [NSURL] {
+        return overlays.dropLast().reverse()
+    }
 
-        self.documentRoot = documentRoot
+    init(rootURL: NSURL, overlayURLs: [NSURL]?) {
+        precondition(rootURL.fileURL)
+        var overlays = [rootURL]
+        overlayURLs?.forEach {
+            precondition($0.fileURL)
+            overlays.append($0)
+        }
+        self.overlays = overlays.reverse()
         super.init()
+    }
+    convenience init(rootURL: NSURL) {
+        self.init(rootURL: rootURL, overlayURLs: nil)
     }
     deinit {
         stop()
@@ -153,14 +162,22 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
             // Bad request
             statusCode = 400
         } else if request.HTTPMethod == "GET" || request.HTTPMethod == "HEAD" {
-            fileURL = documentRoot.URLByAppendingPathComponent(request.URL!.path!)
-            var isDirectory: ObjCBool = false
             let fileManager = NSFileManager.defaultManager()
-            fileManager.fileExistsAtPath(fileURL.path!, isDirectory: &isDirectory)
-            if isDirectory {
-                fileURL = fileURL.URLByAppendingPathComponent("index.html")
+            let relativePath = String(request.URL!.path!.characters.dropFirst())
+            for baseURL in overlays {
+                var isDirectory: ObjCBool = false
+                var url = NSURL(string: relativePath, relativeToURL: baseURL)!
+                if fileManager.fileExistsAtPath(url.path!, isDirectory: &isDirectory) {
+                    if isDirectory {
+                        url = url.URLByAppendingPathComponent("index.html")
+                    }
+                    if fileManager.isReadableFileAtPath(url.path!) {
+                        fileURL = url
+                        break
+                    }
+                }
             }
-            if fileManager.isReadableFileAtPath(fileURL.path!) {
+            if fileURL.path != nil {
                 statusCode = 200
                 let attrs = try! fileManager.attributesOfItemAtPath(fileURL.path!)
                 headers["Content-Type"] = getMIMETypeByExtension(fileURL.pathExtension!)
