@@ -18,50 +18,61 @@ import Foundation
 
 public class XWVScriptObject : XWVObject {
     // JavaScript object operations
-    public func construct(arguments arguments: [AnyObject]?, resultHandler: ((AnyObject!)->Void)?) {
+    public func construct(arguments arguments: [AnyObject]?, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
         let exp = "new " + scriptForCallingMethod(nil, arguments: arguments)
-        evaluateExpression(exp, onSuccess: resultHandler)
+        evaluateExpression(exp, completionHandler: completionHandler)
     }
-    public func call(arguments arguments: [AnyObject]?, resultHandler: ((AnyObject!)->Void)?) {
+    public func call(arguments arguments: [AnyObject]?, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
         let exp = scriptForCallingMethod(nil, arguments: arguments)
-        evaluateExpression(exp, onSuccess: resultHandler)
+        evaluateExpression(exp, completionHandler: completionHandler)
     }
-    public func callMethod(name: String, withArguments arguments: [AnyObject]?, resultHandler: ((AnyObject!)->Void)?) {
+    public func callMethod(name: String, withArguments arguments: [AnyObject]?, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
         let exp = scriptForCallingMethod(name, arguments: arguments)
-        evaluateExpression(exp, onSuccess: resultHandler)
+        evaluateExpression(exp, completionHandler: completionHandler)
     }
 
-    public func construct(arguments arguments: [AnyObject]?) -> AnyObject! {
-        return evaluateExpression("new \(scriptForCallingMethod(nil, arguments: arguments))")
+    public func construct(arguments arguments: [AnyObject]?) throws -> AnyObject {
+        let exp = "new \(scriptForCallingMethod(nil, arguments: arguments))"
+        guard let result = try evaluateExpression(exp) else {
+            let code = WKErrorCode.JavaScriptExceptionOccurred.rawValue
+            throw NSError(domain: WKErrorDomain, code: code, userInfo: nil)
+        }
+        return result
     }
-    public func call(arguments arguments: [AnyObject]?) -> AnyObject! {
-        return evaluateExpression(scriptForCallingMethod(nil, arguments: arguments))
+    public func call(arguments arguments: [AnyObject]?) throws -> AnyObject! {
+        return try evaluateExpression(scriptForCallingMethod(nil, arguments: arguments))
     }
-    public func callMethod(name: String, withArguments arguments: [AnyObject]?) -> AnyObject! {
-        return evaluateExpression(scriptForCallingMethod(name, arguments: arguments))
+    public func callMethod(name: String, withArguments arguments: [AnyObject]?) throws -> AnyObject! {
+        return try evaluateExpression(scriptForCallingMethod(name, arguments: arguments))
+    }
+    public func call(arguments arguments: [AnyObject]?, error: NSErrorPointer) -> AnyObject! {
+        return evaluateExpression(scriptForCallingMethod(nil, arguments: arguments), error: error)
+    }
+    public func callMethod(name: String, withArguments arguments: [AnyObject]?, error: NSErrorPointer) -> AnyObject! {
+        return evaluateExpression(scriptForCallingMethod(name, arguments: arguments), error: error)
     }
 
     public func defineProperty(name: String, descriptor: [String:AnyObject]) -> AnyObject? {
         let exp = "Object.defineProperty(\(namespace), \(name), \(serialize(descriptor)))"
-        return evaluateExpression(exp)
+        return try! evaluateExpression(exp)
     }
     public func deleteProperty(name: String) -> Bool {
-        let result: AnyObject? = evaluateExpression("delete \(scriptForFetchingProperty(name))")
+        let result: AnyObject? = try! evaluateExpression("delete \(scriptForFetchingProperty(name))")
         return (result as? NSNumber)?.boolValue ?? false
     }
     public func hasProperty(name: String) -> Bool {
-        let result: AnyObject? = evaluateExpression("\(scriptForFetchingProperty(name)) != undefined")
+        let result: AnyObject? = try! evaluateExpression("\(scriptForFetchingProperty(name)) != undefined")
         return (result as? NSNumber)?.boolValue ?? false
     }
 
     public func value(forProperty name: String) -> AnyObject? {
-        return evaluateExpression(scriptForFetchingProperty(name))
+        return try! evaluateExpression(scriptForFetchingProperty(name))
     }
     public func setValue(value: AnyObject?, forProperty name:String) {
         webView?.evaluateJavaScript(scriptForUpdatingProperty(name, value: value), completionHandler: nil)
     }
     public func value(atIndex index: UInt) -> AnyObject? {
-        return evaluateExpression("\(namespace)[\(index)]")
+        return try! evaluateExpression("\(namespace)[\(index)]")
     }
     public func setValue(value: AnyObject?, atIndex index: UInt) {
         webView?.evaluateJavaScript("\(namespace)[\(index)] = \(serialize(value))", completionHandler: nil)

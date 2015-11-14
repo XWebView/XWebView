@@ -40,41 +40,40 @@ public class XWVObject : NSObject {
     }
 
     deinit {
-        var script: String?
+        let script: String
         if reference == 0 {
             script = "delete \(namespace)"
         } else if origin != nil {
             script = "\(origin.namespace).$releaseObject(\(reference))"
+        } else {
+            assertionFailure()
+            return
         }
-        if let webView = webView, let script = script {
-            webView.evaluateJavaScript(script, completionHandler: nil)
-        }
+        webView?.evaluateJavaScript(script, completionHandler: nil)
     }
 
     // Evaluate JavaScript expression
-    public func evaluateExpression(exp: String, error: NSErrorPointer = nil) -> AnyObject? {
-        if let result: AnyObject = webView?.evaluateJavaScript(scriptForRetaining(exp), error: error) {
-            return wrapScriptObject(result)
-        }
-        return nil
+    public func evaluateExpression(expression: String) throws -> AnyObject? {
+        return wrapScriptObject(try webView?.evaluateJavaScript(scriptForRetaining(expression)))
     }
-    public func evaluateExpression(exp: String, onSuccess handler: ((AnyObject!)->Void)?) {
-        if handler == nil {
-            webView?.evaluateJavaScript(exp, completionHandler: nil)
-        } else {
-            webView?.evaluateJavaScript(scriptForRetaining(exp)) {
-                [weak self](result: AnyObject?, error: NSError?)->Void in
-                if self != nil && result != nil {
-                    handler!(self!.wrapScriptObject(result!))
-                }
-            }
+    public func evaluateExpression(expression: String, error: NSErrorPointer) -> AnyObject? {
+        return wrapScriptObject(webView?.evaluateJavaScript(expression, error: error))
+    }
+    public func evaluateExpression(expression: String, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
+        guard let completionHandler = completionHandler else {
+            webView?.evaluateJavaScript(expression, completionHandler: nil)
+            return
+        }
+        webView?.evaluateJavaScript(scriptForRetaining(expression)) {
+            [weak self](result: AnyObject?, error: NSError?)->Void in
+            completionHandler(self?.wrapScriptObject(result) ?? result, error)
         }
     }
     private func scriptForRetaining(script: String) -> String {
         return origin != nil ? "\(origin.namespace).$retainObject(\(script))" : script
     }
 
-    func wrapScriptObject(object: AnyObject?) -> AnyObject {
+    func wrapScriptObject(object: AnyObject!) -> AnyObject! {
         if let dict = object as? [String: AnyObject] where dict["$sig"] as? NSNumber == 0x5857574F {
             if let num = dict["$ref"] as? NSNumber {
                 return XWVScriptObject(reference: num.integerValue, channel: channel, origin: self)
@@ -82,7 +81,7 @@ public class XWVObject : NSObject {
                 return XWVScriptObject(namespace: namespace, channel: channel, origin: self)
             }
         }
-        return object ?? NSNull()
+        return object
     }
 
     func serialize(object: AnyObject?) -> String {

@@ -28,11 +28,12 @@ class XWVBindingObject : XWVScriptObject {
         startKVO()
     }
 
-    init(namespace: String, channel: XWVChannel, arguments: [AnyObject]?) {
+    init?(namespace: String, channel: XWVChannel, arguments: [AnyObject]?) {
         super.init(namespace: namespace, channel: channel, origin: nil)
         let member = channel.typeInfo[""]
         guard member != nil, case .Initializer(let selector, let arity) = member! else {
-            preconditionFailure("FATAL: Plugin is not a constructor")
+            print("<XWV> ERROR: Plugin is not a constructor")
+            return nil
         }
 
         var args = arguments?.map(wrapScriptObject) ?? []
@@ -49,7 +50,7 @@ class XWVBindingObject : XWVScriptObject {
         objc_setAssociatedObject(object, key, self, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
         startKVO()
         syncProperties()
-        promise?.callMethod("resolve", withArguments: [self], resultHandler: nil)
+        promise?.callMethod("resolve", withArguments: [self], completionHandler: nil)
     }
     private func syncProperties() {
         var script = ""
@@ -69,11 +70,11 @@ class XWVBindingObject : XWVScriptObject {
     }
 
     // Dispatch operation to plugin object
-    func invokeNativeMethod(name: String, withArguments arguments: [AnyObject]?) {
+    func invokeNativeMethod(name: String, withArguments arguments: [AnyObject]) {
         if let selector = channel.typeInfo[name]?.selector {
-            var args = arguments?.map(wrapScriptObject)
+            var args = arguments.map(wrapScriptObject)
             if object is XWVScripting && name.isEmpty && selector == Selector("invokeDefaultMethodWithArguments:") {
-                args = [args ?? []];
+                args = [args];
             }
             if channel.queue != nil {
                 dispatch_async(channel.queue) {
@@ -85,7 +86,7 @@ class XWVBindingObject : XWVScriptObject {
             }
         }
     }
-    func updateNativeProperty(name: String, withValue value: AnyObject!) {
+    func updateNativeProperty(name: String, withValue value: AnyObject) {
         if let setter = channel.typeInfo[name]?.setter {
             let val: AnyObject = wrapScriptObject(value)
             if channel.queue != nil {
@@ -100,19 +101,19 @@ class XWVBindingObject : XWVScriptObject {
     }
 
     // override methods of XWVScriptObject
-    override func callMethod(name: String, withArguments arguments: [AnyObject]?, resultHandler: ((AnyObject!) -> Void)?) {
+    override func callMethod(name: String, withArguments arguments: [AnyObject]?, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
         if let selector = channel.typeInfo[name]?.selector {
             let result: AnyObject! = XWVInvocation(target: object).call(selector, withObjects: arguments)
-            resultHandler?(result)
+            completionHandler?(result, nil)
         } else {
-            super.callMethod(name, withArguments: arguments, resultHandler: resultHandler)
+            super.callMethod(name, withArguments: arguments, completionHandler: completionHandler)
         }
     }
-    override func callMethod(name: String, withArguments arguments: [AnyObject]?) -> AnyObject! {
+    override func callMethod(name: String, withArguments arguments: [AnyObject]?) throws -> AnyObject! {
         if let selector = channel.typeInfo[name]?.selector {
             return XWVInvocation(target: object).call(selector, withObjects: arguments)
         }
-        return super.callMethod(name, withArguments: arguments)
+        return try super.callMethod(name, withArguments: arguments)
     }
     override func value(forProperty name: String) -> AnyObject? {
         if let getter = channel.typeInfo[name]?.getter {
