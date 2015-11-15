@@ -40,7 +40,7 @@ class ConstructorPlugin : XWVTestCase {
     class Plugin2 : NSObject, XWVScripting {
         override init() {}
         init(expectation: AnyObject?) {
-            (expectation as? XWVScriptObject)?.callMethod("fulfill", withArguments: nil, resultHandler: nil)
+            (expectation as? XWVScriptObject)?.callMethod("fulfill", withArguments: nil, completionHandler: nil)
         }
         class func scriptNameForSelector(selector: Selector) -> String? {
             return selector == Selector("initWithExpectation:") ? "" : nil

@@ -80,6 +80,9 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     }
 
     public func userContentController(userContentController: WKUserContentController, didReceiveScriptMessage message: WKScriptMessage) {
+        // A workaround for crash when postMessage(undefined)
+        guard unsafeBitCast(message.body, COpaquePointer.self) != nil else { return }
+
         if let body = message.body as? [String: AnyObject], let opcode = body["$opcode"] as? String {
             let target = (body["$target"] as? NSNumber)?.integerValue ?? 0
             if let object = instances[target] {
@@ -95,11 +98,12 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                     }
                 } else if let member = typeInfo[opcode] where member.isProperty {
                     // Update property
-                    object.updateNativeProperty(opcode, withValue: body["$operand"])
+                    object.updateNativeProperty(opcode, withValue: body["$operand"] ?? NSNull())
                 } else if let member = typeInfo[opcode] where member.isMethod {
                     // Invoke method
-                    let args = body["$operand"] as? [AnyObject]
-                    object.invokeNativeMethod(opcode, withArguments: args)
+                    if let args = (body["$operand"] ?? []) as? [AnyObject] {
+                        object.invokeNativeMethod(opcode, withArguments: args)
+                    } // else malformatted operand
                 }  // else Unknown opcode
             } else if opcode == "+" {
                 // Create instance

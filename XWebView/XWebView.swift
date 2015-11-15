@@ -42,17 +42,18 @@ extension WKWebView {
 
 extension WKWebView {
     // Synchronized evaluateJavaScript
-    public func evaluateJavaScript(script: String, error: NSErrorPointer = nil) -> AnyObject? {
+    // It returns nil if script is a statement or its result is undefined.
+    // So, Swift cannot map the throwing method to Objective-C method.
+    public func evaluateJavaScript(script: String) throws -> AnyObject? {
         var result: AnyObject?
+        var error: NSError?
         var done = false
         let timeout = 3.0
         if NSThread.isMainThread() {
             evaluateJavaScript(script) {
                 (obj: AnyObject?, err: NSError?)->Void in
                 result = obj
-                if error != nil {
-                    error.memory = err
-                }
+                error = err
                 done = true
             }
             while !done {
@@ -69,9 +70,7 @@ extension WKWebView {
                     (obj: AnyObject?, err: NSError?)->Void in
                     condition.lock()
                     result = obj
-                    if error != nil {
-                        error.memory = err
-                    }
+                    error = err
                     done = true
                     condition.signal()
                     condition.unlock()
@@ -85,9 +84,23 @@ extension WKWebView {
             }
             condition.unlock()
         }
+        if error != nil { throw error! }
         if !done {
             print("<XWV> ERROR: Timeout to evaluate script.")
         }
+        return result
+    }
+
+    // Wrapper method of synchronized evaluateJavaScript for Objective-C
+    public func evaluateJavaScript(script: String, error: NSErrorPointer) -> AnyObject? {
+        var result: AnyObject?
+        var err: NSError?
+        do {
+            result = try evaluateJavaScript(script)
+        } catch let e as NSError {
+            err = e
+        }
+        if error != nil { error.memory = err }
         return result
     }
 }

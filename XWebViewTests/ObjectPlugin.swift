@@ -36,10 +36,10 @@ class ObjectPlugin : XWVTestCase {
             }
         }
         func method(callback callback: XWVScriptObject) {
-            callback.call(arguments: nil, resultHandler: nil)
+            callback.call(arguments: nil, completionHandler: nil)
         }
         func method(promiseObject promiseObject: XWVScriptObject) {
-            promiseObject.callMethod("resolve", withArguments: nil, resultHandler: nil)
+            promiseObject.callMethod("resolve", withArguments: nil, completionHandler: nil)
         }
         func windowObject() {
             if let test: AnyObject = scriptObject?.windowObject["test"] {
@@ -125,7 +125,7 @@ class ObjectPlugin : XWVTestCase {
         let plugin = Plugin(expectation: expectation)
         loadPlugin(plugin as NSObject, namespace: namespace, script: "") {
             (webView)->Void in
-            plugin.scriptObject?.callMethod("method", withArguments: nil)
+            try! plugin.scriptObject?.callMethod("method", withArguments: nil)
             return
         }
         waitForExpectationsWithTimeout(2, handler: nil)
