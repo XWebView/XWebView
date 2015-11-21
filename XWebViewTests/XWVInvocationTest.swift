@@ -18,9 +18,9 @@ import XCTest
 import XWebView
 
 class InvocationTarget: NSObject {
-    class ObjectForLeakTest {
+    class LeakTest {
         let expectation: XCTestExpectation
-        init(expectation: XCTestExpectation) {
+        @objc init(expectation: XCTestExpectation) {
             self.expectation = expectation
         }
         deinit {
@@ -53,8 +53,8 @@ class InvocationTarget: NSObject {
     func concat(a: String, _ b: String) -> String { return a + b }
     func convert(num: NSNumber) -> Int { return num.integerValue }
 
-    func leak(expectation: XCTestExpectation) -> AnyObject {
-        return ObjectForLeakTest(expectation: expectation)
+    func _new(expectation: XCTestExpectation) -> AnyObject {
+        return LeakTest(expectation: expectation)
     }
 }
 
@@ -70,15 +70,28 @@ class InvocationTests : XCTestCase {
         inv = nil
     }
 
+    #if arch(x86_64) || arch(arm64)
+    typealias XInt = Int64
+    typealias XUInt = UInt64
+    #else
+    typealias XInt = Int32
+    typealias XUInt = UInt32
+    #endif
+
     func testMethods() {
         XCTAssertTrue(inv[Selector("dummy")]() is Void)
+        #if arch(x86_64) || arch(arm64)
         XCTAssertTrue(inv[Selector("echoWithBool:")](Bool(true)) as? Bool == true)
-        XCTAssertTrue(inv[Selector("echoWithInt:")](Int(-11)) as? Int64 == -11)
+        #else
+        // http://stackoverflow.com/questions/26459754/bool-encoding-wrong-from-nsmethodsignature
+        XCTAssertTrue(inv[Selector("echoWithBool:")](Bool(true)) as? Int8 == 1)
+        #endif
+        XCTAssertTrue(inv[Selector("echoWithInt:")](Int(-11)) as? XInt == -11)
         XCTAssertTrue(inv[Selector("echoWithInt8:")](Int8(-22)) as? Int8 == -22)
         XCTAssertTrue(inv[Selector("echoWithInt16:")](Int16(-33)) as? Int16 == -33)
         XCTAssertTrue(inv[Selector("echoWithInt32:")](Int32(-44)) as? Int32 == -44)
         XCTAssertTrue(inv[Selector("echoWithInt64:")](Int64(-55)) as? Int64 == -55)
-        XCTAssertTrue(inv[Selector("echoWithUint:")](UInt(11)) as? UInt64 == 11)
+        XCTAssertTrue(inv[Selector("echoWithUint:")](UInt(11)) as? XUInt == 11)
         XCTAssertTrue(inv[Selector("echoWithUint8:")](UInt8(22)) as? UInt8 == 22)
         XCTAssertTrue(inv[Selector("echoWithUint16:")](UInt16(33)) as? UInt16 == 33)
         XCTAssertTrue(inv[Selector("echoWithUint32:")](UInt32(44)) as? UInt32 == 44)
@@ -92,22 +105,31 @@ class InvocationTests : XCTestCase {
         let cls = self.dynamicType
         XCTAssertTrue(inv[Selector("echoWithClass:")](cls) as? AnyClass === cls)
 
-        XCTAssertTrue(inv[Selector("convert:")](UInt8(12)) as? Int64 == 12)
-        XCTAssertTrue(inv[Selector("add::")](2, 3) as? Int64 == 5)
+        XCTAssertTrue(inv[Selector("convert:")](UInt8(12)) as? XInt == 12)
+        XCTAssertTrue(inv[Selector("add::")](2, 3) as? XInt == 5)
         XCTAssertTrue(inv[Selector("concat::")]("ab", "cd") as? String == "abcd")
     }
 
     func testProperty() {
-        XCTAssertTrue(inv["integer"] as? Int64 == 123)
+        XCTAssertTrue(inv["integer"] as? XInt == 123)
         inv["integer"] = 321
-        XCTAssertTrue(inv["integer"] as? Int64 == 321)
+        XCTAssertTrue(inv["integer"] as? XInt == 321)
     }
 
-    func testLeak() {
+    func testLeak1() {
         autoreleasepool {
             let expectation = expectationWithDescription("leak")
-            let obj = inv.call(Selector("leak:"), withArguments: expectation) as! InvocationTarget.ObjectForLeakTest
-            XCTAssertEqual(expectation, obj.expectation)
+            let obj = inv[Selector("_new:")](expectation) as? InvocationTarget.LeakTest
+            XCTAssertEqual(expectation, obj!.expectation)
+        }
+        waitForExpectationsWithTimeout(2, handler: nil)
+    }
+
+    func testLeak2() {
+        autoreleasepool {
+            let expectation = expectationWithDescription("leak")
+            let obj = XWVInvocation.construct(InvocationTarget.LeakTest.self, initializer: Selector("initWithExpectation:"), withArguments: [expectation]) as? InvocationTarget.LeakTest
+            XCTAssertEqual(expectation, obj!.expectation)
         }
         waitForExpectationsWithTimeout(2, handler: nil)
     }
