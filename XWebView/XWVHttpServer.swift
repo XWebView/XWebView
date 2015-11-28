@@ -59,7 +59,10 @@ class XWVHttpServer : NSObject {
         var context = CFSocketContext(version: 0, info: info, retain: nil, release: nil, copyDescription: nil)
         let callbackType = CFSocketCallBackType.AcceptCallBack.rawValue
         socket = CFSocketCreate(nil, PF_INET, SOCK_STREAM, 0, callbackType, ServerAcceptCallBack, &context)
-        guard socket != nil else { return false }
+        guard socket != nil else {
+            log("!Failed to create socket")
+            return false
+        }
 
         var yes = UInt32(1)
         setsockopt(CFSocketGetNative(socket), SOL_SOCKET, SO_REUSEADDR, &yes, UInt32(sizeof(UInt32)))
@@ -72,7 +75,7 @@ class XWVHttpServer : NSObject {
             sin_zero: (0, 0, 0, 0, 0, 0, 0, 0))
         let data = NSData(bytes: &sockaddr, length: sizeof(sockaddr_in))
         guard CFSocketSetAddress(socket, data) == CFSocketError.Success else {
-            print("<XWV> ERROR: \(String(UTF8String: strerror(errno))!)")
+            log("!Failed to listen on port \(port) \(String(UTF8String: strerror(errno))!)")
             CFSocketInvalidate(socket)
             return false
         }
@@ -99,7 +102,6 @@ class XWVHttpServer : NSObject {
             for _ in 0 ..< 100 {
                 let port = in_port_t(arc4random() % (49152 - 1024) + 1024)
                 if listenOnPort(port) {
-                    print("<XWV> INFO: Listen on port: \(port)")
                     self.port = port
                     break
                 }
@@ -127,9 +129,12 @@ class XWVHttpServer : NSObject {
 
     func suspend(_: NSNotification!) {
         close()
+        log("+HTTP server is suspended")
     }
     func resume(_: NSNotification!) {
-        listenOnPort(port)
+        if listenOnPort(port) {
+            log("+HTTP server is resumed")
+        }
     }
 
     func serverLoop(_: AnyObject) {
@@ -161,6 +166,7 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
         if request.URL == nil {
             // Bad request
             statusCode = 400
+            log("?Bad request")
         } else if request.HTTPMethod == "GET" || request.HTTPMethod == "HEAD" {
             let fileManager = NSFileManager.defaultManager()
             let relativePath = String(request.URL!.path!.characters.dropFirst())
@@ -183,10 +189,12 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
                 headers["Content-Type"] = getMIMETypeByExtension(fileURL.pathExtension!)
                 headers["Content-Length"] = String(attrs[NSFileSize]!)
                 headers["Last-Modified"] = dateFormatter.stringFromDate(attrs[NSFileModificationDate] as! NSDate)
+                log("+\(request.HTTPMethod) fileURL.path")
             } else {
                 // Not found
                 statusCode = 404
                 fileURL = NSURL()
+                log("-File NOT found for URL \(request.URL!)")
             }
         } else {
             // Method not allowed
