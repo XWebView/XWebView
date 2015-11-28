@@ -211,7 +211,7 @@ public func invoke(target: AnyObject, selector: Selector, withArguments argument
         inv.invokeWithTarget(target)
     } else {
         let selector = Selector("invokeWithTarget:")
-        if !wait { inv.retainArguments() }
+        inv.retainArguments()
         inv.performSelector(selector, onThread: thread!, withObject: target, waitUntilDone: wait)
         guard wait else { return Void() }
     }
