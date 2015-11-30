@@ -31,12 +31,13 @@ extension WKWebView {
         let bundle = NSBundle(forClass: XWVChannel.self)
         guard let path = bundle.pathForResource("xwebview", ofType: "js"),
             let source = try? NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding) else {
-            preconditionFailure("FATAL: Internal error")
+            die("Failed to read provision script: xwebview.js")
         }
         let time = WKUserScriptInjectionTime.AtDocumentStart
         let script = WKUserScript(source: source as String, injectionTime: time, forMainFrameOnly: true)
         let xwvplugin = XWVUserScript(webView: self, script: script, namespace: "XWVPlugin")
         objc_setAssociatedObject(self, key, xwvplugin, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        log("+WKWebView(\(unsafeAddressOf(self))) is ready for loading plugins")
     }
 }
 
@@ -86,7 +87,7 @@ extension WKWebView {
         }
         if error != nil { throw error! }
         if !done {
-            print("<XWV> ERROR: Timeout to evaluate script.")
+            log("!Timeout to evaluate script: \(script)")
         }
         return result
     }
@@ -108,9 +109,13 @@ extension WKWebView {
 extension WKWebView {
     // Overlay support for loading file URL
     public func loadFileURL(URL: NSURL, overlayURLs: [NSURL]? = nil) -> WKNavigation? {
-        precondition(URL.fileURL && URL.baseURL != nil, "URL must be a relative file URL.")
         guard overlayURLs?.count > 0 else {
             return loadFileURL(URL, allowingReadAccessToURL: URL.baseURL!)
+        }
+
+        guard URL.fileURL && URL.baseURL != nil else {
+            assertionFailure("URL must be a relative file URL.")
+            return nil
         }
 
         guard let port = startHttpd(rootURL: URL.baseURL!, overlayURLs: overlayURLs) else { return nil }
@@ -136,7 +141,7 @@ extension WKWebView {
             let method = class_getInstanceMethod(self, Selector("_loadFileURL:allowingReadAccessToURL:"))
             assert(method != nil)
             if class_addMethod(self, selector, method_getImplementation(method), method_getTypeEncoding(method)) {
-                print("<XWV> INFO: Platform is iOS 8.x")
+                log("+Running on iOS 8.x")
                 method_exchangeImplementations(
                     class_getInstanceMethod(self, Selector("loadHTMLString:baseURL:")),
                     class_getInstanceMethod(self, Selector("_loadHTMLString:baseURL:"))
@@ -146,13 +151,15 @@ extension WKWebView {
     }
 
     @objc private func _loadFileURL(URL: NSURL, allowingReadAccessToURL readAccessURL: NSURL) -> WKNavigation? {
-        precondition(URL.fileURL && readAccessURL.fileURL)
-
         // readAccessURL must contain URL
         let fileManager = NSFileManager.defaultManager()
         var relationship: NSURLRelationship = NSURLRelationship.Other
         _ = try? fileManager.getRelationship(&relationship, ofDirectoryAtURL: readAccessURL, toItemAtURL: URL)
-        guard relationship != NSURLRelationship.Other else { return nil }
+        guard URL.fileURL && readAccessURL.fileURL && relationship != NSURLRelationship.Other else {
+            assert(relationship != NSURLRelationship.Other, "readAccessURL must contain URL")
+            assert(URL.fileURL && readAccessURL.fileURL, "URL and readAccessURL must be file URLs")
+            return nil
+        }
 
         guard let port = startHttpd(rootURL: readAccessURL) else { return nil }
         var path = URL.path![readAccessURL.path!.endIndex ..< URL.path!.endIndex]
@@ -185,6 +192,7 @@ extension WKWebView {
         let httpd = XWVHttpServer(rootURL: rootURL, overlayURLs: overlayURLs)
         guard httpd.start() else { return nil }
         objc_setAssociatedObject(self, key, httpd, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        log("+HTTP server is started on port: \(httpd.port)")
         return httpd.port
     }
 }

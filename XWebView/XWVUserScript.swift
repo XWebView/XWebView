@@ -45,7 +45,7 @@ class XWVUserScript {
         if webView.URL != nil {
             webView.evaluateJavaScript(script.source) {
                 if let error = $1 {
-                    print("<XWV> ERROR: Inject user script in context.\n\(error)")
+                    log("!Failed to inject script. \(error)")
                 }
             }
         }

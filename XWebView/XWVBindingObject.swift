@@ -29,9 +29,10 @@ class XWVBindingObject : XWVScriptObject {
 
     init?(namespace: String, channel: XWVChannel, arguments: [AnyObject]?) {
         super.init(namespace: namespace, channel: channel, origin: nil)
+        let cls: AnyClass = channel.typeInfo.plugin
         let member = channel.typeInfo[""]
         guard member != nil, case .Initializer(let selector, let arity) = member! else {
-            print("<XWV> ERROR: Plugin is not a constructor")
+            log("!Plugin class \(cls) is not a constructor")
             return nil
         }
 
@@ -45,10 +46,9 @@ class XWVBindingObject : XWVScriptObject {
             arguments = [arguments]
         }
 
-        let cls: AnyClass = channel.typeInfo.plugin
         let args: [Any!] = arguments.map{ $0 !== NSNull() ? ($0 as Any) : nil }
         guard let instance = XWVInvocation.construct(cls, initializer: selector, withArguments: args) else {
-            print("<XWV> ERROR: Create plugin instance failed")
+            log("!Failed to create instance for plugin class \(cls)")
             return nil
         }
 

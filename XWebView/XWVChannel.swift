@@ -26,6 +26,10 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
 
     private var instances = [Int: XWVBindingObject]()
     private var userScript: XWVUserScript?
+    private(set) var principal: XWVBindingObject {
+        get { return instances[0]! }
+        set { instances[0] = newValue }
+    }
 
     private class var sequenceNumber: UInt {
         struct sequence{
@@ -38,7 +42,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         let queue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL)
         self.init(name: name, webView:webView, queue: queue)
     }
-    
+
     public init(name: String?, webView: WKWebView, queue: dispatch_queue_t) {
         self.name = name ?? "\(XWVChannel.sequenceNumber)"
         self.webView = webView
@@ -46,7 +50,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         thread = nil
         webView.prepareForPlugin()
     }
-    
+
     public init(name: String?, webView: WKWebView, thread: NSThread) {
         self.name = name ?? "\(XWVChannel.sequenceNumber)"
         self.webView = webView
@@ -56,9 +60,9 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     }
 
     public func bindPlugin(object: AnyObject, toNamespace namespace: String) -> XWVScriptObject? {
-        assert(typeInfo == nil, "<XWV> This channel already has a bound object")
-        guard let webView = webView else { return nil }
-        
+        assert(typeInfo == nil, "Channel \(name) is occupied by plugin object \(principal.plugin)")
+        guard typeInfo == nil, let webView = webView else { return nil }
+
         webView.configuration.userContentController.addScriptMessageHandler(self, name: name)
         typeInfo = XWVMetaObject(plugin: object.dynamicType)
         let plugin = XWVBindingObject(namespace: namespace, channel: self, object: object)
@@ -69,14 +73,20 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                                   forMainFrameOnly: true)
         userScript = XWVUserScript(webView: webView, script: script)
 
-        instances[0] = plugin
+        principal = plugin
+        log("+Plugin object \(object) is bound to \(namespace) with channel \(name)")
         return plugin as XWVScriptObject
     }
 
     public func unbind() {
-        assert(typeInfo != nil, "<XWV> Error: can't unbind inexistent plugin.")
+        guard typeInfo != nil else { return }
+        let namespace = principal.namespace
+        let plugin = principal.plugin
         instances.removeAll(keepCapacity: false)
         webView?.configuration.userContentController.removeScriptMessageHandlerForName(name)
+        userScript = nil
+        //typeInfo = nil  // FIXME: crash while instance deinit
+        log("+Plugin object \(plugin) is unbound from \(namespace)")
     }
 
     public func userContentController(userContentController: WKUserContentController, didReceiveScriptMessage message: WKScriptMessage) {
@@ -90,11 +100,11 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                     if target == 0 {
                         // Dispose plugin
                         unbind()
-                        print("<XWV> Plugin was disposed")
-                    } else {
+                    } else if let instance = instances.removeValueForKey(target) {
                         // Dispose instance
-                        let object = instances.removeValueForKey(target)
-                        assert(object != nil, "<XWV> Warning: bad instance id was received")
+                        log("+Instance \(target) is unbound from \(instance.namespace)")
+                    } else {
+                        log("?Invalid instance id: \(target)")
                     }
                 } else if let member = typeInfo[opcode] where member.isProperty {
                     // Update property
@@ -104,19 +114,22 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                     if let args = (body["$operand"] ?? []) as? [AnyObject] {
                         object.invokeNativeMethod(opcode, withArguments: args)
                     } // else malformatted operand
-                }  // else Unknown opcode
+                } else {
+                    log("?Invalid member name: \(opcode)")
+                }
             } else if opcode == "+" {
                 // Create instance
                 let args = body["$operand"] as? [AnyObject]
-                let namespace = "\(instances[0]!.namespace)[\(target)]"
+                let namespace = "\(principal.namespace)[\(target)]"
                 instances[target] = XWVBindingObject(namespace: namespace, channel: self, arguments: args)
+                log("+Instance \(target) is bound to \(namespace)")
             } // else Unknown opcode
-        } else if let obj = instances[0]!.plugin as? WKScriptMessageHandler {
+        } else if let obj = principal.plugin as? WKScriptMessageHandler {
             // Plugin claims for raw messages
             obj.userContentController(userContentController, didReceiveScriptMessage: message)
         } else {
             // discard unknown message
-            print("<XWV> WARNING: Unknown message: \(message.body)")
+            log("-Unknown message: \(message.body)")
         }
     }
 

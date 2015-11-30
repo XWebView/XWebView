@@ -169,7 +169,8 @@ extension XWVHttpConnection : NSStreamDelegate {
             if bytesSent < 0 { fallthrough }
 
         case NSStreamEvent.ErrorOccurred:
-            print("<XWV> ERROR: " + (aStream.streamError?.localizedDescription ?? "Unknown"))
+            let error = aStream.streamError?.localizedDescription ?? "Unknown"
+            log("!HTTP connection error: \(error)")
             fallthrough
 
         case NSStreamEvent.EndEncountered:
