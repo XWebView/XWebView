@@ -17,7 +17,7 @@
 import Foundation
 
 @objc public protocol XWVScripting : class {
-    optional func javascriptStub(stub: String) -> String
+    optional func rewriteGeneratedStub(stub: String, forKey: String) -> String
     optional func invokeDefaultMethodWithArguments(args: [AnyObject]!) -> AnyObject!
     optional func finalizeForScript()
 

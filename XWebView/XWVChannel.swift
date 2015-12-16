@@ -65,17 +65,15 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
 
         webView.configuration.userContentController.addScriptMessageHandler(self, name: name)
         typeInfo = XWVMetaObject(plugin: object.dynamicType)
-        let plugin = XWVBindingObject(namespace: namespace, channel: self, object: object)
+        principal = XWVBindingObject(namespace: namespace, channel: self, object: object)
 
-        let stub = generateStub(plugin)
-        let script = WKUserScript(source: (object as? XWVScripting)?.javascriptStub?(stub) ?? stub,
+        let script = WKUserScript(source: generateStubs(),
                                   injectionTime: WKUserScriptInjectionTime.AtDocumentStart,
                                   forMainFrameOnly: true)
         userScript = XWVUserScript(webView: webView, script: script)
 
-        principal = plugin
         log("+Plugin object \(object) is bound to \(namespace) with channel \(name)")
-        return plugin as XWVScriptObject
+        return principal as XWVScriptObject
     }
 
     public func unbind() {
@@ -133,34 +131,48 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         }
     }
 
-    private func generateStub(object: XWVBindingObject) -> String {
-        func generateMethod(this: String, name: String, prebind: Bool) -> String {
-            let stub = "XWVPlugin.invokeNative.bind(\(this), '\(name)')"
+    private func generateStubs() -> String {
+        func generateMethod(key: String, this: String, prebind: Bool) -> String {
+            let stub = "XWVPlugin.invokeNative.bind(\(this), '\(key)')"
             return prebind ? "\(stub);" : "function(){return \(stub).apply(null, arguments);}"
         }
+        func rewriteStub(stub: String, forKey key: String) -> String {
+            return (principal.plugin as? XWVScripting)?.rewriteGeneratedStub?(stub, forKey: key) ?? stub
+        }
 
-        var base = "null"
-        var prebind = true
+        let prebind = !(typeInfo[""]?.isInitializer ?? false)
+        let stubs = typeInfo.reduce("") {
+            let key = $1.0
+            let member = $1.1
+            let stub: String
+            if member.isMethod && !key.isEmpty {
+                let method = generateMethod("\(key)\(member.type)", this: prebind ? "exports" : "this", prebind: prebind)
+                stub = "exports.\(key) = \(method)"
+            } else if member.isProperty {
+                let value = principal.serialize(principal[key])
+                stub = "XWVPlugin.defineProperty(exports, '\(key)', \(value), \(member.setter != nil));"
+            } else {
+                return $0
+            }
+            return $0 + rewriteStub(stub, forKey: key) + "\n"
+        }
+
+        let base: String
         if let member = typeInfo[""] {
             if member.isInitializer {
                 base = "'\(member.type)'"
-                prebind = false
             } else {
-                base = generateMethod("arguments.callee", name: "\(member.type)", prebind: false)
+                base = generateMethod("\(member.type)", this: "arguments.callee", prebind: false)
             }
+        } else {
+            base = rewriteStub("null", forKey: ".base")
         }
 
-        var stub = "(function(exports) {\n"
-        for (name, member) in typeInfo {
-            if member.isMethod && !name.isEmpty {
-                let method = generateMethod(prebind ? "exports" : "this", name: "\(name)\(member.type)", prebind: prebind)
-                stub += "exports.\(name) = \(method)\n"
-            } else if member.isProperty {
-                let value = object.serialize(object[name])
-                stub += "XWVPlugin.defineProperty(exports, '\(name)', \(value), \(member.setter != nil));\n"
-            }
-        }
-        stub += "})(XWVPlugin.createPlugin('\(name)', '\(object.namespace)', \(base)));\n\n"
-        return stub
+        return rewriteStub(
+            "(function(exports) {\n" +
+                rewriteStub(stubs, forKey: ".local") +
+            "})(XWVPlugin.createPlugin('\(name)', '\(principal.namespace)', \(base)));\n",
+            forKey: ".global"
+        )
     }
 }
