@@ -24,8 +24,12 @@ class XWVScriptingTest : XWVTestCase {
         init(expectation: XCTestExpectation?) {
             self.expectation = expectation
         }
-        func javascriptStub(stub: String) -> String {
-            return stub + "\nwindow.stub = true;\n"
+        func rewriteGeneratedStub(stub: String, forKey key: String) -> String {
+            switch key {
+            case ".global": return stub + "window.stub = true;\n"
+            case ".local": return stub + "exports.abc = true;\n"
+            default: return stub
+            }
         }
         func finalizeForScript() {
             expectation?.fulfill()
@@ -40,9 +44,9 @@ class XWVScriptingTest : XWVTestCase {
 
     let namespace = "xwvtest"
 
-    func testJavascriptStub() {
+    func testRewriteGeneratedStub() {
         let desc = "javascriptStub"
-        let script = "if (window.stub) fulfill('\(desc)');"
+        let script = "if (window.stub && \(namespace).abc) fulfill('\(desc)');"
         _ = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
