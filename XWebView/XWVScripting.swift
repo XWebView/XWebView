@@ -17,6 +17,7 @@
 import Foundation
 
 @objc public protocol XWVScripting : class {
+    optional var channelIdentifier: String { get }
     optional func rewriteGeneratedStub(stub: String, forKey: String) -> String
     optional func invokeDefaultMethodWithArguments(args: [AnyObject]!) -> AnyObject!
     optional func finalizeForScript()

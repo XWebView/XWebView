@@ -20,7 +20,7 @@ import WebKit
 
 extension WKWebView {
     public func loadPlugin(object: AnyObject, namespace: String) -> XWVScriptObject? {
-        let channel = XWVChannel(name: nil, webView: self)
+        let channel = XWVChannel(webView: self)
         return channel.bindPlugin(object, toNamespace: namespace)
     }
 

@@ -18,7 +18,7 @@ import Foundation
 import WebKit
 
 public class XWVChannel : NSObject, WKScriptMessageHandler {
-    public let name: String
+    private(set) public var identifier: String?
     public let thread: NSThread?
     public let queue: dispatch_queue_t?
     private(set) public weak var webView: WKWebView?
@@ -43,20 +43,18 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         return dispatch_queue_create(label, DISPATCH_QUEUE_SERIAL)
     }()
 
-    public convenience init(name: String?, webView: WKWebView) {
-        self.init(name: name, webView:webView, queue: XWVChannel.defaultQueue)
+    public convenience init(webView: WKWebView) {
+        self.init(webView: webView, queue: XWVChannel.defaultQueue)
     }
 
-    public init(name: String?, webView: WKWebView, queue: dispatch_queue_t) {
-        self.name = name ?? "\(XWVChannel.sequenceNumber)"
+    public init(webView: WKWebView, queue: dispatch_queue_t) {
         self.webView = webView
         self.queue = queue
         thread = nil
         webView.prepareForPlugin()
     }
 
-    public init(name: String?, webView: WKWebView, thread: NSThread) {
-        self.name = name ?? "\(XWVChannel.sequenceNumber)"
+    public init(webView: WKWebView, thread: NSThread) {
         self.webView = webView
         self.thread = thread
         queue = nil
@@ -64,10 +62,11 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
     }
 
     public func bindPlugin(object: AnyObject, toNamespace namespace: String) -> XWVScriptObject? {
-        assert(typeInfo == nil, "Channel \(name) is occupied by plugin object \(principal.plugin)")
-        guard typeInfo == nil, let webView = webView else { return nil }
+        guard identifier == nil, let webView = webView else { return nil }
 
-        webView.configuration.userContentController.addScriptMessageHandler(self, name: name)
+        let id = (object as? XWVScripting)?.channelIdentifier ?? String(XWVChannel.sequenceNumber)
+        identifier = id
+        webView.configuration.userContentController.addScriptMessageHandler(self, name: id)
         typeInfo = XWVMetaObject(plugin: object.dynamicType)
         principal = XWVBindingObject(namespace: namespace, channel: self, object: object)
 
@@ -76,18 +75,18 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
                                   forMainFrameOnly: true)
         userScript = XWVUserScript(webView: webView, script: script)
 
-        log("+Plugin object \(object) is bound to \(namespace) with channel \(name)")
+        log("+Plugin object \(object) is bound to \(namespace) with channel \(id)")
         return principal as XWVScriptObject
     }
 
     public func unbind() {
-        guard typeInfo != nil else { return }
+        guard let id = identifier else { return }
         let namespace = principal.namespace
         let plugin = principal.plugin
         instances.removeAll(keepCapacity: false)
-        webView?.configuration.userContentController.removeScriptMessageHandlerForName(name)
+        webView?.configuration.userContentController.removeScriptMessageHandlerForName(id)
         userScript = nil
-        //typeInfo = nil  // FIXME: crash while instance deinit
+        identifier = nil
         log("+Plugin object \(plugin) is unbound from \(namespace)")
     }
 
@@ -175,7 +174,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         return rewriteStub(
             "(function(exports) {\n" +
                 rewriteStub(stubs, forKey: ".local") +
-            "})(XWVPlugin.createPlugin('\(name)', '\(principal.namespace)', \(base)));\n",
+            "})(XWVPlugin.createPlugin('\(identifier!)', '\(principal.namespace)', \(base)));\n",
             forKey: ".global"
         )
     }
