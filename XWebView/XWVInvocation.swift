@@ -76,7 +76,7 @@ public class XWVInvocation {
     }
     @objc public func asyncCall(selector: Selector, withObjects objects: [AnyObject]?) {
         let args: [Any!] = objects?.map{ $0 !== NSNull() ? ($0 as Any) : nil } ?? []
-        call(selector, withArguments: args)
+        asyncCall(selector, withArguments: args)
     }
 
     // Syntactic sugar for calling method
