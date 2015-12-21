@@ -19,8 +19,8 @@ import WebKit
 
 public class XWVChannel : NSObject, WKScriptMessageHandler {
     public let name: String
-    public let thread: NSThread!
-    public let queue: dispatch_queue_t!
+    public let thread: NSThread?
+    public let queue: dispatch_queue_t?
     private(set) public weak var webView: WKWebView?
     var typeInfo: XWVMetaObject!
 
@@ -38,9 +38,13 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         return ++sequence.number
     }
 
+    private static var defaultQueue: dispatch_queue_t = {
+        let label = "org.xwebview.default-queue"
+        return dispatch_queue_create(label, DISPATCH_QUEUE_SERIAL)
+    }()
+
     public convenience init(name: String?, webView: WKWebView) {
-        let queue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL)
-        self.init(name: name, webView:webView, queue: queue)
+        self.init(name: name, webView:webView, queue: XWVChannel.defaultQueue)
     }
 
     public init(name: String?, webView: WKWebView, queue: dispatch_queue_t) {
