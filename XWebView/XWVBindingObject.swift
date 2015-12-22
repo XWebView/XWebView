@@ -64,10 +64,10 @@ class XWVBindingObject : XWVScriptObject {
 
     private func bindObject(object: AnyObject) -> XWVInvocation {
         let option: XWVInvocation.Option
-        if channel.queue != nil {
-            option = .Queue(queue: channel.queue)
-        } else if channel.thread != nil {
-            option = .Thread(thread: channel.thread)
+        if let queue = channel.queue {
+            option = .Queue(queue: queue)
+        } else if let thread = channel.thread {
+            option = .Thread(thread: thread)
         } else {
             option = .None
         }
