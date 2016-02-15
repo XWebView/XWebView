@@ -23,7 +23,7 @@ private let webViewInvalidated =
 public class XWVObject : NSObject {
     public let namespace: String
     private(set) public weak var webView: WKWebView?
-    weak var origin: XWVObject?
+    private weak var origin: XWVObject?
     private let reference: Int
 
     // initializer for plugin object.

@@ -16,7 +16,8 @@
 
 XWVPlugin = function(channelName) {
     var channel = webkit.messageHandlers[channelName];
-    if (!channel) throw 'channel has not established';
+    if (channelName && !channel)
+        throw 'channel has not established';
 
     Object.defineProperty(this, '$channel', {'configurable': true, 'value': channel});
     Object.defineProperty(this, '$references', {'configurable': true, 'value': []});
@@ -207,3 +208,5 @@ XWVPlugin.prototype = {
         this.__proto__ = Object.getPrototypeOf(this.__proto__);
     }
 }
+
+XWVPlugin.context = new XWVPlugin(0);
