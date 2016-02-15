@@ -121,9 +121,9 @@ extension XWVScriptObject {
 extension XWVScriptObject {
     // DOM objects
     public var windowObject: XWVScriptObject {
-        return XWVScriptObject(namespace: "window", channel: self.channel, origin: self.origin)
+        return XWVScriptObject(namespace: "window", origin: origin!)
     }
     public var documentObject: XWVScriptObject {
-        return XWVScriptObject(namespace: "document", channel: self.channel, origin: self.origin)
+        return XWVScriptObject(namespace: "document", origin: origin!)
     }
 }

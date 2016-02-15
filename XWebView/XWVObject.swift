@@ -22,35 +22,45 @@ private let webViewInvalidated =
 
 public class XWVObject : NSObject {
     public let namespace: String
-    public unowned let channel: XWVChannel
-    public var webView: WKWebView? { return channel.webView }
-    weak var origin: XWVObject!
+    private(set) public weak var webView: WKWebView?
+    weak var origin: XWVObject?
+    private let reference: Int
 
-    // This object is a plugin object.
-    init(namespace: String, channel: XWVChannel, origin: XWVObject?) {
+    // initializer for plugin object.
+    init(namespace: String, webView: WKWebView) {
         self.namespace = namespace
-        self.channel = channel
+        self.webView = webView
+        reference = 0
         super.init()
-        self.origin = origin ?? self
+        origin = self
     }
 
-    // The object is a stub for a JavaScript object which was retained as an argument.
-    private var reference = 0
-    convenience init(reference: Int, channel: XWVChannel, origin: XWVObject) {
-        let namespace = "\(origin.namespace).$references[\(reference)]"
-        self.init(namespace: namespace, channel: channel, origin: origin)
+    // initializer for script object with global namespace.
+    init(namespace: String, origin: XWVObject) {
+        self.namespace = namespace
+        self.origin = origin
+        webView = origin.webView
+        reference = 0
+        super.init()
+    }
+
+    // initializer for script object which is retained on script side.
+    init(reference: Int, origin: XWVObject) {
         self.reference = reference
+        self.origin = origin
+        webView = origin.webView
+        namespace = "\(origin.namespace).$references[\(reference)]"
+        super.init()
     }
 
     deinit {
         guard let webView = webView else { return }
         let script: String
-        if reference == 0 {
+        if origin === self {
             script = "delete \(namespace)"
-        } else if origin != nil {
+        } else if reference != 0, let origin = origin {
             script = "\(origin.namespace).$releaseObject(\(reference))"
         } else {
-            assertionFailure()
             return
         }
         webView.evaluateJavaScript(script, completionHandler: nil)
@@ -85,15 +95,17 @@ public class XWVObject : NSObject {
         }
     }
     private func scriptForRetaining(script: String) -> String {
-        return origin != nil ? "\(origin.namespace).$retainObject(\(script))" : script
+        guard let origin = origin else { return script }
+        return "\(origin.namespace).$retainObject(\(script))"
     }
 
     func wrapScriptObject(object: AnyObject!) -> AnyObject! {
+        guard let origin = origin else { return object }
         if let dict = object as? [String: AnyObject] where dict["$sig"] as? NSNumber == 0x5857574F {
-            if let num = dict["$ref"] as? NSNumber {
-                return XWVScriptObject(reference: num.integerValue, channel: channel, origin: self)
+            if let num = dict["$ref"] as? NSNumber where num != 0 {
+                return XWVScriptObject(reference: num.integerValue, origin: origin)
             } else if let namespace = dict["$ns"] as? String {
-                return XWVScriptObject(namespace: namespace, channel: channel, origin: self)
+                return XWVScriptObject(namespace: namespace, origin: origin)
             }
         }
         return object
