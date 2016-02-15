@@ -17,6 +17,9 @@
 import Foundation
 import WebKit
 
+private let webViewInvalidated =
+    NSError(domain: WKErrorDomain, code: WKErrorCode.WebViewInvalidated.rawValue, userInfo: nil)
+
 public class XWVObject : NSObject {
     public let namespace: String
     public unowned let channel: XWVChannel
@@ -40,6 +43,7 @@ public class XWVObject : NSObject {
     }
 
     deinit {
+        guard let webView = webView else { return }
         let script: String
         if reference == 0 {
             script = "delete \(namespace)"
@@ -49,22 +53,33 @@ public class XWVObject : NSObject {
             assertionFailure()
             return
         }
-        webView?.evaluateJavaScript(script, completionHandler: nil)
+        webView.evaluateJavaScript(script, completionHandler: nil)
     }
 
     // Evaluate JavaScript expression
     public func evaluateExpression(expression: String) throws -> AnyObject? {
-        return wrapScriptObject(try webView?.evaluateJavaScript(scriptForRetaining(expression)))
+        guard let webView = webView else {
+            throw webViewInvalidated
+        }
+        return wrapScriptObject(try webView.evaluateJavaScript(scriptForRetaining(expression)))
     }
     public func evaluateExpression(expression: String, error: NSErrorPointer) -> AnyObject? {
-        return wrapScriptObject(webView?.evaluateJavaScript(expression, error: error))
+        guard let webView = webView else {
+            if error != nil { error.memory = webViewInvalidated }
+            return nil
+        }
+        return wrapScriptObject(webView.evaluateJavaScript(scriptForRetaining(expression), error: error))
     }
     public func evaluateExpression(expression: String, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
-        guard let completionHandler = completionHandler else {
-            webView?.evaluateJavaScript(expression, completionHandler: nil)
+        guard let webView = webView else {
+            completionHandler?(nil, webViewInvalidated)
             return
         }
-        webView?.evaluateJavaScript(scriptForRetaining(expression)) {
+        guard let completionHandler = completionHandler else {
+            webView.evaluateJavaScript(expression, completionHandler: nil)
+            return
+        }
+        webView.evaluateJavaScript(scriptForRetaining(expression)) {
             [weak self](result: AnyObject?, error: NSError?)->Void in
             completionHandler(self?.wrapScriptObject(result) ?? result, error)
         }
