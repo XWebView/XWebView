@@ -130,7 +130,7 @@ class XWVBindingObject : XWVScriptObject {
             super.callMethod(name, withArguments: arguments, completionHandler: completionHandler)
         }
     }
-    override func callMethod(name: String, withArguments arguments: [AnyObject]?) throws -> AnyObject! {
+    override func callMethod(name: String, withArguments arguments: [AnyObject]?) throws -> AnyObject? {
         if let selector = channel.typeInfo[name]?.selector {
             return proxy.call(selector, withObjects: arguments)
         }

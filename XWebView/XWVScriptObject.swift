@@ -39,16 +39,16 @@ public class XWVScriptObject : XWVObject {
         }
         return result
     }
-    public func call(arguments arguments: [AnyObject]?) throws -> AnyObject! {
+    public func call(arguments arguments: [AnyObject]?) throws -> AnyObject? {
         return try evaluateExpression(scriptForCallingMethod(nil, arguments: arguments))
     }
-    public func callMethod(name: String, withArguments arguments: [AnyObject]?) throws -> AnyObject! {
+    public func callMethod(name: String, withArguments arguments: [AnyObject]?) throws -> AnyObject? {
         return try evaluateExpression(scriptForCallingMethod(name, arguments: arguments))
     }
-    public func call(arguments arguments: [AnyObject]?, error: NSErrorPointer) -> AnyObject! {
+    public func call(arguments arguments: [AnyObject]?, error: NSErrorPointer) -> AnyObject? {
         return evaluateExpression(scriptForCallingMethod(nil, arguments: arguments), error: error)
     }
-    public func callMethod(name: String, withArguments arguments: [AnyObject]?, error: NSErrorPointer) -> AnyObject! {
+    public func callMethod(name: String, withArguments arguments: [AnyObject]?, error: NSErrorPointer) -> AnyObject? {
         return evaluateExpression(scriptForCallingMethod(name, arguments: arguments), error: error)
     }
 
