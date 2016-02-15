@@ -187,8 +187,11 @@ XWVPlugin.prototype = {
         delete this.$references[refid];
         this.$lastRefID = refid;
     },
-    dispose: function() {
-        this.$channel.postMessage({'$opcode': '-', '$target': this.$instanceID});
+    dispose: function(immediate) {
+        if (!immediate) {
+            this.$channel.postMessage({'$opcode': '-', '$target': this.$instanceID});
+            return;
+        }
 
         delete this.$channel;
         delete this.$properties;

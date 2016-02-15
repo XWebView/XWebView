@@ -59,6 +59,7 @@ class XWVBindingObject : XWVScriptObject {
 
     deinit {
         (plugin as? XWVScripting)?.finalizeForScript?()
+        super.callMethod("dispose", withArguments: [true], completionHandler: nil)
         unbindObject(plugin)
     }
 
