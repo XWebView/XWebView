@@ -189,7 +189,7 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
                 headers["Content-Type"] = getMIMETypeByExtension(fileURL.pathExtension!)
                 headers["Content-Length"] = String(attrs[NSFileSize]!)
                 headers["Last-Modified"] = dateFormatter.stringFromDate(attrs[NSFileModificationDate] as! NSDate)
-                log("+\(request.HTTPMethod) fileURL.path")
+                log("+\(request.HTTPMethod!) \(fileURL.path!)")
             } else {
                 // Not found
                 statusCode = 404
