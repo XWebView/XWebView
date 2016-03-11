@@ -118,12 +118,10 @@ extension XWVScriptObject {
     }
 }
 
-extension XWVScriptObject {
-    // DOM objects
-    public var windowObject: XWVScriptObject {
-        return XWVScriptObject(namespace: "window", channel: self.channel, origin: self.origin)
-    }
-    public var documentObject: XWVScriptObject {
-        return XWVScriptObject(namespace: "document", channel: self.channel, origin: self.origin)
+class XWVWindowObject: XWVScriptObject {
+    private let origin: XWVObject
+    init(webView: WKWebView) {
+        origin = XWVObject(namespace: "XWVPlugin.context", webView: webView)
+        super.init(namespace: "window", origin: origin)
     }
 }

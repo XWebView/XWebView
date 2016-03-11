@@ -22,6 +22,20 @@ class XWebViewTests: XWVTestCase {
     class Plugin : NSObject {
     }
 
+    func testWindowObject() {
+        let expectation = expectationWithDescription("testWindowObject")
+        loadPlugin(Plugin(), namespace: "xwvtest", script: "") {
+            if let math = $0.windowObject["Math"] as? XWVScriptObject,
+                num = try? math.callMethod("sqrt", withArguments: [9]),
+                result = (num as? NSNumber)?.integerValue where result == 3 {
+                expectation.fulfill()
+            } else {
+                XCTFail("testWindowObject Failed")
+            }
+        }
+        waitForExpectationsWithTimeout(2, handler: nil)
+    }
+
     func testLoadPlugin() {
         if webview.loadPlugin(Plugin(), namespace: "xwvtest") == nil {
             XCTFail("testLoadPlugin Failed")

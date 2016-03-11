@@ -19,16 +19,19 @@ import ObjectiveC
 
 class XWVBindingObject : XWVScriptObject {
     private let key = unsafeAddressOf(XWVScriptObject)
+    unowned let channel: XWVChannel
     private var proxy: XWVInvocation!
     final var plugin: AnyObject { return proxy.target }
 
     init(namespace: String, channel: XWVChannel, object: AnyObject) {
-        super.init(namespace: namespace, channel: channel, origin: nil)
+        self.channel = channel
+        super.init(namespace: namespace, webView: channel.webView!)
         proxy = bindObject(object)
     }
 
     init?(namespace: String, channel: XWVChannel, arguments: [AnyObject]?) {
-        super.init(namespace: namespace, channel: channel, origin: nil)
+        self.channel = channel
+        super.init(namespace: namespace, webView: channel.webView!)
         let cls: AnyClass = channel.typeInfo.plugin
         let member = channel.typeInfo[""]
         guard member != nil, case .Initializer(let selector, let arity) = member! else {
