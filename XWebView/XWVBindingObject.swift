@@ -17,16 +17,16 @@
 import Foundation
 import ObjectiveC
 
-class XWVBindingObject : XWVScriptObject {
+final class XWVBindingObject : XWVScriptObject {
     private let key = unsafeAddressOf(XWVScriptObject)
     unowned let channel: XWVChannel
-    private var proxy: XWVInvocation!
-    final var plugin: AnyObject { return proxy.target }
+    var plugin: AnyObject!
 
     init(namespace: String, channel: XWVChannel, object: AnyObject) {
         self.channel = channel
+        self.plugin = object
         super.init(namespace: namespace, webView: channel.webView!)
-        proxy = bindObject(object)
+        bind()
     }
 
     init?(namespace: String, channel: XWVChannel, arguments: [AnyObject]?) {
@@ -49,13 +49,14 @@ class XWVBindingObject : XWVScriptObject {
             arguments = [arguments]
         }
 
-        let args: [Any!] = arguments.map{ $0 !== NSNull() ? ($0 as Any) : nil }
-        guard let instance = XWVInvocation.construct(cls, initializer: selector, withArguments: args) else {
+        let args: [Any!] = arguments.map{ $0 is NSNull ? nil : ($0 as Any) }
+        plugin = XWVInvocation.construct(cls, initializer: selector, withArguments: args)
+        guard plugin != nil else {
             log("!Failed to create instance for plugin class \(cls)")
             return nil
         }
 
-        proxy = bindObject(instance)
+        bind()
         syncProperties()
         promise?.callMethod("resolve", withArguments: [self], completionHandler: nil)
     }
@@ -63,72 +64,56 @@ class XWVBindingObject : XWVScriptObject {
     deinit {
         (plugin as? XWVScripting)?.finalizeForScript?()
         super.callMethod("dispose", withArguments: [true], completionHandler: nil)
-        unbindObject(plugin)
+        unbind()
     }
 
-    private func bindObject(object: AnyObject) -> XWVInvocation {
-        let option: XWVInvocation.Option
-        if let queue = channel.queue {
-            option = .Queue(queue: queue)
-        } else if let thread = channel.thread {
-            option = .Thread(thread: thread)
-        } else {
-            option = .None
-        }
-        let proxy = XWVInvocation(target: object, option: option)
-
-        objc_setAssociatedObject(object, key, self, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
+    private func bind() {
+        objc_setAssociatedObject(plugin, key, self, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
 
         // Start KVO
-        if object is NSObject {
-            for (_, member) in channel.typeInfo.filter({ $1.isProperty }) {
-                let key = member.getter!.description
-                object.addObserver(self, forKeyPath: key, options: NSKeyValueObservingOptions.New, context: nil)
-            }
+        guard let plugin = plugin as? NSObject else { return }
+        channel.typeInfo.filter{ $1.isProperty }.forEach {
+            plugin.addObserver(self, forKeyPath: String($1.getter!), options: NSKeyValueObservingOptions.New, context: nil)
         }
-        return proxy
     }
-    private func unbindObject(object: AnyObject) {
-        objc_setAssociatedObject(object, key, nil, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
+    private func unbind() {
+        objc_setAssociatedObject(plugin, key, nil, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
 
         // Stop KVO
-        if object is NSObject {
-            for (_, member) in channel.typeInfo.filter({ $1.isProperty }) {
-                let key = member.getter!.description
-                object.removeObserver(self, forKeyPath: key, context: nil)
-            }
+        guard plugin is NSObject else { return }
+        channel.typeInfo.filter{ $1.isProperty }.forEach {
+            plugin.removeObserver(self, forKeyPath: String($1.getter!), context: nil)
         }
     }
     private func syncProperties() {
-        var script = ""
-        for (name, member) in channel.typeInfo.filter({ $1.isProperty }) {
-            let val: AnyObject! = proxy.call(member.getter!, withObjects: nil)
-            script += "\(namespace).$properties['\(name)'] = \(serialize(val));\n"
+        let script = channel.typeInfo.filter{ $1.isProperty }.reduce("") {
+            let val: AnyObject! = performSelector($1.1.getter!, withObjects: nil)
+            return "\($0)\(namespace).$properties['\($1.0)'] = \(serialize(val));\n"
         }
         webView?.evaluateJavaScript(script, completionHandler: nil)
     }
 
     // Dispatch operation to plugin object
     func invokeNativeMethod(name: String, withArguments arguments: [AnyObject]) {
-        if let selector = channel.typeInfo[name]?.selector {
-            var args = arguments.map(wrapScriptObject)
-            if plugin is XWVScripting && name.isEmpty && selector == Selector("invokeDefaultMethodWithArguments:") {
-                args = [args];
-            }
-            proxy.asyncCall(selector, withObjects: args)
+        guard let selector = channel.typeInfo[name]?.selector else { return }
+
+        var args = arguments.map(wrapScriptObject)
+        if plugin is XWVScripting && name.isEmpty && selector == Selector("invokeDefaultMethodWithArguments:") {
+            args = [args];
         }
+        performSelector(selector, withObjects: args, waitUntilDone: false)
     }
     func updateNativeProperty(name: String, withValue value: AnyObject) {
-        if let setter = channel.typeInfo[name]?.setter {
-            let val: AnyObject = wrapScriptObject(value)
-            proxy.asyncCall(setter, withObjects: [val])
-        }
+        guard let setter = channel.typeInfo[name]?.setter else { return }
+
+        let val: AnyObject = wrapScriptObject(value)
+        performSelector(setter, withObjects: [val], waitUntilDone: false)
     }
 
     // override methods of XWVScriptObject
     override func callMethod(name: String, withArguments arguments: [AnyObject]?, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
         if let selector = channel.typeInfo[name]?.selector {
-            let result: AnyObject! = proxy.call(selector, withObjects: arguments)
+            let result: AnyObject! = performSelector(selector, withObjects: arguments)
             completionHandler?(result, nil)
         } else {
             super.callMethod(name, withArguments: arguments, completionHandler: completionHandler)
@@ -136,22 +121,23 @@ class XWVBindingObject : XWVScriptObject {
     }
     override func callMethod(name: String, withArguments arguments: [AnyObject]?) throws -> AnyObject? {
         if let selector = channel.typeInfo[name]?.selector {
-            return proxy.call(selector, withObjects: arguments)
+            return performSelector(selector, withObjects: arguments)
         }
         return try super.callMethod(name, withArguments: arguments)
     }
     override func value(forProperty name: String) -> AnyObject? {
         if let getter = channel.typeInfo[name]?.getter {
-            return proxy.call(getter, withObjects: nil)
+            return performSelector(getter, withObjects: nil)
         }
         return super.value(forProperty: name)
     }
     override func setValue(value: AnyObject?, forProperty name: String) {
-        if channel.typeInfo[name]?.setter != nil {
-            proxy[name] = value
-        } else {
-            assert(channel.typeInfo[name] == nil, "Property '\(name)' is readonly")
+        if let setter = channel.typeInfo[name]?.setter {
+            performSelector(setter, withObjects: [value ?? NSNull()])
+        } else if channel.typeInfo[name] == nil {
             super.setValue(value, forProperty: name)
+        } else {
+            assertionFailure("Property '\(name)' is readonly")
         }
     }
 
@@ -166,6 +152,41 @@ class XWVBindingObject : XWVScriptObject {
         }
         let script = "\(namespace).$properties['\(prop)'] = \(serialize(change?[NSKeyValueChangeNewKey]))"
         webView.evaluateJavaScript(script, completionHandler: nil)
+    }
+}
+
+extension XWVBindingObject {
+    private func performSelector(selector: Selector, withObjects arguments: [AnyObject]?, waitUntilDone wait: Bool = true) -> AnyObject! {
+        var result: Any! = ()
+        let trampoline: dispatch_block_t = {
+            [weak self] in
+            guard let plugin = self?.plugin else { return }
+            let args: [Any!] = arguments?.map{ $0 is NSNull ? nil : ($0 as Any) } ?? []
+            result = castToObjectFromAny(invoke(plugin, selector: selector, withArguments: args))
+        }
+        if let queue = channel.queue {
+            if !wait {
+                dispatch_async(queue, trampoline)
+            } else if dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL) != dispatch_queue_get_label(queue) {
+                dispatch_sync(queue, trampoline)
+            } else {
+                trampoline()
+            }
+        } else if let runLoop = channel.runLoop?.getCFRunLoop() {
+            if wait && CFRunLoopGetCurrent() === runLoop {
+                trampoline()
+            } else {
+                CFRunLoopPerformBlock(runLoop, kCFRunLoopDefaultMode, trampoline)
+                CFRunLoopWakeUp(runLoop)
+                while wait && result is Void {
+                    let reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 3.0, true)
+                    if reason != CFRunLoopRunResult.HandledSource {
+                        break
+                    }
+                }
+            }
+        }
+        return result as? AnyObject
     }
 }
 
