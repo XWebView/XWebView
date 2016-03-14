@@ -18,7 +18,6 @@ import Foundation
 import ObjectiveC
 
 final class XWVBindingObject : XWVScriptObject {
-    private let key = unsafeAddressOf(XWVScriptObject)
     unowned let channel: XWVChannel
     var plugin: AnyObject!
 
@@ -49,8 +48,10 @@ final class XWVBindingObject : XWVScriptObject {
             arguments = [arguments]
         }
 
-        let args: [Any!] = arguments.map{ $0 is NSNull ? nil : ($0 as Any) }
-        plugin = XWVInvocation.construct(cls, initializer: selector, withArguments: args)
+        plugin = invoke(cls, selector: "alloc", withArguments: []) as? AnyObject
+        if plugin != nil {
+            plugin = performSelector(selector, withObjects: arguments)
+        }
         guard plugin != nil else {
             log("!Failed to create instance for plugin class \(cls)")
             return nil
@@ -68,8 +69,6 @@ final class XWVBindingObject : XWVScriptObject {
     }
 
     private func bind() {
-        objc_setAssociatedObject(plugin, key, self, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
-
         // Start KVO
         guard let plugin = plugin as? NSObject else { return }
         channel.typeInfo.filter{ $1.isProperty }.forEach {
@@ -77,8 +76,6 @@ final class XWVBindingObject : XWVScriptObject {
         }
     }
     private func unbind() {
-        objc_setAssociatedObject(plugin, key, nil, objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)
-
         // Stop KVO
         guard plugin is NSObject else { return }
         channel.typeInfo.filter{ $1.isProperty }.forEach {
@@ -156,13 +153,27 @@ final class XWVBindingObject : XWVScriptObject {
 }
 
 extension XWVBindingObject {
+    private static var key: pthread_key_t = {
+        var key = pthread_key_t()
+        pthread_key_create(&key, nil)
+        return key
+    }()
+
+    private static var currentBindingObject: XWVBindingObject? {
+        let ptr = pthread_getspecific(XWVBindingObject.key)
+        guard ptr != nil else { return nil }
+        return unsafeBitCast(ptr, XWVBindingObject.self)
+    }
     private func performSelector(selector: Selector, withObjects arguments: [AnyObject]?, waitUntilDone wait: Bool = true) -> AnyObject! {
         var result: Any! = ()
         let trampoline: dispatch_block_t = {
             [weak self] in
             guard let plugin = self?.plugin else { return }
             let args: [Any!] = arguments?.map{ $0 is NSNull ? nil : ($0 as Any) } ?? []
+            let save = pthread_getspecific(XWVBindingObject.key)
+            pthread_setspecific(XWVBindingObject.key, unsafeAddressOf(self!))
             result = castToObjectFromAny(invoke(plugin, selector: selector, withArguments: args))
+            pthread_setspecific(XWVBindingObject.key, save)
         }
         if let queue = channel.queue {
             if !wait {
@@ -190,8 +201,8 @@ extension XWVBindingObject {
     }
 }
 
-public extension NSObject {
-    var scriptObject: XWVScriptObject? {
-        return objc_getAssociatedObject(self, unsafeAddressOf(XWVScriptObject)) as? XWVScriptObject
+public extension XWVScriptObject {
+    static var bindingObject: XWVScriptObject? {
+        return XWVBindingObject.currentBindingObject
     }
 }
