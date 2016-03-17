@@ -19,28 +19,32 @@ import XCTest
 import XWebView
 
 class ConstructorPlugin : XWVTestCase {
-    class Plugin : NSObject, XWVScripting {
-        dynamic var property = 123
-        private var expectation: XCTestExpectation?;
-        init(expectation: XCTestExpectation?) {
-            self.expectation = expectation
+    class Plugin0 : NSObject, XWVScripting {
+        init(expectation: AnyObject?) {
+            if let e = expectation as? XWVScriptObject {
+                e.callMethod("fulfill", withArguments: nil, completionHandler: nil)
+            }
         }
+        class func scriptNameForSelector(selector: Selector) -> String? {
+            return selector == Selector("initWithExpectation:") ? "" : nil
+        }
+    }
+    class Plugin1 : NSObject, XWVScripting {
+        dynamic let property: Int
         init(value: Int) {
             property = value
-        }
-        func finalizeForScript() {
-            if property == 456 {
-                scriptObject?.webView?.evaluateJavaScript("fulfill('finalizeForScript')", completionHandler: nil)
-            }
         }
         class func scriptNameForSelector(selector: Selector) -> String? {
             return selector == Selector("initWithValue:") ? "" : nil
         }
     }
     class Plugin2 : NSObject, XWVScripting {
-        override init() {}
+        private let expectation: XWVScriptObject?
         init(expectation: AnyObject?) {
-            (expectation as? XWVScriptObject)?.callMethod("fulfill", withArguments: nil, completionHandler: nil)
+            self.expectation = expectation as? XWVScriptObject
+        }
+        func finalizeForScript() {
+            expectation?.callMethod("fulfill", withArguments: nil, completionHandler: nil)
         }
         class func scriptNameForSelector(selector: Selector) -> String? {
             return selector == Selector("initWithExpectation:") ? "" : nil
@@ -53,35 +57,28 @@ class ConstructorPlugin : XWVTestCase {
         let desc = "constructor"
         let script = "if (\(namespace) instanceof Function) fulfill('\(desc)')"
         _ = expectationWithDescription(desc)
-        loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
+        loadPlugin(Plugin0(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
     func testConstruction() {
         let desc = "construction"
-        let script = "if (new \(namespace)(456) instanceof Promise) fulfill('\(desc)')"
-        _ = expectationWithDescription(desc)
-        loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectationsWithTimeout(2, handler: nil)
-    }
-/*  func testConstruction2() {
-        let desc = "construction2"
         let script = "new \(namespace)(expectation('\(desc)'))"
         _ = expectationWithDescription(desc)
-        loadPlugin(Plugin2(), namespace: namespace, script: script)
+        loadPlugin(Plugin0(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
-    }*/
+    }
     func testSyncProperties() {
         let desc = "syncProperties"
         let script = "(new \(namespace)(456)).then(function(o){if (o.property==456) fulfill('\(desc)');})"
         _ = expectationWithDescription(desc)
-        loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
+        loadPlugin(Plugin1(value: 123), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
     func testFinalizeForScript() {
         let desc = "finalizeForScript"
-        let script = "(new \(namespace)(456)).then(function(o){o.dispose();})"
+        let script = "(new \(namespace)(expectation('\(desc)'))).then(function(o){o.dispose();})"
         _ = expectationWithDescription(desc)
-        loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
+        loadPlugin(Plugin2(expectation: nil), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
     }
 }

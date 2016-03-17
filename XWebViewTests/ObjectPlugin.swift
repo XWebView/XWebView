@@ -41,6 +41,13 @@ class ObjectPlugin : XWVTestCase {
         func method(promiseObject promiseObject: XWVScriptObject) {
             promiseObject.callMethod("resolve", withArguments: nil, completionHandler: nil)
         }
+        func method1() {
+            guard let bindingObject = XWVScriptObject.bindingObject else { return }
+            property = 456
+            if (bindingObject["property"] as? NSNumber)?.integerValue == 456 {
+                expectation?.fulfill()
+            }
+        }
         init(expectation: XCTestExpectation?) {
             self.expectation = expectation
         }
@@ -116,11 +123,7 @@ class ObjectPlugin : XWVTestCase {
         let desc = "scriptObject"
         let expectation = expectationWithDescription(desc)
         let plugin = Plugin(expectation: expectation)
-        loadPlugin(plugin as NSObject, namespace: namespace, script: "") {
-            (webView)->Void in
-            try! plugin.scriptObject?.callMethod("method", withArguments: nil)
-            return
-        }
+        loadPlugin(plugin, namespace: namespace, script: "\(namespace).method1();")
         waitForExpectationsWithTimeout(2, handler: nil)
     }
 }
