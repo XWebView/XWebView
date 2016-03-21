@@ -17,7 +17,7 @@
 import Foundation
 import ObjectiveC
 
-public class XWVInvocation {
+public class XWVInvocation: NSObject {
     public final let target: AnyObject
     private let thread: NSThread?
 
@@ -26,9 +26,8 @@ public class XWVInvocation {
         self.thread = thread
     }
 
-    public class func construct(`class`: AnyClass, initializer: Selector = Selector("init"), withArguments arguments: [Any!] = []) -> AnyObject? {
-        let alloc = Selector("alloc")
-        guard let obj = invoke(`class`, selector: alloc, withArguments: []) as? AnyObject else {
+    public class func construct(`class`: AnyClass, initializer: Selector, withArguments arguments: [Any!] = []) -> AnyObject? {
+        guard let obj = invoke(`class`, selector: Selector("alloc"), withArguments: []) as? AnyObject else {
             return nil
         }
         return invoke(obj, selector: initializer, withArguments: arguments) as? AnyObject
@@ -107,12 +106,132 @@ extension XWVInvocation {
     }
 }
 
-
 // Notice: The target method must strictly obey the Cocoa convention.
 // Do NOT call method with explicit family control or parameter attribute of ARC.
 // See: http://clang.llvm.org/docs/AutomaticReferenceCounting.html
-private let _NSInvocation: AnyClass = NSClassFromString("NSInvocation")!
 private let _NSMethodSignature: AnyClass = NSClassFromString("NSMethodSignature")!
+private let _NSInvocation: AnyClass = NSClassFromString("NSInvocation")!
+
+class MethodSignatureTrick : NSObject {
+    private static var initialized: dispatch_once_t = 0
+    override class func initialize() {
+        dispatch_once(&initialized) {
+            let sel = #selector(signatureWithObjCTypes(_:))
+            let method = class_getClassMethod(_NSMethodSignature, sel)
+            let imp = method_getImplementation(method)
+            method_setImplementation(class_getClassMethod(self, sel), imp)
+
+            let numberOfArgumentsSel = #selector(numberOfArguments)
+            let numberOfArgumentsMethod = class_getInstanceMethod(_NSInvocation, numberOfArgumentsSel)
+            let numberOfArgumentsImp = method_getImplementation(numberOfArgumentsMethod)
+            method_setImplementation(numberOfArgumentsMethod, numberOfArgumentsImp)
+
+            let getArgumentTypeAtIndexSel = #selector(getArgumentTypeAtIndex(_:))
+            let getArgumentTypeAtIndexMethod = class_getInstanceMethod(_NSInvocation, getArgumentTypeAtIndexSel)
+            let getArgumentTypeAtIndexImp = method_getImplementation(getArgumentTypeAtIndexMethod)
+            method_setImplementation(getArgumentTypeAtIndexMethod, getArgumentTypeAtIndexImp)
+
+            let methodReturnLengthSel = #selector(methodReturnLength)
+            let methodReturnLengthMethod = class_getInstanceMethod(_NSInvocation, methodReturnLengthSel)
+            let methodReturnLengthImp = method_getImplementation(methodReturnLengthMethod)
+            method_setImplementation(methodReturnLengthMethod, methodReturnLengthImp)
+
+            let methodReturnTypeSel = #selector(methodReturnType)
+            let methodReturnTypeMethod = class_getInstanceMethod(_NSInvocation, methodReturnTypeSel)
+            let methodReturnTypeImp = method_getImplementation(methodReturnTypeMethod)
+            method_setImplementation(methodReturnTypeMethod, methodReturnTypeImp)
+        }
+    }
+
+    dynamic class func signatureWithObjCTypes(type: UnsafePointer<Int8>) -> MethodSignatureTrick {
+        assertionFailure("unreachable")
+        return MethodSignatureTrick()
+    }
+
+    dynamic func numberOfArguments() -> Int {
+        assertionFailure("unreachable")
+        return 0
+    }
+
+    dynamic func methodReturnLength() -> Int {
+        assertionFailure("unreachable")
+        return 0
+    }
+
+    dynamic func methodReturnType() -> UnsafePointer<Int8> {
+        assertionFailure("unreachable")
+        return nil
+    }
+
+    dynamic func getArgumentTypeAtIndex(index: Int) -> UnsafePointer<Int8> {
+        assertionFailure("unreachable")
+        return nil
+    }
+}
+
+class InvocationTrick : NSObject {
+    private static var initialized: dispatch_once_t = 0
+    override class func initialize() {
+        dispatch_once(&initialized) {
+            let sel = #selector(invocationWithMethodSignature(_:))
+            let method = class_getClassMethod(_NSInvocation, sel)
+            let imp = method_getImplementation(method)
+            method_setImplementation(class_getClassMethod(self, sel), imp)
+
+            let setArgumentAtIndexSel = #selector(setArgument(_:atIndex:))
+            let setArgumentAtIndexMethod = class_getInstanceMethod(_NSInvocation, setArgumentAtIndexSel)
+            let setArgumentAtIndexImp = method_getImplementation(setArgumentAtIndexMethod)
+            method_setImplementation(setArgumentAtIndexMethod, setArgumentAtIndexImp)
+
+            let selectorSel = #selector(setSelector(_:))
+            let selectorMethod = class_getInstanceMethod(_NSInvocation, selectorSel)
+            let selectorImp = method_getImplementation(selectorMethod)
+            method_setImplementation(selectorMethod, selectorImp)
+
+            let invokeWithTargetSel = #selector(invokeWithTarget(_:))
+            let invokeWithTargetMethod = class_getInstanceMethod(_NSInvocation, invokeWithTargetSel)
+            let invokeWithTargetImp = method_getImplementation(invokeWithTargetMethod)
+            method_setImplementation(invokeWithTargetMethod, invokeWithTargetImp)
+
+            let retainArgumentsSel = #selector(retainArguments)
+            let retainArgumentsMethod = class_getInstanceMethod(_NSInvocation, retainArgumentsSel)
+            let retainArgumentsImp = method_getImplementation(retainArgumentsMethod)
+            method_setImplementation(retainArgumentsMethod, retainArgumentsImp)
+
+            let getReturnValueSel = #selector(getReturnValue(_:))
+            let getReturnValueMethod = class_getInstanceMethod(_NSInvocation, getReturnValueSel)
+            let getReturnValueImp = method_getImplementation(getReturnValueMethod)
+            method_setImplementation(getReturnValueMethod, getReturnValueImp)
+         }
+    }
+
+    dynamic class func invocationWithMethodSignature(sig: NSObject?) -> InvocationTrick {
+        assertionFailure("unreachable")
+        return InvocationTrick()
+    }
+
+    dynamic func setArgument(argument: UnsafePointer<Int8>, atIndex index: Int) {
+        assertionFailure("unreachable")
+
+    }
+
+    dynamic func setSelector(selector: Selector) {
+        assertionFailure("unreachable")
+    }
+
+    dynamic func invokeWithTarget(target: AnyObject) {
+        assertionFailure("unreachable")
+    }
+
+    dynamic func retainArguments() {
+        assertionFailure("unreachable")
+    }
+
+    dynamic func getReturnValue(buffer: UnsafeMutablePointer<UInt8>) {
+        assertionFailure("unreachable")
+    }
+}
+
 public func invoke(target: AnyObject, selector: Selector, withArguments arguments: [Any!], onThread thread: NSThread? = nil, waitUntilDone wait: Bool = true) -> Any! {
     let method = class_getInstanceMethod(target.dynamicType, selector)
     if method == nil {
@@ -124,11 +243,11 @@ public func invoke(target: AnyObject, selector: Selector, withArguments argument
         NSException(name: NSInvalidArgumentException, reason: reason, userInfo: nil).raise()
     }
 
-    let sig = _NSMethodSignature.signatureWithObjCTypes(method_getTypeEncoding(method))!
-    let inv = _NSInvocation.invocationWithMethodSignature(sig)
+    let sig = MethodSignatureTrick.signatureWithObjCTypes(method_getTypeEncoding(method))
+    let inv = InvocationTrick.invocationWithMethodSignature(sig)
 
     // Setup arguments
-    assert(arguments.count + 2 <= Int(sig.numberOfArguments), "Too many arguments for calling -[\(target.dynamicType) \(selector)]")
+    assert(arguments.count + 2 <= Int(sig.numberOfArguments()), "Too many arguments for calling -[\(target.dynamicType) \(selector)]")
     var args = [[Int]](count: arguments.count, repeatedValue: [])
     for var i = 0; i < arguments.count; ++i {
         let type = sig.getArgumentTypeAtIndex(i + 2)
@@ -168,7 +287,7 @@ public func invoke(target: AnyObject, selector: Selector, withArguments argument
         // Self should be consumed for method belongs to init famlily
         _ = Unmanaged.passRetained(target)
     }
-    inv.selector = selector
+    inv.setSelector(selector)
 
     if thread == nil || (thread == NSThread.currentThread() && wait) {
         inv.invokeWithTarget(target)
@@ -178,19 +297,19 @@ public func invoke(target: AnyObject, selector: Selector, withArguments argument
         inv.performSelector(selector, onThread: thread!, withObject: target, waitUntilDone: wait)
         guard wait else { return Void() }
     }
-    if sig.methodReturnLength == 0 { return Void() }
+    if sig.methodReturnLength() == 0 { return Void() }
 
     // Fetch the return value
-    let buffer = UnsafeMutablePointer<UInt8>.alloc(sig.methodReturnLength)
+    let buffer = UnsafeMutablePointer<UInt8>.alloc(sig.methodReturnLength())
     inv.getReturnValue(buffer)
     defer {
-        if sig.methodReturnType[0] == 0x40 && selector.returnsRetained {
+        if sig.methodReturnType()[0] == 0x40 && selector.returnsRetained {
             // To balance the retained return value
             Unmanaged.passUnretained(UnsafePointer<AnyObject>(buffer).memory).release()
         }
-        buffer.dealloc(sig.methodReturnLength)
+        buffer.dealloc(sig.methodReturnLength())
     }
-    return castToAnyFromBytes(buffer, withObjCType: sig.methodReturnType)
+    return castToAnyFromBytes(buffer, withObjCType: sig.methodReturnType())
 }
 
 
