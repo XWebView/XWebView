@@ -58,6 +58,7 @@ class XWVScriptingTest : XWVTestCase {
         let expectation = expectationWithDescription(desc)
         loadPlugin(Plugin(expectation: expectation), namespace: namespace, script: script)
         waitForExpectationsWithTimeout(2, handler: nil)
+        
     }
     func testIsSelectorExcluded() {
         let desc = "isSelectorExcluded"
