@@ -124,8 +124,8 @@ public func invoke(target: AnyObject, selector: Selector, withArguments argument
         NSException(name: NSInvalidArgumentException, reason: reason, userInfo: nil).raise()
     }
 
-    let sig = _NSMethodSignature.signatureWithObjCTypes(method_getTypeEncoding(method))!
-    let inv = _NSInvocation.invocationWithMethodSignature(sig)
+    let sig = FixSwift22.getSignatureWithObjCTypes(method_getTypeEncoding(method))!
+    let inv = FixSwift22.invocationWithMethodSignature(sig)!
 
     // Setup arguments
     assert(arguments.count + 2 <= Int(sig.numberOfArguments), "Too many arguments for calling -[\(target.dynamicType) \(selector)]")
