@@ -29,3 +29,5 @@ FOUNDATION_EXPORT const unsigned char XWebViewVersionString[];
 @interface WKWebView (XWebView)
 - (nullable WKNavigation *)loadFileURL:(nonnull NSURL *)URL allowingReadAccessToURL:(nonnull NSURL *)readAccessURL;
 @end
+
+#import <XWebView/FixSwift22.h>

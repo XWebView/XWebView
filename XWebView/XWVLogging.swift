@@ -18,11 +18,11 @@ import Darwin
 
 public typealias asl_object_t = COpaquePointer
 
-@asmname("asl_open") func asl_open(ident: UnsafePointer<Int8>, _ facility: UnsafePointer<Int8>, _ opts: UInt32) -> asl_object_t;
-@asmname("asl_close") func asl_close(obj: asl_object_t);
-@asmname("asl_vlog") func asl_vlog(obj: asl_object_t, _ msg: asl_object_t, _ level: Int32, _ format: UnsafePointer<Int8>, _ ap: CVaListPointer) -> Int32;
-@asmname("asl_add_output_file") func asl_add_output_file(client: asl_object_t, _ descriptor: Int32, _ msg_fmt: UnsafePointer<Int8>, _ time_fmt: UnsafePointer<Int8>, _ filter: Int32, _ text_encoding: Int32) -> Int32;
-@asmname("asl_set_output_file_filter") func asl_set_output_file_filter(asl: asl_object_t, _ descriptor: Int32, _ filter: Int32) -> Int32;
+@_silgen_name("asl_open") func asl_open(ident: UnsafePointer<Int8>, _ facility: UnsafePointer<Int8>, _ opts: UInt32) -> asl_object_t;
+@_silgen_name("asl_close") func asl_close(obj: asl_object_t);
+@_silgen_name("asl_vlog") func asl_vlog(obj: asl_object_t, _ msg: asl_object_t, _ level: Int32, _ format: UnsafePointer<Int8>, _ ap: CVaListPointer) -> Int32;
+@_silgen_name("asl_add_output_file") func asl_add_output_file(client: asl_object_t, _ descriptor: Int32, _ msg_fmt: UnsafePointer<Int8>, _ time_fmt: UnsafePointer<Int8>, _ filter: Int32, _ text_encoding: Int32) -> Int32;
+@_silgen_name("asl_set_output_file_filter") func asl_set_output_file_filter(asl: asl_object_t, _ descriptor: Int32, _ filter: Int32) -> Int32;
 
 public class XWVLogging : XWVScripting {
     public enum Level : Int32 {
@@ -129,7 +129,7 @@ func log(message: String, level: XWVLogging.Level? = nil) {
     logger.log(message, level: level)
 }
 
-@noreturn func die(@autoclosure message: ()->String, file: StaticString = __FILE__, line: UInt = __LINE__) {
+@noreturn func die(@autoclosure message: ()->String, file: StaticString = #file, line: UInt = #line) {
     logger.log(message(), level: .Alert)
     fatalError(message, file: file, line: line)
 }
