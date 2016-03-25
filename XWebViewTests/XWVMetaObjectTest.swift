@@ -28,14 +28,14 @@ class XWVMetaObjectTest: XCTestCase {
         let meta = XWVMetaObject(plugin: TestForMethod.self)
         if let member = meta["method"] {
             XCTAssertTrue(member.isMethod)
-            XCTAssertTrue(member.selector == Selector("method"))
+            XCTAssertTrue(member.selector == #selector(TestForMethod.method as (TestForMethod) -> () -> ()))
             XCTAssertTrue(member.type == "#0a")
         } else {
             XCTFail()
         }
         if let member = meta["methodWithArgument"] {
             XCTAssertTrue(member.isMethod)
-            XCTAssertTrue(member.selector == Selector("methodWithArgument:"))
+            XCTAssertTrue(member.selector == #selector(TestForMethod.method(argument:)))
             XCTAssertTrue(member.type == "#1a")
         } else {
             XCTFail()
@@ -76,14 +76,14 @@ class XWVMetaObjectTest: XCTestCase {
         let meta = XWVMetaObject(plugin: TestForPromise.self)
         if let member = meta["methodWithPromiseObject"] {
             XCTAssertTrue(member.isMethod)
-            XCTAssertTrue(member.selector == Selector("methodWithPromiseObject:"))
+            XCTAssertTrue(member.selector == #selector(TestForPromise.method(promiseObject:)))
             XCTAssertTrue(member.type == "#1p")
         } else {
             XCTFail()
         }
         if let member = meta["methodWithArgument"] {
             XCTAssertTrue(member.isMethod)
-            XCTAssertTrue(member.selector == Selector("methodWithArgument:promiseObject:"))
+            XCTAssertTrue(member.selector == #selector(TestForPromise.method(argument:promiseObject:)))
             XCTAssertTrue(member.type == "#2p")
         } else {
             XCTFail()
@@ -94,7 +94,7 @@ class XWVMetaObjectTest: XCTestCase {
             @objc let property = 0
             @objc func method() {}
             @objc class func isSelectorExcludedFromScript(selector: Selector) -> Bool {
-                return selector == Selector("method")
+                return selector == #selector(TestForExclusion.method)
             }
             @objc class func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool {
                 return String(UTF8String: name) == "property"
@@ -109,13 +109,13 @@ class XWVMetaObjectTest: XCTestCase {
         class TestForFunction : XWVScripting {
             @objc func defaultMethod() {}
             @objc class func scriptNameForSelector(selector: Selector) -> String? {
-                return selector == Selector("defaultMethod") ? "" : nil
+                return selector == #selector(TestForFunction.defaultMethod) ? "" : nil
             }
         }
         let meta = XWVMetaObject(plugin: TestForFunction.self)
         if let member = meta[""] {
             XCTAssertTrue(member.isMethod)
-            XCTAssertTrue(member.selector == Selector("defaultMethod"))
+            XCTAssertTrue(member.selector == #selector(TestForFunction.defaultMethod))
             XCTAssertTrue(member.type == "#0a")
         } else {
             XCTFail()
@@ -131,7 +131,7 @@ class XWVMetaObjectTest: XCTestCase {
         let meta = XWVMetaObject(plugin: TestForFunction.self)
         if let member = meta[""] {
             XCTAssertTrue(member.isMethod)
-            XCTAssertTrue(member.selector == Selector("invokeDefaultMethodWithArguments:"))
+            XCTAssertTrue(member.selector == #selector(XWVScripting.invokeDefaultMethodWithArguments(_:)))
             XCTAssertTrue(member.type == "")
         } else {
             XCTFail()
@@ -142,13 +142,13 @@ class XWVMetaObjectTest: XCTestCase {
         class TestForConstructor : XWVScripting {
             @objc init(argument: AnyObject?) {}
             @objc class func scriptNameForSelector(selector: Selector) -> String? {
-                return selector == Selector("initWithArgument:") ? "" : nil
+                return selector == #selector(TestForConstructor.init(argument:)) ? "" : nil
             }
         }
         let meta = XWVMetaObject(plugin: TestForConstructor.self)
         if let member = meta[""] {
             XCTAssertTrue(member.isInitializer)
-            XCTAssertTrue(member.selector == Selector("initWithArgument:"))
+            XCTAssertTrue(member.selector == #selector(TestForConstructor.init(argument:)))
             XCTAssertTrue(member.type == "#2p")
         } else {
             XCTFail()
@@ -162,7 +162,7 @@ class XWVMetaObjectTest: XCTestCase {
         let meta = XWVMetaObject(plugin: TestForConstructor.self)
         if let member = meta[""] {
             XCTAssertTrue(member.isInitializer)
-            XCTAssertTrue(member.selector == Selector("initByScriptWithArguments:"))
+            XCTAssertTrue(member.selector == #selector(TestForConstructor.init(byScriptWithArguments:)))
             XCTAssertTrue(member.type == "#p")
         } else {
             XCTFail()

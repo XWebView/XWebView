@@ -29,3 +29,29 @@ FOUNDATION_EXPORT const unsigned char XWebViewVersionString[];
 @interface WKWebView (XWebView)
 - (nullable WKNavigation *)loadFileURL:(nonnull NSURL *)URL allowingReadAccessToURL:(nonnull NSURL *)readAccessURL;
 @end
+
+NS_ASSUME_NONNULL_BEGIN
+
+// The workaround for using NSInvocation and NSMethodSignature in Swift.
+@protocol _NSMethodSignatureFactory <NSObject>
+- (NSMethodSignature *)signatureWithObjCTypes:(const char *)types;
+@end
+@interface NSMethodSignature (Swift) <_NSMethodSignatureFactory>
+@end
+
+@protocol _NSInvocationFactory <NSObject>
+- (NSInvocation *)invocationWithMethodSignature:(NSMethodSignature *)sig;
+@end
+@interface NSInvocation (Swift) <_NSInvocationFactory>
+@end
+
+// Special selectors which can't be referenced directly in Swift.
+@protocol _SpecialSelectors
+// NSObject
+- (instancetype)alloc;
+- (void)dealloc;
+// NSInvocation
+- (void)invokeWithTarget:(id)target;
+@end
+
+NS_ASSUME_NONNULL_END
