@@ -35,7 +35,7 @@ class XWVScriptingTest : XWVTestCase {
             expectation?.fulfill()
         }
         class func isSelectorExcludedFromScript(selector: Selector) -> Bool {
-            return selector == Selector("initWithExpectation:")
+            return selector == #selector(Plugin.init(expectation:))
         }
         class func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool {
             return String(UTF8String: name) == "expectation"

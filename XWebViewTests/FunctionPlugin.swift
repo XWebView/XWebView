@@ -29,7 +29,7 @@ class FunctionPlugin : XWVTestCase {
             expectation?.fulfill()
         }
         class func scriptNameForSelector(selector: Selector) -> String? {
-            return selector == Selector("defaultMethod") ? "" : nil
+            return selector == #selector(Plugin.defaultMethod) ? "" : nil
         }
     }
 
