@@ -35,7 +35,8 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         struct sequence{
             static var number: UInt = 0
         }
-        return ++sequence.number
+        sequence.number += 1
+        return sequence.number
     }
 
     private static var defaultQueue: dispatch_queue_t = {
@@ -47,7 +48,8 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         self.init(webView: webView, queue: XWVChannel.defaultQueue)
     }
     public convenience init(webView: WKWebView, thread: NSThread) {
-        let runLoop = invoke(NSRunLoop.self, selector: "currentRunLoop", withArguments: [], onThread: thread) as! NSRunLoop
+        let selector = #selector(NSRunLoop.currentRunLoop)
+        let runLoop = invoke(NSRunLoop.self, selector: selector, withArguments: [], onThread: thread) as! NSRunLoop
         self.init(webView: webView, runLoop: runLoop)
     }
 

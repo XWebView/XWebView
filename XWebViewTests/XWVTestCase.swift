@@ -21,7 +21,8 @@ import XWebView
 
 extension XCTestExpectation : XWVScripting {
     public class func isSelectorExcludedFromScript(selector: Selector) -> Bool {
-        return selector != Selector("fulfill") && selector != Selector("description")
+        return selector != #selector(XCTestExpectation.fulfill) &&
+               selector != #selector(NSObject.description as () -> String)
     }
     public class func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool {
         return true

@@ -114,7 +114,7 @@ extension XWVHttpConnection : NSStreamDelegate {
                     }
                     bytesConsumed += data.length
                 }
-                ++ptr
+                ptr = ptr.successor()
             }
             if bytesConsumed > 0 {
                 // Move remained bytes to the begining.
@@ -189,13 +189,17 @@ private extension String {
     mutating func trim(@noescape predicate: (Character) -> Bool) {
         if !isEmpty {
             var start = startIndex
-            var end = endIndex.predecessor()
-            for var s = start; s != endIndex && predicate(self[s]); start = ++s {}
-            if start == endIndex {
-                self = ""
-            } else {
-                for var e = end; predicate(self[e]); end = --e {}
+            while start != endIndex && predicate(self[start]) {
+                start = start.successor()
+            }
+            if start < endIndex {
+                var end = endIndex
+                repeat {
+                    end = end.predecessor()
+                } while predicate(self[end])
                 self = self[start ... end]
+            } else {
+                self = ""
             }
         }
     }

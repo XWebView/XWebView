@@ -44,11 +44,11 @@ final class XWVBindingObject : XWVScriptObject {
             promise = arguments.last as? XWVScriptObject
             arguments.removeLast()
         }
-        if selector == "initByScriptWithArguments:" {
+        if selector == Selector("initByScriptWithArguments:") {
             arguments = [arguments]
         }
 
-        plugin = invoke(cls, selector: "alloc", withArguments: []) as? AnyObject
+        plugin = invoke(cls, selector: #selector(_SpecialSelectors.alloc), withArguments: []) as? AnyObject
         if plugin != nil {
             plugin = performSelector(selector, withObjects: arguments)
         }
@@ -95,7 +95,7 @@ final class XWVBindingObject : XWVScriptObject {
         guard let selector = channel.typeInfo[name]?.selector else { return }
 
         var args = arguments.map(wrapScriptObject)
-        if plugin is XWVScripting && name.isEmpty && selector == Selector("invokeDefaultMethodWithArguments:") {
+        if plugin is XWVScripting && name.isEmpty && selector == #selector(XWVScripting.invokeDefaultMethodWithArguments(_:)) {
             args = [args];
         }
         performSelector(selector, withObjects: args, waitUntilDone: false)
