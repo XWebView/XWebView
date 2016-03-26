@@ -26,7 +26,7 @@ class ConstructorPlugin : XWVTestCase {
             }
         }
         class func scriptNameForSelector(selector: Selector) -> String? {
-            return selector == Selector("initWithExpectation:") ? "" : nil
+            return selector == #selector(Plugin0.init(expectation:)) ? "" : nil
         }
     }
     class Plugin1 : NSObject, XWVScripting {
@@ -35,7 +35,7 @@ class ConstructorPlugin : XWVTestCase {
             property = value
         }
         class func scriptNameForSelector(selector: Selector) -> String? {
-            return selector == Selector("initWithValue:") ? "" : nil
+            return selector == #selector(Plugin1.init(value:)) ? "" : nil
         }
     }
     class Plugin2 : NSObject, XWVScripting {
@@ -47,7 +47,7 @@ class ConstructorPlugin : XWVTestCase {
             expectation?.callMethod("fulfill", withArguments: nil, completionHandler: nil)
         }
         class func scriptNameForSelector(selector: Selector) -> String? {
-            return selector == Selector("initWithExpectation:") ? "" : nil
+            return selector == #selector(Plugin2.init(expectation:)) ? "" : nil
         }
     }
 

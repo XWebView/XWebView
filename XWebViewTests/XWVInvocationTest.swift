@@ -79,35 +79,35 @@ class InvocationTests : XCTestCase {
     #endif
 
     func testMethods() {
-        XCTAssertTrue(inv[Selector("dummy")]() is Void)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.dummy)]() is Void)
         #if arch(x86_64) || arch(arm64)
-        XCTAssertTrue(inv[Selector("echoWithBool:")](Bool(true)) as? Bool == true)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(bool:))](Bool(true)) as? Bool == true)
         #else
         // http://stackoverflow.com/questions/26459754/bool-encoding-wrong-from-nsmethodsignature
         XCTAssertTrue(inv[Selector("echoWithBool:")](Bool(true)) as? Int8 == 1)
         #endif
-        XCTAssertTrue(inv[Selector("echoWithInt:")](Int(-11)) as? XInt == -11)
-        XCTAssertTrue(inv[Selector("echoWithInt8:")](Int8(-22)) as? Int8 == -22)
-        XCTAssertTrue(inv[Selector("echoWithInt16:")](Int16(-33)) as? Int16 == -33)
-        XCTAssertTrue(inv[Selector("echoWithInt32:")](Int32(-44)) as? Int32 == -44)
-        XCTAssertTrue(inv[Selector("echoWithInt64:")](Int64(-55)) as? Int64 == -55)
-        XCTAssertTrue(inv[Selector("echoWithUint:")](UInt(11)) as? XUInt == 11)
-        XCTAssertTrue(inv[Selector("echoWithUint8:")](UInt8(22)) as? UInt8 == 22)
-        XCTAssertTrue(inv[Selector("echoWithUint16:")](UInt16(33)) as? UInt16 == 33)
-        XCTAssertTrue(inv[Selector("echoWithUint32:")](UInt32(44)) as? UInt32 == 44)
-        XCTAssertTrue(inv[Selector("echoWithUint64:")](UInt64(55)) as? UInt64 == 55)
-        XCTAssertTrue(inv[Selector("echoWithFloat:")](Float(12.34)) as? Float == 12.34)
-        XCTAssertTrue(inv[Selector("echoWithDouble:")](Double(-56.78)) as? Double == -56.78)
-        XCTAssertTrue(inv[Selector("echoWithUnicode:")](UnicodeScalar(78)) as? Int32 == 78)
-        XCTAssertTrue(inv[Selector("echoWithString:")]("abc") as? String == "abc")
-        let selector = Selector("echoWithSelector:")
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int:))](Int(-11)) as? XInt == -11)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int8:))](Int8(-22)) as? Int8 == -22)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int16:))](Int16(-33)) as? Int16 == -33)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int32:))](Int32(-44)) as? Int32 == -44)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int64:))](Int64(-55)) as? Int64 == -55)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint:))](UInt(11)) as? XUInt == 11)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint8:))](UInt8(22)) as? UInt8 == 22)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint16:))](UInt16(33)) as? UInt16 == 33)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint32:))](UInt32(44)) as? UInt32 == 44)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint64:))](UInt64(55)) as? UInt64 == 55)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(float:))](Float(12.34)) as? Float == 12.34)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(double:))](Double(-56.78)) as? Double == -56.78)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(unicode:))](UnicodeScalar(78)) as? Int32 == 78)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(string:))]("abc") as? String == "abc")
+        let selector = #selector(InvocationTarget.echo(selector:))
         XCTAssertTrue(inv[selector](selector) as? Selector == selector)
         let cls = self.dynamicType
-        XCTAssertTrue(inv[Selector("echoWithClass:")](cls) as? AnyClass === cls)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(class:))](cls) as? AnyClass === cls)
 
-        XCTAssertTrue(inv[Selector("convert:")](UInt8(12)) as? XInt == 12)
-        XCTAssertTrue(inv[Selector("add::")](2, 3) as? XInt == 5)
-        XCTAssertTrue(inv[Selector("concat::")]("ab", "cd") as? String == "abcd")
+        XCTAssertTrue(inv[ #selector(InvocationTarget.convert(_:))](UInt8(12)) as? XInt == 12)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.add(_:_:))](2, 3) as? XInt == 5)
+        XCTAssertTrue(inv[ #selector(InvocationTarget.concat(_:_:))]("ab", "cd") as? String == "abcd")
     }
 
     func testProperty() {
@@ -119,7 +119,7 @@ class InvocationTests : XCTestCase {
     func testLeak1() {
         autoreleasepool {
             let expectation = expectationWithDescription("leak")
-            let obj = inv[Selector("_new:")](expectation) as? InvocationTarget.LeakTest
+            let obj = inv[ #selector(InvocationTarget._new(_:))](expectation) as? InvocationTarget.LeakTest
             XCTAssertEqual(expectation, obj!.expectation)
         }
         waitForExpectationsWithTimeout(2, handler: nil)
@@ -128,7 +128,7 @@ class InvocationTests : XCTestCase {
     func testLeak2() {
         autoreleasepool {
             let expectation = expectationWithDescription("leak")
-            let obj = XWVInvocation.construct(InvocationTarget.LeakTest.self, initializer: Selector("initWithExpectation:"), withArguments: [expectation]) as? InvocationTarget.LeakTest
+            let obj = XWVInvocation.construct(InvocationTarget.LeakTest.self, initializer: #selector(InvocationTarget.LeakTest.init(expectation:)), withArguments: [expectation]) as? InvocationTarget.LeakTest
             XCTAssertEqual(expectation, obj!.expectation)
         }
         waitForExpectationsWithTimeout(2, handler: nil)
