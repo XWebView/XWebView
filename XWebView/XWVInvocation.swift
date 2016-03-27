@@ -26,8 +26,8 @@ public class XWVInvocation {
         self.thread = thread
     }
 
-    public class func construct(`class`: AnyClass, initializer: Selector = Selector("init"), withArguments arguments: [Any!] = []) -> AnyObject? {
-        let alloc = Selector("alloc")
+    public class func construct(`class`: AnyClass, initializer: Selector = #selector(NSObject.init), withArguments arguments: [Any!] = []) -> AnyObject? {
+        let alloc = #selector(_SpecialSelectors.alloc)
         guard let obj = invoke(`class`, selector: alloc, withArguments: []) as? AnyObject else {
             return nil
         }
@@ -124,13 +124,14 @@ public func invoke(target: AnyObject, selector: Selector, withArguments argument
         NSException(name: NSInvalidArgumentException, reason: reason, userInfo: nil).raise()
     }
 
-    let sig = _NSMethodSignature.signatureWithObjCTypes(method_getTypeEncoding(method))!
-    let inv = _NSInvocation.invocationWithMethodSignature(sig)
+    let sig = (_NSMethodSignature as! _NSMethodSignatureFactory).signatureWithObjCTypes(method_getTypeEncoding(method))
+    let inv = (_NSInvocation as! _NSInvocationFactory).invocationWithMethodSignature(sig)
 
     // Setup arguments
-    assert(arguments.count + 2 <= Int(sig.numberOfArguments), "Too many arguments for calling -[\(target.dynamicType) \(selector)]")
+    precondition(arguments.count + 2 <= Int(method_getNumberOfArguments(method)),
+                 "Too many arguments for calling -[\(target.dynamicType) \(selector)]")
     var args = [[Int]](count: arguments.count, repeatedValue: [])
-    for var i = 0; i < arguments.count; ++i {
+    for i in 0 ..< arguments.count {
         let type = sig.getArgumentTypeAtIndex(i + 2)
         let typeChar = Character(UnicodeScalar(UInt8(type[0])))
 
@@ -156,7 +157,7 @@ public func invoke(target: AnyObject, selector: Selector, withArguments argument
             // Nil or unsupported type
             assert(argument == nil, "Unsupported argument type '\(String(UTF8String: type))'")
             var align: Int = 0
-            NSGetSizeAndAlignment(sig.getArgumentTypeAtIndex(i), nil, &align)
+            NSGetSizeAndAlignment(type, nil, &align)
             args[i] = [Int](count: align / sizeof(Int), repeatedValue: 0)
         }
         args[i].withUnsafeBufferPointer {
@@ -173,7 +174,7 @@ public func invoke(target: AnyObject, selector: Selector, withArguments argument
     if thread == nil || (thread == NSThread.currentThread() && wait) {
         inv.invokeWithTarget(target)
     } else {
-        let selector = Selector("invokeWithTarget:")
+        let selector = #selector(_SpecialSelectors.invokeWithTarget(_:))
         inv.retainArguments()
         inv.performSelector(selector, onThread: thread!, withObject: target, waitUntilDone: wait)
         guard wait else { return Void() }
@@ -257,18 +258,21 @@ public func castToObjectFromAny(value: Any!) -> AnyObject! {
         return value as? AnyObject
     }
 
-    if let v = value as? Int8           { return NSNumber(char: v) } else
-    if let v = value as? Int16          { return NSNumber(short: v) } else
-    if let v = value as? Int32          { return NSNumber(int: v) } else
-    if let v = value as? Int64          { return NSNumber(longLong: v) } else
-    if let v = value as? UInt8          { return NSNumber(unsignedChar: v) } else
-    if let v = value as? UInt16         { return NSNumber(unsignedShort: v) } else
-    if let v = value as? UInt32         { return NSNumber(unsignedInt: v) } else
-    if let v = value as? UInt64         { return NSNumber(unsignedLongLong: v) } else
-    if let v = value as? UnicodeScalar  { return NSNumber(unsignedInt: v.value) } else
-    if let s = value as? Selector       { return s.description } else
-    if let p = value as? COpaquePointer { return NSValue(pointer: UnsafePointer<Void>(p)) }
-    assert(value is Void, "Can't convert '\(value.dynamicType)' to AnyObject")
+    switch value {
+    case let v as Int8:           return NSNumber(char: v)
+    case let v as Int16:          return NSNumber(short: v)
+    case let v as Int32:          return NSNumber(int: v)
+    case let v as Int64:          return NSNumber(longLong: v)
+    case let v as UInt8:          return NSNumber(unsignedChar: v)
+    case let v as UInt16:         return NSNumber(unsignedShort: v)
+    case let v as UInt32:         return NSNumber(unsignedInt: v)
+    case let v as UInt64:         return NSNumber(unsignedLongLong: v)
+    case let v as UnicodeScalar:  return NSNumber(unsignedInt: v.value)
+    case let s as Selector:       return String(s)
+    case let p as COpaquePointer: return NSValue(pointer: UnsafePointer<Void>(p))
+    default:
+        assert(value is Void, "Can't convert '\(value.dynamicType)' to AnyObject")
+    }
     return nil
 }
 
@@ -308,7 +312,7 @@ private extension Selector {
     var family: Family {
         // See: http://clang.llvm.org/docs/AutomaticReferenceCounting.html#id34
         var s = unsafeBitCast(self, UnsafePointer<Int8>.self)
-        while s.memory == 0x5f { ++s }  // skip underscore
+        while s.memory == 0x5f { s += 1 }  // skip underscore
         for p in Selector.prefixes {
             let lowercase: Range<CChar> = 97...122
             let l = p.count

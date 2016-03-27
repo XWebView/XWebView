@@ -26,7 +26,7 @@ For more documents, please go to the project [Wiki](../../wiki).
 
 ## Minimum Requirements:
 
-* Development:  Xcode 7
+* Development:  Xcode 7.3
 * Deployment:   iOS 8.0
 
 ## License

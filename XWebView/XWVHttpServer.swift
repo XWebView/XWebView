@@ -80,7 +80,8 @@ class XWVHttpServer : NSObject {
             return false
         }
 
-        NSThread.detachNewThreadSelector(Selector("serverLoop:"), toTarget: self, withObject: nil)
+        let serverLoop = #selector(XWVHttpServer.serverLoop(_:))
+        NSThread.detachNewThreadSelector(serverLoop, toTarget: self, withObject: nil)
         return true
     }
 
@@ -112,8 +113,14 @@ class XWVHttpServer : NSObject {
         guard self.port != 0 else { return false }
 
         #if os(iOS)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("suspend:"), name: UIApplicationDidEnterBackgroundNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("resume:"), name: UIApplicationWillEnterForegroundNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self,
+                                                         selector: #selector(XWVHttpServer.suspend(_:)),
+                                                         name: UIApplicationDidEnterBackgroundNotification,
+                                                         object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self,
+                                                         selector: #selector(XWVHttpServer.resume(_:)),
+                                                         name: UIApplicationWillEnterForegroundNotification,
+                                                         object: nil)
         #endif
         return true
     }
