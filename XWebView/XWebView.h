@@ -57,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 // Special init which can't be reference directly in Swift, but cannot be a protocol either.
 @interface _InitSelector: NSObject
 // Init with script
-- (id)initByScriptWithArguments:(va_list)args;
+- (id)initByScriptWithArguments:(NSArray *)args;
 @end
 
 NS_ASSUME_NONNULL_END
