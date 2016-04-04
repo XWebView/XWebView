@@ -15,6 +15,7 @@
 */
 
 import Foundation
+import WebKit
 
 public class XWVScriptObject : XWVObject {
     // JavaScript object operations
