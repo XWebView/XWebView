@@ -8,6 +8,10 @@ XWebView is an extensible WebView which is built on top of [WKWebView](https://d
 
 Plugins written in Objective-C or Swift programming language can be automatically exposed in JavaScript context. With capabilities offered by plugins, Web apps can look and behave exactly like native apps. They will be no longer a second-class citizen on iOS platform.
 
+## Sample Project
+
+For a complete example on how to use XWebView including both Swift and JavaScript code, see the [Sample Project](https://github.com/XWebView/Sample).
+
 ## Features
 
 Basically, plugins are native classes which can export their interfaces to a JavaScript environment. Calling methods and accessing properties of a plugin object in JavaScript result in same operations to the native plugin object. If you know the [Apache Cordova](https://cordova.apache.org/), you may have the concept of plugins. Well, XWebView does more in simpler manner.
