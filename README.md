@@ -33,6 +33,15 @@ For more documents, please go to the project [Wiki](../../wiki).
 * Development:  Xcode 7.3
 * Deployment:   iOS 8.0
 
+## XWebView vs. Swift
+
+| Swift | PromiseKit |
+| ----- | ---------- |
+| 3     |     ?      |
+| 2.3   |   0.10.0   |
+| 2.2   |   0.9.5    |
+
+
 ## License
 
 XWebView is distributed under the [Apache License 2.0](LICENSE).
