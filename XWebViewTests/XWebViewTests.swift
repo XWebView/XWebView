@@ -47,8 +47,8 @@ class XWebViewTests: XWVTestCase {
         let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")
         if let root = bundle?.bundleURL.URLByAppendingPathComponent("www") {
             let url = root.URLByAppendingPathComponent("webviewTest.html")
-            XCTAssert(url.checkResourceIsReachableAndReturnError(nil), "HTML file not found")
-            webview.loadFileURL(url, allowingReadAccessToURL: root)
+            XCTAssert(url!.checkResourceIsReachableAndReturnError(nil), "HTML file not found")
+            webview.loadFileURL(url!, allowingReadAccessToURL: root)
             waitForExpectationsWithTimeout(2, handler: nil)
         }
     }
@@ -65,10 +65,10 @@ class XWebViewTests: XWVTestCase {
                 create: true)
             var url = library.URLByAppendingPathComponent("webviewTest.html")
             let content = "<html><script type='text/javascript'>fulfill('loadFileURLWithOverlay');</script></html>"
-            try! content.writeToURL(url, atomically: false, encoding: NSUTF8StringEncoding)
+            try! content.writeToURL(url!, atomically: false, encoding: NSUTF8StringEncoding)
 
             url = NSURL(string: "webviewTest.html", relativeToURL: root)!
-            webview.loadFileURL(url, overlayURLs: [library])
+            webview.loadFileURL(url!, overlayURLs: [library])
             waitForExpectationsWithTimeout(2, handler: nil)
         }
     }
