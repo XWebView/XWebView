@@ -35,11 +35,11 @@ For more documents, please go to the project [Wiki](../../wiki).
 
 ## XWebView vs. Swift
 
-| Swift | PromiseKit |
+| Swift |  XWebView  |
 | ----- | ---------- |
 | 3     |     ?      |
 | 2.3   |   0.10.0   |
-| 2.2   |   0.9.5    |
+| 2.2   |   0.10.0   |
 
 
 ## License
