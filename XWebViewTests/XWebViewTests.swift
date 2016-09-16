@@ -45,10 +45,16 @@ class XWebViewTests: XWVTestCase {
     func testLoadFileURL() {
         _ = expectationWithDescription("loadFileURL")
         let bundle = NSBundle(identifier:"org.xwebview.XWebViewTests")
+      
         if let root = bundle?.bundleURL.URLByAppendingPathComponent("www") {
-            let url = root.URLByAppendingPathComponent("webviewTest.html")
-            XCTAssert(url!.checkResourceIsReachableAndReturnError(nil), "HTML file not found")
-            webview.loadFileURL(url!, allowingReadAccessToURL: root)
+            #if swift(>=2.3)
+              let url = root.URLByAppendingPathComponent("webviewTest.html")!
+            #else
+              let url = root.URLByAppendingPathComponent("webviewTest.html")
+            #endif
+          
+            XCTAssert(url.checkResourceIsReachableAndReturnError(nil), "HTML file not found")
+            webview.loadFileURL(url, allowingReadAccessToURL: root)
             waitForExpectationsWithTimeout(2, handler: nil)
         }
     }
@@ -63,12 +69,18 @@ class XWebViewTests: XWVTestCase {
                 inDomain: NSSearchPathDomainMask.UserDomainMask,
                 appropriateForURL: nil,
                 create: true)
-            var url = library.URLByAppendingPathComponent("webviewTest.html")
+          
+            #if swift(>=2.3)
+              var url = library.URLByAppendingPathComponent("webviewTest.html")!
+            #else
+              var url = library.URLByAppendingPathComponent("webviewTest.html")
+            #endif
+          
             let content = "<html><script type='text/javascript'>fulfill('loadFileURLWithOverlay');</script></html>"
-            try! content.writeToURL(url!, atomically: false, encoding: NSUTF8StringEncoding)
+            try! content.writeToURL(url, atomically: false, encoding: NSUTF8StringEncoding)
 
             url = NSURL(string: "webviewTest.html", relativeToURL: root)!
-            webview.loadFileURL(url!, overlayURLs: [library])
+            webview.loadFileURL(url, overlayURLs: [library])
             waitForExpectationsWithTimeout(2, handler: nil)
         }
     }

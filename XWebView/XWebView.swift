@@ -123,7 +123,13 @@ extension WKWebView {
         }
 
         guard let port = startHttpd(rootURL: URL.baseURL!, overlayURLs: overlayURLs) else { return nil }
-        let url = NSURL(string: URL.resourceSpecifier!, relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
+      
+        #if swift(>=2.3)
+          let url = NSURL(string: URL.resourceSpecifier!, relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
+        #else
+          let url = NSURL(string: URL.resourceSpecifier, relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
+        #endif
+      
         return loadRequest(NSURLRequest(URL: url!))
     }
 }

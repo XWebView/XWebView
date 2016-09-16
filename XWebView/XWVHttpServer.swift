@@ -182,7 +182,11 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
                 var url = NSURL(string: relativePath, relativeToURL: baseURL)!
                 if fileManager.fileExistsAtPath(url.path!, isDirectory: &isDirectory) {
                     if isDirectory {
-                        url = url.URLByAppendingPathComponent("index.html")!
+                        #if swift(>=2.3)
+                          url = url.URLByAppendingPathComponent("index.html")!
+                        #else
+                          url = url.URLByAppendingPathComponent("index.html")
+                        #endif                      
                     }
                     if fileManager.isReadableFileAtPath(url.path!) {
                         fileURL = url
