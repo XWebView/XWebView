@@ -121,7 +121,7 @@ XWVPlugin.invokeNative = function(name) {
         if (t[1].slice(-1) == 'p') {
             // Return a Promise object for async operation
             args.unshift(name);
-            return Promise((function(args, resolve, reject) {
+            return new Promise((function(args, resolve, reject) {
                 args[args.length - 1] = {'resolve': resolve, 'reject': reject};
                 XWVPlugin.invokeNative.apply(this, args);
             }).bind(this, args));
