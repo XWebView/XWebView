@@ -28,7 +28,7 @@ class FunctionPlugin : XWVTestCase {
         func defaultMethod() {
             expectation?.fulfill()
         }
-        class func scriptNameForSelector(selector: Selector) -> String? {
+        class func scriptName(for selector: Selector) -> String? {
             return selector == #selector(Plugin.defaultMethod) ? "" : nil
         }
     }
@@ -38,20 +38,20 @@ class FunctionPlugin : XWVTestCase {
     func testDefaultMethod() {
         let desc = "defaultMethod"
         let script = "if (\(namespace) instanceof Function) fulfill('\(desc)')"
-        _ = expectationWithDescription(desc)
+        _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectationsWithTimeout(2, handler: nil)
+        waitForExpectations(timeout: 2, handler: nil)
     }
     func testCallDefaultMethod() {
-        let expectation = expectationWithDescription("callDefaultMethod")
-        loadPlugin(Plugin(expectation: expectation), namespace: namespace, script: "\(namespace)()")
-        waitForExpectationsWithTimeout(2, handler: nil)
+        let exp = expectation(description: "callDefaultMethod")
+        loadPlugin(Plugin(expectation: exp), namespace: namespace, script: "\(namespace)()")
+        waitForExpectations(timeout: 2, handler: nil)
     }
     func testPropertyOfDefaultMethod() {
         let desc = "propertyOfDefaultMethod"
         let script = "if (\(namespace).property == 123) fulfill('\(desc)');"
-        _ = expectationWithDescription(desc)
+        _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectationsWithTimeout(2, handler: nil)
+        waitForExpectations(timeout: 2, handler: nil)
     }
 }

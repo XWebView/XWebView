@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-
+/*
 import Foundation
 #if os(iOS)
 import UIKit
@@ -23,41 +23,41 @@ import CoreServices
 #endif
 
 class XWVHttpServer : NSObject {
-    private var socket: CFSocketRef!
-    private var connections = Set<XWVHttpConnection>()
-    private let overlays: [NSURL]
+    fileprivate var socket: CFSocket!
+    fileprivate var connections = Set<XWVHttpConnection>()
+    fileprivate let overlays: [URL]
     private(set) var port: in_port_t = 0
 
-    var rootURL: NSURL {
+    var rootURL: URL {
         return overlays.last!
     }
-    var overlayURLs: [NSURL] {
-        return overlays.dropLast().reverse()
+    var overlayURLs: [URL] {
+        return overlays.dropLast().reversed()
     }
 
-    init(rootURL: NSURL, overlayURLs: [NSURL]?) {
-        precondition(rootURL.fileURL)
+    init(rootURL: URL, overlayURLs: [URL]?) {
+        precondition(rootURL.isFileURL)
         var overlays = [rootURL]
         overlayURLs?.forEach {
-            precondition($0.fileURL)
+            precondition($0.isFileURL)
             overlays.append($0)
         }
-        self.overlays = overlays.reverse()
+        self.overlays = overlays.reversed()
         super.init()
     }
-    convenience init(rootURL: NSURL) {
+    convenience init(rootURL: URL) {
         self.init(rootURL: rootURL, overlayURLs: nil)
     }
     deinit {
         stop()
     }
 
-    private func listenOnPort(port: in_port_t) -> Bool {
+    private func listen(on port: in_port_t) -> Bool {
         guard socket == nil else { return false }
 
-        let info = UnsafeMutablePointer<Void>(unsafeAddressOf(self))
+        let info = UnsafeMutableRawPointer(mutating: unsafeAddressOf(self))
         var context = CFSocketContext(version: 0, info: info, retain: nil, release: nil, copyDescription: nil)
-        let callbackType = CFSocketCallBackType.AcceptCallBack.rawValue
+        let callbackType = CFSocketCallBackType.acceptCallBack.rawValue
         socket = CFSocketCreate(nil, PF_INET, SOCK_STREAM, 0, callbackType, ServerAcceptCallBack, &context)
         guard socket != nil else {
             log("!Failed to create socket")
@@ -65,23 +65,23 @@ class XWVHttpServer : NSObject {
         }
 
         var yes = UInt32(1)
-        setsockopt(CFSocketGetNative(socket), SOL_SOCKET, SO_REUSEADDR, &yes, UInt32(sizeof(UInt32)))
+        setsockopt(CFSocketGetNative(socket), SOL_SOCKET, SO_REUSEADDR, &yes, UInt32(MemoryLayout<UInt32>.size))
 
         var sockaddr = sockaddr_in(
-            sin_len: UInt8(sizeof(sockaddr_in)),
+            sin_len: UInt8(MemoryLayout<sockaddr_in>.size),
             sin_family: UInt8(AF_INET),
             sin_port: port.bigEndian,
             sin_addr: in_addr(s_addr: UInt32(0x7f000001).bigEndian),
             sin_zero: (0, 0, 0, 0, 0, 0, 0, 0))
-        let data = NSData(bytes: &sockaddr, length: sizeof(sockaddr_in))
-        guard CFSocketSetAddress(socket, data) == CFSocketError.Success else {
-            log("!Failed to listen on port \(port) \(String(UTF8String: strerror(errno))!)")
+        let data = Data(bytes: &sockaddr, count: MemoryLayout<sockaddr_in>.size)
+        guard CFSocketSetAddress(socket, data as CFData!) == CFSocketError.success else {
+            log("!Failed to listen on port \(port) \(String(cString: strerror(errno)))")
             CFSocketInvalidate(socket)
             return false
         }
 
         let serverLoop = #selector(XWVHttpServer.serverLoop(_:))
-        NSThread.detachNewThreadSelector(serverLoop, toTarget: self, withObject: nil)
+        Thread.detachNewThreadSelector(serverLoop, toTarget: self, with: nil)
         return true
     }
 
@@ -102,33 +102,33 @@ class XWVHttpServer : NSObject {
             // Try to find a random port in registered ports range
             for _ in 0 ..< 100 {
                 let port = in_port_t(arc4random() % (49152 - 1024) + 1024)
-                if listenOnPort(port) {
+                if listen(on: port) {
                     self.port = port
                     break
                 }
             }
-        } else if listenOnPort(port) {
+        } else if listen(on: port) {
             self.port = port
         }
         guard self.port != 0 else { return false }
 
         #if os(iOS)
-        NSNotificationCenter.defaultCenter().addObserver(self,
-                                                         selector: #selector(XWVHttpServer.suspend(_:)),
-                                                         name: UIApplicationDidEnterBackgroundNotification,
-                                                         object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self,
-                                                         selector: #selector(XWVHttpServer.resume(_:)),
-                                                         name: UIApplicationWillEnterForegroundNotification,
-                                                         object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(XWVHttpServer.suspend(_:)),
+                                               name: NSNotification.Name.UIApplicationDidEnterBackground,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(XWVHttpServer.resume(_:)),
+                                               name: NSNotification.Name.UIApplicationWillEnterForeground,
+                                               object: nil)
         #endif
         return true
     }
 
     func stop() {
         #if os(iOS)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIApplicationDidEnterBackgroundNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIApplicationWillEnterForegroundNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
         #endif
         port = 0
         close()
@@ -139,7 +139,7 @@ class XWVHttpServer : NSObject {
         log("+HTTP server is suspended")
     }
     func resume(_: NSNotification!) {
-        if listenOnPort(port) {
+        if listen(on: port) {
             log("+HTTP server is resumed")
         }
     }
@@ -147,65 +147,69 @@ class XWVHttpServer : NSObject {
     func serverLoop(_: AnyObject) {
         let runLoop = CFRunLoopGetCurrent()
         let source = CFSocketCreateRunLoopSource(nil, socket, 0)
-        CFRunLoopAddSource(runLoop, source, kCFRunLoopCommonModes)
+        CFRunLoopAddSource(runLoop, source, CFRunLoopMode.commonModes)
         CFRunLoopRun()
     }
 }
 
 extension XWVHttpServer : XWVHttpConnectionDelegate {
-    func didOpenConnection(connection: XWVHttpConnection) {
+    func didOpenConnection(_ connection: XWVHttpConnection) {
         connections.insert(connection)
     }
-    func didCloseConnection(connection: XWVHttpConnection) {
+    func didCloseConnection(_ connection: XWVHttpConnection) {
         connections.remove(connection)
     }
 
-    func handleRequest(request: NSURLRequest) -> NSHTTPURLResponse {
+    func handleRequest(_ request: URLRequest) -> HTTPURLResponse {
         // Date format, see section 7.1.1.1 of RFC7231
-        let dateFormatter = NSDateFormatter()
-        dateFormatter.locale = NSLocale(localeIdentifier: "en_US")
-        dateFormatter.timeZone = NSTimeZone(name: "GMT")
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US")
+        dateFormatter.timeZone = TimeZone(abbreviation: "GMT")
         dateFormatter.dateFormat = "E, dd MMM yyyy HH:mm:ss z"
 
-        var headers: [String: String] = ["Date": dateFormatter.stringFromDate(NSDate())]
+        var headers: [String: String] = ["Date": dateFormatter.string(from: Date())]
         var statusCode = 500
-        var fileURL = NSURL()
-        if request.URL == nil {
+        var fileURL: URL? = nil
+        if request.url == nil {
             // Bad request
             statusCode = 400
             log("?Bad request")
-        } else if request.HTTPMethod == "GET" || request.HTTPMethod == "HEAD" {
-            let fileManager = NSFileManager.defaultManager()
-            let relativePath = String(request.URL!.path!.characters.dropFirst())
+        } else if request.httpMethod == "GET" || request.httpMethod == "HEAD" {
+            let fileManager = FileManager.default
+            let relativePath = String(request.url!.path.characters.dropFirst())
             for baseURL in overlays {
                 var isDirectory: ObjCBool = false
-                var url = NSURL(string: relativePath, relativeToURL: baseURL)!
-                if fileManager.fileExistsAtPath(url.path!, isDirectory: &isDirectory) {
-                    if isDirectory {
+                var url = URL(string: relativePath, relativeTo: baseURL)!
+                if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+                    if isDirectory.boolValue {
+                        #if swift(>=3.0)
+                          url = url.appendingPathComponent("index.html")
+                        #else
                         #if swift(>=2.3)
                           url = url.URLByAppendingPathComponent("index.html")!
                         #else
                           url = url.URLByAppendingPathComponent("index.html")
-                        #endif                      
+                        #endif
+                        #endif
                     }
-                    if fileManager.isReadableFileAtPath(url.path!) {
+                    if fileManager.isReadableFile(atPath: url.path) {
                         fileURL = url
                         break
                     }
                 }
             }
-            if fileURL.path != nil {
+            if let fileURL = fileURL {
                 statusCode = 200
-                let attrs = try! fileManager.attributesOfItemAtPath(fileURL.path!)
-                headers["Content-Type"] = getMIMETypeByExtension(fileURL.pathExtension!)
-                headers["Content-Length"] = String(attrs[NSFileSize]!)
-                headers["Last-Modified"] = dateFormatter.stringFromDate(attrs[NSFileModificationDate] as! NSDate)
-                log("+\(request.HTTPMethod!) \(fileURL.path!)")
+                let attrs = try! fileManager.attributesOfItem(atPath: fileURL.path)
+                headers["Content-Type"] = getMIMETypeByExtension(extensionName: fileURL.pathExtension)
+                headers["Content-Length"] = String(describing: attrs[FileAttributeKey.size]!)
+                headers["Last-Modified"] = dateFormatter.string(from: attrs[FileAttributeKey.modificationDate] as! Date)
+                log("+\(request.httpMethod!) \(fileURL.path)")
             } else {
                 // Not found
                 statusCode = 404
-                fileURL = NSURL()
-                log("-File NOT found for URL \(request.URL!)")
+                fileURL = nil
+                log("-File NOT found for URL \(request.url!)")
             }
         } else {
             // Method not allowed
@@ -215,14 +219,15 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
         if statusCode != 200 {
             headers["Content-Length"] = "0"
         }
-        return NSHTTPURLResponse(URL: fileURL, statusCode: statusCode, HTTPVersion: "HTTP/1.1", headerFields: headers)!
+        return HTTPURLResponse(url: fileURL!, statusCode: statusCode, httpVersion: "HTTP/1.1", headerFields: headers)!
+        // FIXME: return nil when fileURL == nil
     }
 }
 
-private func ServerAcceptCallBack(socket: CFSocket!, type: CFSocketCallBackType, address: CFData!, data:UnsafePointer<Void>, info: UnsafeMutablePointer<Void>) {
-    let server = unsafeBitCast(info, XWVHttpServer.self)
-    let handle = UnsafePointer<CFSocketNativeHandle>(data).memory
-    assert(socket === server.socket && type == CFSocketCallBackType.AcceptCallBack)
+private func ServerAcceptCallBack(socket: CFSocket?, type: CFSocketCallBackType, address: CFData?, data:UnsafeRawPointer?, info: UnsafeMutableRawPointer?) {
+    let server = unsafeBitCast(info, to: XWVHttpServer.self)
+    let handle = UnsafePointer<CFSocketNativeHandle>(data).pointee
+    assert(socket === server.socket && type == CFSocketCallBackType.acceptCallBack)
 
     let connection = XWVHttpConnection(handle: handle, delegate: server)
     connection.open()
@@ -236,7 +241,7 @@ private func getMIMETypeByExtension(extensionName: String) -> String {
     var type: String! = mimeTypeCache[extensionName]
     if type == nil {
         // Get MIME type through system-declared uniform type identifier.
-        if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, extensionName, nil),
+        if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, extensionName as CFString, nil),
             let mt = UTTypeCopyPreferredTagWithClass(uti.takeRetainedValue(), kUTTagClassMIMEType) {
                 type = mt.takeRetainedValue() as String
         } else {
@@ -245,9 +250,9 @@ private func getMIMETypeByExtension(extensionName: String) -> String {
         }
         mimeTypeCache[extensionName] = type
     }
-    if type.lowercaseString.hasPrefix("text/") {
+    if type.lowercased().hasPrefix("text/") {
         // Assume text resource is UTF-8 encoding
         return type + "; charset=utf-8"
     }
     return type
-}
+}*/

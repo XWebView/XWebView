@@ -18,9 +18,9 @@ import XCTest
 import XWebView
 
 class InvocationTarget: NSObject {
-    class LeakTest {
+    class LeakTest: NSObject {
         let expectation: XCTestExpectation
-        @objc init(expectation: XCTestExpectation) {
+        init(expectation: XCTestExpectation) {
             self.expectation = expectation
         }
         deinit {
@@ -31,6 +31,7 @@ class InvocationTarget: NSObject {
     var integer: Int = 123
 
     func dummy() {}
+    func nullable(_ v: Any?) -> Any? { return v }
     func echo(bool b: Bool) -> Bool { return b }
     func echo(int i: Int) -> Int { return i }
     func echo(int8 i8: Int8) -> Int8 { return i8 }
@@ -49,11 +50,11 @@ class InvocationTarget: NSObject {
     func echo(selector s: Selector) -> Selector { return s }
     func echo(`class` c: AnyClass) -> AnyClass { return c }
 
-    func add(a: Int, _ b: Int) -> Int { return a + b }
-    func concat(a: String, _ b: String) -> String { return a + b }
-    func convert(num: NSNumber) -> Int { return num.integerValue }
+    func add(_ a: Int, _ b: Int) -> Int { return a + b }
+    func concat(_ a: String, _ b: String) -> String { return a + b }
+    func convert(_ num: NSNumber) -> Int { return num.intValue }
 
-    func _new(expectation: XCTestExpectation) -> AnyObject {
+    func _new(_ expectation: XCTestExpectation) -> LeakTest {
         return LeakTest(expectation: expectation)
     }
 }
@@ -102,7 +103,7 @@ class InvocationTests : XCTestCase {
         XCTAssertTrue(inv[ #selector(InvocationTarget.echo(string:))]("abc") as? String == "abc")
         let selector = #selector(InvocationTarget.echo(selector:))
         XCTAssertTrue(inv[selector](selector) as? Selector == selector)
-        let cls = self.dynamicType
+        let cls = type(of: self)
         XCTAssertTrue(inv[ #selector(InvocationTarget.echo(class:))](cls) as? AnyClass === cls)
 
         XCTAssertTrue(inv[ #selector(InvocationTarget.convert(_:))](UInt8(12)) as? XInt == 12)
@@ -116,21 +117,26 @@ class InvocationTests : XCTestCase {
         XCTAssertTrue(inv["integer"] as? XInt == 321)
     }
 
+    func testNullable() {
+        XCTAssertTrue(inv[ #selector(InvocationTarget.nullable(_:))]("abc") as? String == "abc")
+        XCTAssertTrue(inv[ #selector(InvocationTarget.nullable(_:))](nil) == nil)
+    }
+
     func testLeak1() {
         autoreleasepool {
-            let expectation = expectationWithDescription("leak")
-            let obj = inv[ #selector(InvocationTarget._new(_:))](expectation) as? InvocationTarget.LeakTest
-            XCTAssertEqual(expectation, obj!.expectation)
+            let exp = expectation(description: "leak")
+            let obj = inv[ #selector(InvocationTarget._new(_:))](exp) as? InvocationTarget.LeakTest
+            XCTAssertEqual(exp, obj!.expectation)
         }
-        waitForExpectationsWithTimeout(2, handler: nil)
+        waitForExpectations(timeout: 2, handler: nil)
     }
 
     func testLeak2() {
         autoreleasepool {
-            let expectation = expectationWithDescription("leak")
-            let obj = XWVInvocation.construct(InvocationTarget.LeakTest.self, initializer: #selector(InvocationTarget.LeakTest.init(expectation:)), withArguments: [expectation]) as? InvocationTarget.LeakTest
-            XCTAssertEqual(expectation, obj!.expectation)
+            let exp = expectation(description: "leak")
+            let obj = createInstance(of: InvocationTarget.LeakTest.self, by: #selector(InvocationTarget.LeakTest.init(expectation:)), with: [exp]) as? InvocationTarget.LeakTest
+            XCTAssertEqual(exp, obj!.expectation)
         }
-        waitForExpectationsWithTimeout(2, handler: nil)
+        waitForExpectations(timeout: 2, handler: nil)
     }
 }

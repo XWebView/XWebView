@@ -17,10 +17,10 @@
 import Foundation
 import ObjectiveC
 
-class XWVMetaObject: CollectionType {
+class XWVMetaObject {
     enum Member {
         case Method(selector: Selector, arity: Int32)
-        case Property(getter: Selector, setter: Selector)
+        case Property(getter: Selector, setter: Selector?)
         case Initializer(selector: Selector, arity: Int32)
 
         var isMethod: Bool {
@@ -38,10 +38,8 @@ class XWVMetaObject: CollectionType {
         var selector: Selector? {
             switch self {
             case let .Method(selector, _):
-                assert(selector != Selector())
                 return selector
             case let .Initializer(selector, _):
-                assert(selector != Selector())
                 return selector
             default:
                 return nil
@@ -49,14 +47,12 @@ class XWVMetaObject: CollectionType {
         }
         var getter: Selector? {
             if case .Property(let getter, _) = self {
-                assert(getter != Selector())
                 return getter
             }
             return nil
         }
         var setter: Selector? {
-            if case .Property(let getter, let setter) = self {
-                assert(getter != Selector())
+            if case .Property(_, let setter) = self {
                 return setter
             }
             return nil
@@ -84,33 +80,33 @@ class XWVMetaObject: CollectionType {
     }
 
     let plugin: AnyClass
-    private var members = [String: Member]()
+    fileprivate var members = [String: Member]()
     private static let exclusion: Set<Selector> = {
         var methods = instanceMethods(forProtocol: XWVScripting.self)
-        methods.remove(#selector(XWVScripting.invokeDefaultMethodWithArguments(_:)))
+        methods.remove(#selector(XWVScripting.invokeDefaultMethod(withArguments:)))
         return methods.union([
-            #selector(_SpecialSelectors.dealloc),
-            #selector(NSObject.copy as ()->AnyObject)
+            #selector(NSObject.deinit),
+            #selector(NSObject.copy)
         ])
     }()
 
     init(plugin: AnyClass) {
         self.plugin = plugin
-        enumerateExcluding(self.dynamicType.exclusion) {
+        _ = enumerate(excluding: type(of: self).exclusion) {
             (name, member) -> Bool in
             var name = name
             var member = member
             switch member {
             case let .Method(selector, _):
                 if let cls = plugin as? XWVScripting.Type {
-                    if cls.isSelectorExcludedFromScript?(selector) ?? false {
+                    if cls.isSelectorExcluded?(fromScript: selector) ?? false {
                         return true
                     }
-                    if selector == #selector(XWVScripting.invokeDefaultMethodWithArguments(_:)) {
+                    if selector == #selector(XWVScripting.invokeDefaultMethod(withArguments:)) {
                         member = .Method(selector: selector, arity: -1)
                         name = ""
                     } else {
-                        name = cls.scriptNameForSelector?(selector) ?? name
+                        name = cls.scriptName?(for: selector) ?? name
                     }
                 } else if name.characters.first == "_" {
                     return true
@@ -118,10 +114,10 @@ class XWVMetaObject: CollectionType {
 
             case .Property(_, _):
                 if let cls = plugin as? XWVScripting.Type {
-                    if let isExcluded = cls.isKeyExcludedFromScript where name.withCString(isExcluded) {
+                    if let isExcluded = cls.isKeyExcluded(fromScript:), name.withCString(isExcluded) {
                         return true
                     }
-                    if let scriptNameForKey = cls.scriptNameForKey {
+                    if let scriptNameForKey = cls.scriptName(forKey:) {
                         name = name.withCString(scriptNameForKey) ?? name
                     }
                 } else if name.characters.first == "_" {
@@ -133,30 +129,30 @@ class XWVMetaObject: CollectionType {
                     member = .Initializer(selector: selector, arity: -1)
                     name = ""
                 } else if let cls = plugin as? XWVScripting.Type {
-                    name = cls.scriptNameForSelector?(selector) ?? name
+                    name = cls.scriptName?(for: selector) ?? name
                 }
                 if !name.isEmpty {
                     return true
                 }
             }
-            assert(members.indexForKey(name) == nil, "Plugin class \(plugin) has a conflict in member name '\(name)'")
+            assert(members.index(forKey: name) == nil, "Plugin class \(plugin) has a conflict in member name '\(name)'")
             members[name] = member
             return true
         }
     }
 
-    private func enumerateExcluding(selectors: Set<Selector>, @noescape callback: ((String, Member)->Bool)) -> Bool {
+    private func enumerate(excluding selectors: Set<Selector>, callback: (String, Member)->Bool) -> Bool {
         var known = selectors
 
         // enumerate properties
         let propertyList = class_copyPropertyList(plugin, nil)
-        if propertyList != nil, var prop = Optional(propertyList) {
+        if var prop = propertyList {
             defer { free(propertyList) }
-            while prop.memory != nil {
-                let name = String(UTF8String: property_getName(prop.memory))!
+            while prop.pointee != nil {
+                let name = String(cString: property_getName(prop.pointee))
                 // get getter
-                var attr = property_copyAttributeValue(prop.memory, "G")
-                let getter = Selector(attr == nil ? name : String(UTF8String: attr)!)
+                var attr = property_copyAttributeValue(prop.pointee, "G")
+                let getter = Selector(attr == nil ? name : String(cString: attr!))
                 free(attr)
                 if known.contains(getter) {
                     prop = prop.successor()
@@ -165,19 +161,19 @@ class XWVMetaObject: CollectionType {
                 known.insert(getter)
 
                 // get setter if readwrite
-                var setter = Selector()
-                attr = property_copyAttributeValue(prop.memory, "R")
+                var setter: Selector? = nil
+                attr = property_copyAttributeValue(prop.pointee, "R")
                 if attr == nil {
-                    attr = property_copyAttributeValue(prop.memory, "S")
+                    attr = property_copyAttributeValue(prop.pointee, "S")
                     if attr == nil {
-                        setter = Selector("set\(String(name.characters.first!).uppercaseString)\(String(name.characters.dropFirst())):")
+                        setter = Selector("set\(String(name[name.startIndex]).uppercased())\(String(name.characters.dropFirst())):")
                     } else {
-                        setter = Selector(String(UTF8String: attr)!)
+                        setter = Selector(String(cString: attr!))
                     }
-                    if known.contains(setter) {
-                        setter = Selector()
+                    if known.contains(setter!) {
+                        setter = nil
                     } else {
-                        known.insert(setter)
+                        known.insert(setter!)
                     }
                 }
                 free(attr)
@@ -192,12 +188,11 @@ class XWVMetaObject: CollectionType {
 
         // enumerate methods
         let methodList = class_copyMethodList(plugin, nil)
-        if methodList != nil, var method = Optional(methodList) {
+        if var method = methodList {
             defer { free(methodList) }
-            while method.memory != nil {
-                let sel = method_getName(method.memory)
-                if !known.contains(sel) && !sel.description.hasPrefix(".") {
-                    let arity = Int32(method_getNumberOfArguments(method.memory) - 2)
+            while method.pointee != nil {
+                if let sel = method_getName(method.pointee), !known.contains(sel) && !sel.description.hasPrefix(".") {
+                    let arity = Int32(method_getNumberOfArguments(method.pointee)) - 2
                     let member: Member
                     if sel.description.hasPrefix("init") {
                         member = Member.Initializer(selector: sel, arity: arity)
@@ -205,7 +200,7 @@ class XWVMetaObject: CollectionType {
                         member = Member.Method(selector: sel, arity: arity)
                     }
                     var name = sel.description
-                    if let end = name.characters.indexOf(":") {
+                    if let end = name.characters.index(of: ":") {
                         name = name[name.startIndex ..< end]
                     }
                     if !callback(name, member) {
@@ -217,28 +212,30 @@ class XWVMetaObject: CollectionType {
         }
         return true
     }
+
+    subscript (name: String) -> Member? {
+        return members[name]
+    }
 }
 
-extension XWVMetaObject {
-    // SequenceType
-    typealias Generator = DictionaryGenerator<String, Member>
-    func generate() -> Generator {
-        return members.generate()
-    }
-
-    // CollectionType
+extension XWVMetaObject: Collection {
+    // IndexableBase
     typealias Index = DictionaryIndex<String, Member>
+    typealias SubSequence = Slice<Dictionary<String, Member>>
     var startIndex: Index {
         return members.startIndex
     }
     var endIndex: Index {
         return members.endIndex
     }
-    subscript (position: Index) -> (String, Member) {
-        return members[position]
+    subscript (_ i: Index) -> (String, Member) {
+        return members[i]
     }
-    subscript (name: String) -> Member? {
-        return members[name]
+    subscript (_ range: Range<Index>) -> SubSequence {
+        return members[range]
+    }
+    func index(after i: Index) -> Index {
+        return members.index(after: i)
     }
 }
 
@@ -246,9 +243,9 @@ private func instanceMethods(forProtocol aProtocol: Protocol) -> Set<Selector> {
     var selectors = Set<Selector>()
     for (req, inst) in [(true, true), (false, true)] {
         let methodList = protocol_copyMethodDescriptionList(aProtocol.self, req, inst, nil)
-        if methodList != nil, var desc = Optional(methodList) {
-            while desc.memory.name != nil {
-                selectors.insert(desc.memory.name)
+        if var desc = methodList {
+            while desc.pointee.name != nil {
+                selectors.insert(desc.pointee.name)
                 desc = desc.successor()
             }
             free(methodList)

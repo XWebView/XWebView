@@ -16,13 +16,13 @@
 
 import Darwin
 
-public typealias asl_object_t = COpaquePointer
+public typealias asl_object_t = OpaquePointer
 
-@_silgen_name("asl_open") func asl_open(ident: UnsafePointer<Int8>, _ facility: UnsafePointer<Int8>, _ opts: UInt32) -> asl_object_t
-@_silgen_name("asl_close") func asl_close(obj: asl_object_t)
-@_silgen_name("asl_vlog") func asl_vlog(obj: asl_object_t, _ msg: asl_object_t, _ level: Int32, _ format: UnsafePointer<Int8>, _ ap: CVaListPointer) -> Int32
-@_silgen_name("asl_add_output_file") func asl_add_output_file(client: asl_object_t, _ descriptor: Int32, _ msg_fmt: UnsafePointer<Int8>, _ time_fmt: UnsafePointer<Int8>, _ filter: Int32, _ text_encoding: Int32) -> Int32
-@_silgen_name("asl_set_output_file_filter") func asl_set_output_file_filter(asl: asl_object_t, _ descriptor: Int32, _ filter: Int32) -> Int32
+@_silgen_name("asl_open") func asl_open(_ ident: UnsafePointer<Int8>?, _ facility: UnsafePointer<Int8>?, _ opts: UInt32) -> asl_object_t?
+@_silgen_name("asl_close") func asl_close(_ obj: asl_object_t)
+@_silgen_name("asl_vlog") func asl_vlog(_ obj: asl_object_t, _ msg: asl_object_t?, _ level: Int32, _ format: UnsafePointer<Int8>, _ ap: CVaListPointer) -> Int32
+@_silgen_name("asl_add_output_file") func asl_add_output_file(_ client: asl_object_t, _ descriptor: Int32, _ msg_fmt: UnsafePointer<Int8>?, _ time_fmt: UnsafePointer<Int8>?, _ filter: Int32, _ text_encoding: Int32) -> Int32
+@_silgen_name("asl_set_output_file_filter") func asl_set_output_file_filter(_ asl: asl_object_t, _ descriptor: Int32, _ filter: Int32) -> Int32
 
 public class XWVLogging : XWVScripting {
     public enum Level : Int32 {
@@ -38,15 +38,15 @@ public class XWVLogging : XWVScripting {
         private static let symbols : [Character] = [
             "\0", "\0", "$", "!", "?", "-", "+", " "
         ]
-        private init?(symbol: Character) {
-            guard symbol != "\0", let value = Level.symbols.indexOf(symbol) else {
+        fileprivate init?(symbol: Character) {
+            guard symbol != "\0", let value = Level.symbols.index(of: symbol) else {
                 return nil
             }
             self = Level(rawValue: Int32(value))!
         }
     }
 
-    public struct Filter : OptionSetType {
+    public struct Filter : OptionSet {
         private var value: Int32
         public var rawValue: Int32 {
             return value
@@ -68,14 +68,14 @@ public class XWVLogging : XWVScripting {
 
     public var filter: Filter {
         didSet {
-            asl_set_output_file_filter(client, STDERR_FILENO, filter.rawValue)
+            _ = asl_set_output_file_filter(client, STDERR_FILENO, filter.rawValue)
         }
     }
 
     private let client: asl_object_t
     private var lock: pthread_mutex_t = pthread_mutex_t()
     public init(facility: String, format: String? = nil) {
-        client = asl_open(nil, facility, 0)
+        client = asl_open(nil, facility, 0)!
         pthread_mutex_init(&lock, nil)
 
         #if DEBUG
@@ -85,30 +85,30 @@ public class XWVLogging : XWVScripting {
         #endif
 
         let format = format ?? "$((Time)(lcl)) $(Facility) <$((Level)(char))>: $(Message)"
-        asl_add_output_file(client, STDERR_FILENO, format, "sec", filter.rawValue, 1)
+        _ = asl_add_output_file(client, STDERR_FILENO, format, "sec", filter.rawValue, 1)
     }
     deinit {
         asl_close(client)
         pthread_mutex_destroy(&lock)
     }
 
-    public func log(message: String, level: Level) {
+    public func log(_ message: String, level: Level) {
         pthread_mutex_lock(&lock)
-        asl_vlog(client, nil, level.rawValue, message, getVaList([]))
+        _ = asl_vlog(client, nil, level.rawValue, message, getVaList([]))
         pthread_mutex_unlock(&lock)
     }
 
-    public func log(message: String, level: Level? = nil) {
+    public func log(_ message: String, level: Level? = nil) {
         var msg = message
         var lvl = level ?? .Debug
-        if level == nil, let ch = msg.characters.first, l = Level(symbol: ch) {
-            msg = msg[msg.startIndex.successor() ..< msg.endIndex]
+        if level == nil, let ch = msg.characters.first, let l = Level(symbol: ch) {
+            msg = String(msg.characters.dropFirst())
             lvl = l
         }
         log(msg, level: lvl)
     }
 
-    @objc public func invokeDefaultMethodWithArguments(args: [AnyObject]!) -> AnyObject! {
+    @objc public func invokeDefaultMethod(withArguments args: [Any]!) -> Any! {
         guard args.count > 0 else { return nil }
         let message = args[0] as? String ?? "\(args[0])"
         var level: Level? = nil
@@ -125,11 +125,11 @@ public class XWVLogging : XWVScripting {
 }
 
 private let logger = XWVLogging(facility: "org.xwebview.xwebview")
-func log(message: String, level: XWVLogging.Level? = nil) {
+func log(_ message: String, level: XWVLogging.Level? = nil) {
     logger.log(message, level: level)
 }
 
-@noreturn func die(@autoclosure message: ()->String, file: StaticString = #file, line: UInt = #line) {
+func die(_ message: @autoclosure ()->String, file: StaticString = #file, line: UInt = #line) -> Never  {
     logger.log(message(), level: .Alert)
     fatalError(message, file: file, line: line)
 }

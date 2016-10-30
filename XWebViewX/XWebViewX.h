@@ -34,28 +34,6 @@ FOUNDATION_EXPORT const unsigned char XWebViewXVersionString[];
 
 NS_ASSUME_NONNULL_BEGIN
 
-// The workaround for using NSInvocation and NSMethodSignature in Swift.
-@protocol _NSMethodSignatureFactory <NSObject>
-- (NSMethodSignature *)signatureWithObjCTypes:(const char *)types;
-@end
-@interface NSMethodSignature (Swift) <_NSMethodSignatureFactory>
-@end
-
-@protocol _NSInvocationFactory <NSObject>
-- (NSInvocation *)invocationWithMethodSignature:(NSMethodSignature *)sig;
-@end
-@interface NSInvocation (Swift) <_NSInvocationFactory>
-@end
-
-// Special selectors which can't be referenced directly in Swift.
-@protocol _SpecialSelectors
-// NSObject
-- (instancetype)alloc;
-- (void)dealloc;
-// NSInvocation
-- (void)invokeWithTarget:(id)target;
-@end
-
 // Special init which can't be reference directly in Swift, but cannot be a protocol either.
 @interface _InitSelector: NSObject
 // Init with script

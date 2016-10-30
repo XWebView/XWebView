@@ -30,14 +30,14 @@ For more documents, please go to the project [Wiki](../../wiki).
 
 ## Minimum Requirements:
 
-* Development:  Xcode 7.3
-* Deployment:   iOS 8.0
+* Development:  Xcode 8
+* Deployment:   iOS 9.0
 
 ## XWebView vs. Swift
 
 | Swift |  XWebView  |
 | ----- | ---------- |
-| 3     |     ?      |
+| 3     |   0.11.0   |
 | 2.3   |   0.10.0   |
 | 2.2   |   0.10.0   |
 

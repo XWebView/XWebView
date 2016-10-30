@@ -18,7 +18,7 @@ import Foundation
 import WebKit
 
 private let webViewInvalidated =
-    NSError(domain: WKErrorDomain, code: WKErrorCode.WebViewInvalidated.rawValue, userInfo: nil)
+    NSError(domain: WKErrorDomain, code: WKError.webViewInvalidated.rawValue, userInfo: nil)
 
 public class XWVObject : NSObject {
     public let namespace: String
@@ -67,20 +67,20 @@ public class XWVObject : NSObject {
     }
 
     // Evaluate JavaScript expression
-    public func evaluateExpression(expression: String) throws -> AnyObject? {
+    public func evaluateExpression(_ expression: String) throws -> Any? {
         guard let webView = webView else {
             throw webViewInvalidated
         }
         return wrapScriptObject(try webView.evaluateJavaScript(scriptForRetaining(expression)))
     }
-    public func evaluateExpression(expression: String, error: NSErrorPointer) -> AnyObject? {
+    public func evaluateExpression(_ expression: String, error: ErrorPointer) -> Any? {
         guard let webView = webView else {
-            if error != nil { error.memory = webViewInvalidated }
+            error?.pointee = webViewInvalidated
             return nil
         }
         return wrapScriptObject(webView.evaluateJavaScript(scriptForRetaining(expression), error: error))
     }
-    public func evaluateExpression(expression: String, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
+    public func evaluateExpression(_ expression: String, completionHandler: ((Any?, Error?) -> Void)?) {
         guard let webView = webView else {
             completionHandler?(nil, webViewInvalidated)
             return
@@ -90,20 +90,20 @@ public class XWVObject : NSObject {
             return
         }
         webView.evaluateJavaScript(scriptForRetaining(expression)) {
-            [weak self](result: AnyObject?, error: NSError?)->Void in
+            [weak self](result: Any?, error: Error?)->Void in
             completionHandler(self?.wrapScriptObject(result) ?? result, error)
         }
     }
-    private func scriptForRetaining(script: String) -> String {
+    private func scriptForRetaining(_ script: String) -> String {
         guard let origin = origin else { return script }
         return "\(origin.namespace).$retainObject(\(script))"
     }
 
-    func wrapScriptObject(object: AnyObject!) -> AnyObject! {
+    func wrapScriptObject(_ object: Any) -> Any {
         guard let origin = origin else { return object }
-        if let dict = object as? [String: AnyObject] where dict["$sig"] as? NSNumber == 0x5857574F {
-            if let num = dict["$ref"] as? NSNumber where num != 0 {
-                return XWVScriptObject(reference: num.integerValue, origin: origin)
+        if let dict = object as? [String: Any], dict["$sig"] as? NSNumber == 0x5857574F {
+            if let num = dict["$ref"] as? NSNumber, num != 0 {
+                return XWVScriptObject(reference: num.intValue, origin: origin)
             } else if let namespace = dict["$ns"] as? String {
                 return XWVScriptObject(namespace: namespace, origin: origin)
             }
@@ -111,36 +111,18 @@ public class XWVObject : NSObject {
         return object
     }
 
-    func serialize(object: AnyObject?) -> String {
-        var obj: AnyObject? = object
-        if let val = obj as? NSValue {
-            obj = val as? NSNumber ?? val.nonretainedObjectValue
-        }
-
-        if let o = obj as? XWVObject {
+    func serialize(_ value: Any?) -> String {
+        switch value {
+        case let o as XWVObject:
             return o.namespace
-        } else if let s = obj as? String {
-            let d = try? NSJSONSerialization.dataWithJSONObject([s], options: NSJSONWritingOptions(rawValue: 0))
-            let json = NSString(data: d!, encoding: NSUTF8StringEncoding)!
-            return json.substringWithRange(NSMakeRange(1, json.length - 2))
-        } else if let n = obj as? NSNumber {
-            if CFGetTypeID(n) == CFBooleanGetTypeID() {
-                return n.boolValue.description
-            }
-            return n.stringValue
-        } else if let date = obj as? NSDate {
-            return "(new Date(\(date.timeIntervalSince1970 * 1000)))"
-        } else if let _ = obj as? NSData {
-            // TODO: map to Uint8Array object
-        } else if let a = obj as? [AnyObject] {
-            return "[" + a.map(serialize).joinWithSeparator(", ") + "]"
-        } else if let d = obj as? [String: AnyObject] {
-            return "{" + d.keys.map{"'\($0)': \(self.serialize(d[$0]!))"}.joinWithSeparator(", ") + "}"
-        } else if obj === NSNull() {
-            return "null"
-        } else if obj == nil {
-            return "undefined"
+        case let d as Date:
+            return "(new Date(\(d.timeIntervalSince1970 * 1000)))"
+        case let a as [Any?]:
+            return jsonify(a)
+        case let d as [String: Any?]:
+            return jsonify(d)
+        default:
+            return jsonify(value)
         }
-        return "'\(obj!.description)'"
     }
 }

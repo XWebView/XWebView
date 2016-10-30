@@ -17,13 +17,13 @@
 import Foundation
 
 @objc public protocol XWVScripting : class {
-    optional var channelIdentifier: String { get }
-    optional func rewriteGeneratedStub(stub: String, forKey: String) -> String
-    optional func invokeDefaultMethodWithArguments(args: [AnyObject]!) -> AnyObject!
-    optional func finalizeForScript()
+    @objc optional var channelIdentifier: String { get }
+    @objc optional func rewriteStub(_ stub: String, forKey: String) -> String
+    @objc optional func invokeDefaultMethod(withArguments args: [Any]!) -> Any!
+    @objc optional func finalizeForScript()
 
-    optional static func scriptNameForKey(name: UnsafePointer<Int8>) -> String?
-    optional static func scriptNameForSelector(selector: Selector) -> String?
-    optional static func isSelectorExcludedFromScript(selector: Selector) -> Bool
-    optional static func isKeyExcludedFromScript(name: UnsafePointer<Int8>) -> Bool
+    @objc optional static func scriptName(forKey key: UnsafePointer<Int8>) -> String?
+    @objc optional static func scriptName(for selector: Selector) -> String?
+    @objc optional static func isSelectorExcluded(fromScript selector: Selector) -> Bool
+    @objc optional static func isKeyExcluded(fromScript name: UnsafePointer<Int8>) -> Bool
 }

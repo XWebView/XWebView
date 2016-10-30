@@ -23,25 +23,25 @@ extension WKWebView {
         return XWVWindowObject(webView: self)
     }
 
-    public func loadPlugin(object: AnyObject, namespace: String) -> XWVScriptObject? {
+    @discardableResult public func loadPlugin(_ object: AnyObject, namespace: String) -> XWVScriptObject? {
         let channel = XWVChannel(webView: self)
         return channel.bindPlugin(object, toNamespace: namespace)
     }
 
     func prepareForPlugin() {
-        let key = unsafeAddressOf(XWVChannel)
+        let key = Unmanaged<AnyObject>.passUnretained(XWVChannel.self).toOpaque()
         if objc_getAssociatedObject(self, key) != nil { return }
 
-        let bundle = NSBundle(forClass: XWVChannel.self)
-        guard let path = bundle.pathForResource("xwebview", ofType: "js"),
-            let source = try? NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding) else {
+        let bundle = Bundle(for: XWVChannel.self)
+        guard let path = bundle.path(forResource: "xwebview", ofType: "js"),
+            let source = try? NSString(contentsOfFile: path, encoding: String.Encoding.utf8.rawValue) else {
             die("Failed to read provision script: xwebview.js")
         }
-        let time = WKUserScriptInjectionTime.AtDocumentStart
+        let time = WKUserScriptInjectionTime.atDocumentStart
         let script = WKUserScript(source: source as String, injectionTime: time, forMainFrameOnly: true)
         let xwvplugin = XWVUserScript(webView: self, script: script, namespace: "XWVPlugin")
         objc_setAssociatedObject(self, key, xwvplugin, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        log("+WKWebView(\(unsafeAddressOf(self))) is ready for loading plugins")
+        log("+WKWebView(\(self)) is ready for loading plugins")
     }
 }
 
@@ -49,30 +49,30 @@ extension WKWebView {
     // Synchronized evaluateJavaScript
     // It returns nil if script is a statement or its result is undefined.
     // So, Swift cannot map the throwing method to Objective-C method.
-    public func evaluateJavaScript(script: String) throws -> AnyObject? {
-        var result: AnyObject?
-        var error: NSError?
+    open func evaluateJavaScript(_ script: String) throws -> Any? {
+        var result: Any?
+        var error: Error?
         var done = false
         let timeout = 3.0
-        if NSThread.isMainThread() {
+        if Thread.isMainThread {
             evaluateJavaScript(script) {
-                (obj: AnyObject?, err: NSError?)->Void in
+                (obj: Any?, err: Error?)->Void in
                 result = obj
                 error = err
                 done = true
             }
             while !done {
-                let reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, timeout, true)
-                if reason != CFRunLoopRunResult.HandledSource {
+                let reason = CFRunLoopRunInMode(CFRunLoopMode.defaultMode, timeout, true)
+                if reason != CFRunLoopRunResult.handledSource {
                     break
                 }
             }
         } else {
             let condition: NSCondition = NSCondition()
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async() {
                 [weak self] in
                 self?.evaluateJavaScript(script) {
-                    (obj: AnyObject?, err: NSError?)->Void in
+                    (obj: Any?, err: Error?)->Void in
                     condition.lock()
                     result = obj
                     error = err
@@ -83,7 +83,7 @@ extension WKWebView {
             }
             condition.lock()
             while !done {
-                if !condition.waitUntilDate(NSDate(timeIntervalSinceNow: timeout)) {
+                if !condition.wait(until: Date(timeIntervalSinceNow: timeout) as Date) {
                     break
                 }
             }
@@ -97,100 +97,43 @@ extension WKWebView {
     }
 
     // Wrapper method of synchronized evaluateJavaScript for Objective-C
-    public func evaluateJavaScript(script: String, error: NSErrorPointer) -> AnyObject? {
-        var result: AnyObject?
-        var err: NSError?
+    open func evaluateJavaScript(_ script: String, error: ErrorPointer) -> Any? {
+        var result: Any?
+        var err: Error?
         do {
             result = try evaluateJavaScript(script)
         } catch let e as NSError {
             err = e
         }
-        if error != nil { error.memory = err }
+        error?.pointee = err as NSError?
         return result
     }
 }
-
+/*
+@available(iOS 9.0, *)
 extension WKWebView {
     // Overlay support for loading file URL
-    public func loadFileURL(URL: NSURL, overlayURLs: [NSURL]? = nil) -> WKNavigation? {
-        guard overlayURLs?.count > 0 else {
-            return loadFileURL(URL, allowingReadAccessToURL: URL.baseURL!)
+    public func loadFileURL(_ URL: URL, overlayURLs: [URL]? = nil) -> WKNavigation? {
+        if let count = overlayURLs?.count, count > 0 {
+            return loadFileURL(URL, allowingReadAccessTo: URL.baseURL!)
         }
 
-        guard URL.fileURL && URL.baseURL != nil else {
-            assertionFailure("URL must be a relative file URL.")
-            return nil
+        guard URL.isFileURL && URL.baseURL != nil else {
+            fatalError("URL must be a relative file URL.")
         }
 
         guard let port = startHttpd(rootURL: URL.baseURL!, overlayURLs: overlayURLs) else { return nil }
       
         #if swift(>=2.3)
-          let url = NSURL(string: URL.resourceSpecifier!, relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
+          let url = URL(string: URL.resourceSpecifier!, relativeTo: URL(string: "http://127.0.0.1:\(port)"))
         #else
-          let url = NSURL(string: URL.resourceSpecifier, relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
+          let url = URL(string: URL.resourceSpecifier, relativeTo: URL(string: "http://127.0.0.1:\(port)"))
         #endif
       
-        return loadRequest(NSURLRequest(URL: url!))
-    }
-}
-
-extension WKWebView {
-    // WKWebView can't load file URL on iOS 8.x devices.
-    // We have to start an embedded http server for proxy.
-    // When running on iOS 8.x, we provide the same API as on iOS 9.
-    // On iOS 9 and above, we do nothing.
-
-    // Swift 2 doesn't support override +load method of NSObject, override +initialize instead.
-    // See http://nshipster.com/swift-objc-runtime/
-    private static var initialized: dispatch_once_t = 0
-    public override class func initialize() {
-        //if #available(iOS 9, *) { return }
-        guard self == WKWebView.self else { return }
-        dispatch_once(&initialized) {
-            let selector = #selector(WKWebView.loadFileURL(_:allowingReadAccessToURL:))
-            let method = class_getInstanceMethod(self, #selector(WKWebView._loadFileURL(_:allowingReadAccessToURL:)))
-            assert(method != nil)
-            if class_addMethod(self, selector, method_getImplementation(method), method_getTypeEncoding(method)) {
-                log("+Running on iOS 8.x")
-                method_exchangeImplementations(
-                    class_getInstanceMethod(self, #selector(WKWebView.loadHTMLString(_:baseURL:))),
-                    class_getInstanceMethod(self, #selector(WKWebView._loadHTMLString(_:baseURL:)))
-                )
-            }
-        }
+        return loadRequest(URLRequest(URL: url!))
     }
 
-    @objc private func _loadFileURL(URL: NSURL, allowingReadAccessToURL readAccessURL: NSURL) -> WKNavigation? {
-        // readAccessURL must contain URL
-        let fileManager = NSFileManager.defaultManager()
-        var relationship: NSURLRelationship = NSURLRelationship.Other
-        _ = try? fileManager.getRelationship(&relationship, ofDirectoryAtURL: readAccessURL, toItemAtURL: URL)
-        guard URL.fileURL && readAccessURL.fileURL && relationship != NSURLRelationship.Other else {
-            assert(relationship != NSURLRelationship.Other, "readAccessURL must contain URL")
-            assert(URL.fileURL && readAccessURL.fileURL, "URL and readAccessURL must be file URLs")
-            return nil
-        }
-
-        guard let port = startHttpd(rootURL: readAccessURL) else { return nil }
-        var path = URL.path![readAccessURL.path!.endIndex ..< URL.path!.endIndex]
-        if let query = URL.query { path += "?\(query)" }
-        if let fragment = URL.fragment { path += "#\(fragment)" }
-        let url = NSURL(string: path , relativeToURL: NSURL(string: "http://127.0.0.1:\(port)"))
-        return loadRequest(NSURLRequest(URL: url!))
-    }
-
-    @objc private func _loadHTMLString(html: String, baseURL: NSURL) -> WKNavigation? {
-        guard baseURL.fileURL else {
-            // call original method implementation
-            return _loadHTMLString(html, baseURL: baseURL)
-        }
-
-        guard let port = startHttpd(rootURL: baseURL) else { return nil }
-        let url = NSURL(string: "http://127.0.0.1:\(port)/")
-        return loadHTMLString(html, baseURL: url)
-    }
-
-    private func startHttpd(rootURL rootURL: NSURL, overlayURLs: [NSURL]? = nil) -> in_port_t? {
+    private func startHttpd(rootURL: URL, overlayURLs: [URL]? = nil) -> in_port_t? {
         let key = unsafeAddressOf(XWVHttpServer)
         if let httpd = objc_getAssociatedObject(self, key) as? XWVHttpServer {
             if httpd.rootURL == rootURL && httpd.overlayURLs == overlayURLs ?? [] {
@@ -205,4 +148,4 @@ extension WKWebView {
         log("+HTTP server is started on port: \(httpd.port)")
         return httpd.port
     }
-}
+}*/
