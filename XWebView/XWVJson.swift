@@ -80,6 +80,10 @@ func jsonify(_ value: NSObject) -> String {
             (ptr: UnsafePointer<UInt8>) -> String in
             jsonify(UnsafeBufferPointer<UInt8>(start: ptr, count: d.count))
         }
+	case let a as [Any?]:
+		return jsonify(a)
+	case let d as [String : Any?]:
+		return jsonify(d)
     default:
         //fatalError("Unsupported type \(type(of: value))")
         print("Unsupported type \(type(of: value))")
