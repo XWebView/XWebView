@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-/*
+
 import Foundation
 #if os(iOS)
 import UIKit
@@ -55,7 +55,7 @@ class XWVHttpServer : NSObject {
     private func listen(on port: in_port_t) -> Bool {
         guard socket == nil else { return false }
 
-        let info = UnsafeMutableRawPointer(mutating: unsafeAddressOf(self))
+        let info = Unmanaged.passUnretained(self).toOpaque()
         var context = CFSocketContext(version: 0, info: info, retain: nil, release: nil, copyDescription: nil)
         let callbackType = CFSocketCallBackType.acceptCallBack.rawValue
         socket = CFSocketCreate(nil, PF_INET, SOCK_STREAM, 0, callbackType, ServerAcceptCallBack, &context)
@@ -160,7 +160,7 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
         connections.remove(connection)
     }
 
-    func handleRequest(_ request: URLRequest) -> HTTPURLResponse {
+    func handleRequest(_ request: URLRequest?) -> HTTPURLResponse {
         // Date format, see section 7.1.1.1 of RFC7231
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US")
@@ -170,11 +170,11 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
         var headers: [String: String] = ["Date": dateFormatter.string(from: Date())]
         var statusCode = 500
         var fileURL: URL? = nil
-        if request.url == nil {
+        if request == nil {
             // Bad request
             statusCode = 400
             log("?Bad request")
-        } else if request.httpMethod == "GET" || request.httpMethod == "HEAD" {
+        } else if let request = request, request.httpMethod == "GET" || request.httpMethod == "HEAD" {
             let fileManager = FileManager.default
             let relativePath = String(request.url!.path.characters.dropFirst())
             for baseURL in overlays {
@@ -182,15 +182,7 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
                 var url = URL(string: relativePath, relativeTo: baseURL)!
                 if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
                     if isDirectory.boolValue {
-                        #if swift(>=3.0)
-                          url = url.appendingPathComponent("index.html")
-                        #else
-                        #if swift(>=2.3)
-                          url = url.URLByAppendingPathComponent("index.html")!
-                        #else
-                          url = url.URLByAppendingPathComponent("index.html")
-                        #endif
-                        #endif
+                        url = url.appendingPathComponent("index.html")
                     }
                     if fileManager.isReadableFile(atPath: url.path) {
                         fileURL = url
@@ -219,18 +211,18 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
         if statusCode != 200 {
             headers["Content-Length"] = "0"
         }
-        return HTTPURLResponse(url: fileURL!, statusCode: statusCode, httpVersion: "HTTP/1.1", headerFields: headers)!
-        // FIXME: return nil when fileURL == nil
+        let url = fileURL ?? request?.url ?? URL(string: "nil")!
+        return HTTPURLResponse(url: url, statusCode: statusCode, httpVersion: "HTTP/1.1", headerFields: headers)!
     }
 }
 
-private func ServerAcceptCallBack(socket: CFSocket?, type: CFSocketCallBackType, address: CFData?, data:UnsafeRawPointer?, info: UnsafeMutableRawPointer?) {
+private func ServerAcceptCallBack(socket: CFSocket?, type: CFSocketCallBackType, address: CFData?, data: UnsafeRawPointer?, info: UnsafeMutableRawPointer?) {
     let server = unsafeBitCast(info, to: XWVHttpServer.self)
-    let handle = UnsafePointer<CFSocketNativeHandle>(data).pointee
     assert(socket === server.socket && type == CFSocketCallBackType.acceptCallBack)
 
+    let handle = data!.load(as: CFSocketNativeHandle.self)
     let connection = XWVHttpConnection(handle: handle, delegate: server)
-    connection.open()
+    _ = connection.open()
 }
 
 private var mimeTypeCache = [
@@ -255,4 +247,4 @@ private func getMIMETypeByExtension(extensionName: String) -> String {
         return type + "; charset=utf-8"
     }
     return type
-}*/
+}

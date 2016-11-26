@@ -48,22 +48,14 @@ class XWebViewTests: XWVTestCase {
         let bundle = Bundle(identifier:"org.xwebview.XWebViewTests")
       
         if let root = bundle?.bundleURL.appendingPathComponent("www") {
-            #if swift(>=3.0)
-                let url = root.appendingPathComponent("webviewTest.html")
-            #else
-                #if swift(>=2.3)
-                    let url = root.URLByAppendingPathComponent("webviewTest.html")!
-                #else
-                    let url = root.URLByAppendingPathComponent("webviewTest.html")
-                #endif
-            #endif
-          
+            let url = root.appendingPathComponent("webviewTest.html")
             XCTAssert(try url.checkResourceIsReachable(), "HTML file not found")
             webview.loadFileURL(url, allowingReadAccessTo: root)
             waitForExpectations(timeout: 2, handler: nil)
         }
     }
-/*
+
+    @available(iOS 9.0, *)
     func testLoadFileURLWithOverlay() {
         _ = expectation(description: "loadFileURLWithOverlay")
         let bundle = Bundle(identifier:"org.xwebview.XWebViewTests")
@@ -74,24 +66,16 @@ class XWebViewTests: XWVTestCase {
                 in: FileManager.SearchPathDomainMask.userDomainMask,
                 appropriateFor: nil,
                 create: true)
-            #if swift(>=3)
-                var url = library.appendingPathComponent("webviewTest.html")
-            #else
-                #if swift(>=2.3)
-                    var url = library.URLByAppendingPathComponent("webviewTest.html")!
-                #else
-                    var url = library.URLByAppendingPathComponent("webviewTest.html")
-                #endif
-            #endif
-          
+            var url = library.appendingPathComponent("webviewTest.html")
+
             let content = "<html><script type='text/javascript'>fulfill('loadFileURLWithOverlay');</script></html>"
             try! content.write(to: url, atomically: false, encoding: String.Encoding.utf8)
 
-            url = URL(string: "webviewTest.html", relativeToURL: root)!
-            webview.loadFileURL(url, overlayURLs: [library])
+            url = URL(string: "webviewTest.html", relativeTo: root)!
+            _ = webview.loadFileURL(url, overlayURLs: [library])
             waitForExpectations(timeout: 2, handler: nil)
         }
-    }*/
+    }
 
     func testLoadHTMLStringWithBaseURL() {
         _ = expectation(description: "loadHTMLStringWithBaseURL")

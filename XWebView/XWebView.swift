@@ -109,32 +109,30 @@ extension WKWebView {
         return result
     }
 }
-/*
+
 @available(iOS 9.0, *)
 extension WKWebView {
     // Overlay support for loading file URL
-    public func loadFileURL(_ URL: URL, overlayURLs: [URL]? = nil) -> WKNavigation? {
-        if let count = overlayURLs?.count, count > 0 {
-            return loadFileURL(URL, allowingReadAccessTo: URL.baseURL!)
+    public func loadFileURL(_ url: URL, overlayURLs: [URL]? = nil) -> WKNavigation? {
+        if let count = overlayURLs?.count, count == 0 {
+            return loadFileURL(url, allowingReadAccessTo: url.baseURL!)
         }
 
-        guard URL.isFileURL && URL.baseURL != nil else {
+        guard url.isFileURL && url.baseURL != nil else {
             fatalError("URL must be a relative file URL.")
         }
 
-        guard let port = startHttpd(rootURL: URL.baseURL!, overlayURLs: overlayURLs) else { return nil }
-      
-        #if swift(>=2.3)
-          let url = URL(string: URL.resourceSpecifier!, relativeTo: URL(string: "http://127.0.0.1:\(port)"))
-        #else
-          let url = URL(string: URL.resourceSpecifier, relativeTo: URL(string: "http://127.0.0.1:\(port)"))
-        #endif
-      
-        return loadRequest(URLRequest(URL: url!))
+        guard let port = startHttpd(rootURL: url.baseURL!, overlayURLs: overlayURLs) else { return nil }
+
+        var res = url.relativePath
+        if let query = url.query { res += "?" + query }
+        if let fragment = url.fragment { res += "#" + fragment }
+        let url = URL(string: res , relativeTo: URL(string: "http://127.0.0.1:\(port)"))
+        return load(URLRequest(url: url!))
     }
 
     private func startHttpd(rootURL: URL, overlayURLs: [URL]? = nil) -> in_port_t? {
-        let key = unsafeAddressOf(XWVHttpServer)
+        let key = Unmanaged.passUnretained(XWVHttpServer.self as AnyObject).toOpaque()
         if let httpd = objc_getAssociatedObject(self, key) as? XWVHttpServer {
             if httpd.rootURL == rootURL && httpd.overlayURLs == overlayURLs ?? [] {
                 return httpd.port
@@ -148,4 +146,4 @@ extension WKWebView {
         log("+HTTP server is started on port: \(httpd.port)")
         return httpd.port
     }
-}*/
+}
