@@ -49,7 +49,7 @@ class XWVScriptingTest : XWVTestCase {
         let script = "if (window.stub && \(namespace).abc) fulfill('\(desc)');"
         _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
 
     func testFinalizeForScript() {
@@ -57,20 +57,20 @@ class XWVScriptingTest : XWVTestCase {
         let script = "\(namespace).dispose()"
         let expectation = super.expectation(description: desc)
         loadPlugin(Plugin(expectation: expectation), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testIsSelectorExcluded() {
         let desc = "isSelectorExcluded"
         let script = "if (\(namespace).initWithExpectation == undefined) fulfill('\(desc)')"
         _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testIsKeyExcluded() {
         let desc = "isKeyExcluded"
         let script = "if (!\(namespace).hasOwnProperty('expectation')) fulfill('\(desc)')"
         _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
 }

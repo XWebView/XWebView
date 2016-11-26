@@ -33,7 +33,7 @@ class XWebViewTests: XWVTestCase {
                 XCTFail("testWindowObject Failed")
             }
         }
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
 
     func testLoadPlugin() {
@@ -51,7 +51,7 @@ class XWebViewTests: XWVTestCase {
             let url = root.appendingPathComponent("webviewTest.html")
             XCTAssert(try url.checkResourceIsReachable(), "HTML file not found")
             webview.loadFileURL(url, allowingReadAccessTo: root)
-            waitForExpectations(timeout: 2, handler: nil)
+            waitForExpectations()
         }
     }
 
@@ -73,7 +73,7 @@ class XWebViewTests: XWVTestCase {
 
             url = URL(string: "webviewTest.html", relativeTo: root)!
             _ = webview.loadFileURL(url, overlayURLs: [library])
-            waitForExpectations(timeout: 2, handler: nil)
+            waitForExpectations()
         }
     }
 
@@ -83,7 +83,7 @@ class XWebViewTests: XWVTestCase {
         if let baseURL = bundle?.bundleURL.appendingPathComponent("www") {
             XCTAssert(try baseURL.checkResourceIsReachable(), "Directory not found")
             webview.loadHTMLString("<html><img id='image' onload='fulfill(\"loadHTMLStringWithBaseURL\")' src='image.png'></html>", baseURL: baseURL)
-            waitForExpectations(timeout: 2, handler: nil)
+            waitForExpectations()
         }
     }
 }

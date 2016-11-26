@@ -58,27 +58,27 @@ class ConstructorPlugin : XWVTestCase {
         let script = "if (\(namespace) instanceof Function) fulfill('\(desc)')"
         _ = expectation(description: desc)
         loadPlugin(Plugin0(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testConstruction() {
         let desc = "construction"
         let script = "new \(namespace)(expectation('\(desc)'))"
         _ = expectation(description: desc)
         loadPlugin(Plugin0(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testSyncProperties() {
         let desc = "syncProperties"
         let script = "(new \(namespace)(456)).then(function(o){if (o.property==456) fulfill('\(desc)');})"
         _ = expectation(description: desc)
         loadPlugin(Plugin1(value: 123), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testFinalizeForScript() {
         let desc = "finalizeForScript"
         let script = "(new \(namespace)(expectation('\(desc)'))).then(function(o){o.dispose();})"
         _ = expectation(description: desc)
         loadPlugin(Plugin2(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
 }

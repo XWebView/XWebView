@@ -61,7 +61,7 @@ class ObjectPlugin : XWVTestCase {
         let script = "if (\(namespace).property == 123) fulfill('\(desc)');"
         _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testUpdateProperty() {
         let exp = expectation(description: "updateProperty")
@@ -75,7 +75,7 @@ class ObjectPlugin : XWVTestCase {
                 }
             }
         }
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testSyncProperty() {
         let exp = expectation(description: "syncProperty")
@@ -90,43 +90,43 @@ class ObjectPlugin : XWVTestCase {
                 }
             }
         }
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
 
     func testCallMethod() {
         let exp = expectation(description: "callMethod")
         loadPlugin(Plugin(expectation: exp), namespace: namespace, script: "\(namespace).method()")
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testCallMethodWithArgument() {
         let exp = expectation(description: "callMethodWithArgument")
         loadPlugin(Plugin(expectation: exp), namespace: namespace, script: "\(namespace).methodWithArgument('Yes')")
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testCallMethodWithInteger() {
         let exp = expectation(description: "callMethodWithInteger")
         loadPlugin(Plugin(expectation: exp), namespace: namespace, script: "\(namespace).methodWithInteger(789)")
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testCallMethodWithCallback() {
         let desc = "callMethodWithCallback"
         let script = "\(namespace).methodWithCallback(function(){fulfill('\(desc)');})"
         _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 3, handler: nil)
+        waitForExpectations()
     }
     func testCallMethodWithPromise() {
         let desc = "callMethodWithPromise"
         let script = "\(namespace).methodWithPromiseObject().then(function(){fulfill('\(desc)');})"
         _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 3, handler: nil)
+        waitForExpectations()
     }
     func testScriptObject() {
         let desc = "scriptObject"
         let exp = expectation(description: desc)
         let plugin = Plugin(expectation: exp)
         loadPlugin(plugin, namespace: namespace, script: "\(namespace).method1();")
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
 }

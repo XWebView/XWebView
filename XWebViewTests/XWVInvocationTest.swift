@@ -128,7 +128,7 @@ class InvocationTests : XCTestCase {
             let obj = inv[ #selector(InvocationTarget._new(_:))](exp) as? InvocationTarget.LeakTest
             XCTAssertEqual(exp, obj!.expectation)
         }
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations(timeout: 3)
     }
 
     func testLeak2() {
@@ -137,6 +137,6 @@ class InvocationTests : XCTestCase {
             let obj = createInstance(of: InvocationTarget.LeakTest.self, by: #selector(InvocationTarget.LeakTest.init(expectation:)), with: [exp]) as? InvocationTarget.LeakTest
             XCTAssertEqual(exp, obj!.expectation)
         }
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations(timeout: 3)
     }
 }

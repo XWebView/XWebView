@@ -56,6 +56,9 @@ class XWVTestCase : XCTestCase, WKNavigationDelegate {
         webview.loadPlugin(e, namespace: "\(namespaceForExpectation).\(description)")
         return e
     }
+    override func waitForExpectations(timeout: TimeInterval = 9, handler: XCWaitCompletionHandler? = nil) {
+        super.waitForExpectations(timeout: timeout, handler: handler)
+    }
 
     func loadPlugin(_ object: NSObject, namespace: String, script: String) {
         loadPlugin(object, namespace: namespace, script: script, onReady: nil)
@@ -79,6 +82,6 @@ class XWVTestCaseTest : XWVTestCase {
         let desc = "selftest"
         _ = expectation(description: desc)
         loadPlugin(Plugin(), namespace: "xwvtest", script: "fulfill('\(desc)');")
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
 }

@@ -40,18 +40,18 @@ class FunctionPlugin : XWVTestCase {
         let script = "if (\(namespace) instanceof Function) fulfill('\(desc)')"
         _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testCallDefaultMethod() {
         let exp = expectation(description: "callDefaultMethod")
         loadPlugin(Plugin(expectation: exp), namespace: namespace, script: "\(namespace)()")
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
     func testPropertyOfDefaultMethod() {
         let desc = "propertyOfDefaultMethod"
         let script = "if (\(namespace).property == 123) fulfill('\(desc)');"
         _ = expectation(description: desc)
         loadPlugin(Plugin(expectation: nil), namespace: namespace, script: script)
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations()
     }
 }
