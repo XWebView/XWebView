@@ -318,7 +318,7 @@
 					};
 					EE62683419FA323900EFC3F8 = {
 						CreatedOnToolsVersion = 6.1;
-						LastSwiftMigration = 0800;
+						LastSwiftMigration = 0820;
 					};
 				};
 			};

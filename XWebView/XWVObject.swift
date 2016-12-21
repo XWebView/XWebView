@@ -71,14 +71,20 @@ public class XWVObject : NSObject {
         guard let webView = webView else {
             throw webViewInvalidated
         }
-        return wrapScriptObject(try webView.evaluateJavaScript(scriptForRetaining(expression)))
+        guard let scriptObject = try webView.evaluateJavaScript(scriptForRetaining(expression))  else {
+            return nil
+        }
+        return wrapScriptObject(scriptObject)
     }
     public func evaluateExpression(_ expression: String, error: ErrorPointer) -> Any? {
         guard let webView = webView else {
             error?.pointee = webViewInvalidated
             return nil
         }
-        return wrapScriptObject(webView.evaluateJavaScript(scriptForRetaining(expression), error: error))
+        guard let scriptObject = webView.evaluateJavaScript(scriptForRetaining(expression), error: error) else {
+            return nil
+        }
+        return wrapScriptObject(scriptObject)
     }
     public func evaluateExpression(_ expression: String, completionHandler: ((Any?, Error?) -> Void)?) {
         guard let webView = webView else {
@@ -91,7 +97,12 @@ public class XWVObject : NSObject {
         }
         webView.evaluateJavaScript(scriptForRetaining(expression)) {
             [weak self](result: Any?, error: Error?)->Void in
-            completionHandler(self?.wrapScriptObject(result) ?? result, error)
+            if error != nil {
+                completionHandler(nil, error)
+            } else {
+                let scriptObject = result.flatMap{ self?.wrapScriptObject($0) }
+                completionHandler(scriptObject, nil)
+            }
         }
     }
     private func scriptForRetaining(_ script: String) -> String {
