@@ -69,12 +69,7 @@ var NSInvocation: NSInvocationProtocol.Type = {
             let code = sig.getArgumentType(atIndex: UInt(i) + 2)
             let type = ObjCType(code: code)
             if type == .object {
-                let obj: AnyObject
-                if let val = arg as? NSNumberConvertible {
-                    obj = NSNumber(value: val)
-                } else {
-                    obj = _bridgeAnythingToObjectiveC(arg)
-                }
+                let obj: AnyObject = _bridgeAnythingToObjectiveC(arg)
                 _autorelease(obj)
                 args[i] = _encodeBitsAsWords(obj)
             } else if type == .clazz, let cls = arg as? AnyClass {
@@ -203,22 +198,6 @@ private enum ObjCType : CChar {
     }
 }
 
-private protocol NSNumberConvertible {}
-extension Int: NSNumberConvertible {}
-extension Int8: NSNumberConvertible {}
-extension Int16: NSNumberConvertible {}
-extension Int32: NSNumberConvertible {}
-extension Int64: NSNumberConvertible {}
-extension UInt: NSNumberConvertible {}
-extension UInt8: NSNumberConvertible {}
-extension UInt16: NSNumberConvertible {}
-extension UInt32: NSNumberConvertible {}
-extension UInt64: NSNumberConvertible {}
-extension Bool: NSNumberConvertible {}
-extension Double: NSNumberConvertible {}
-extension Float: NSNumberConvertible {}
-extension UnicodeScalar: NSNumberConvertible {}
-
 private extension NSNumber {
     func value(as type: ObjCType) -> CVarArg? {
         switch type {
@@ -236,26 +215,6 @@ private extension NSNumber {
         case .float:     return self.floatValue
         case .double:    return self.doubleValue
         default:         return nil
-        }
-    }
-
-    convenience init(value: NSNumberConvertible) {
-        switch value {
-        case let v as Int:     self.init(value: v)
-        case let v as Int8:    self.init(value: v)
-        case let v as Int16:   self.init(value: v)
-        case let v as Int32:   self.init(value: v)
-        case let v as Int64:   self.init(value: v)
-        case let v as UInt:    self.init(value: v)
-        case let v as UInt8:   self.init(value: v)
-        case let v as UInt16:  self.init(value: v)
-        case let v as UInt32:  self.init(value: v)
-        case let v as UInt64:  self.init(value: v)
-        case let v as Bool:    self.init(value: v)
-        case let v as Double:  self.init(value: v)
-        case let v as Float:   self.init(value: v)
-        case let v as UnicodeScalar: self.init(value: v.value)
-        default: fatalError("never reach here")
         }
     }
 }

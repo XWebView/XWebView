@@ -82,44 +82,44 @@ class InvocationTests : XCTestCase {
     func testMethods() {
         XCTAssertTrue(inv[ #selector(InvocationTarget.dummy)]() is Void)
         #if arch(x86_64) || arch(arm64)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(bool:))](Bool(true)) as? Bool == true)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(bool:))](Bool(true)) as? Bool, true)
         #else
         // http://stackoverflow.com/questions/26459754/bool-encoding-wrong-from-nsmethodsignature
-        XCTAssertTrue(inv[Selector("echoWithBool:")](Bool(true)) as? Int8 == 1)
+        XCTAssertEqual(inv[Selector("echoWithBool:")](Bool(true)) as? Int8, 1)
         #endif
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int:))](Int(-11)) as? XInt == -11)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int8:))](Int8(-22)) as? Int8 == -22)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int16:))](Int16(-33)) as? Int16 == -33)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int32:))](Int32(-44)) as? Int32 == -44)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(int64:))](Int64(-55)) as? Int64 == -55)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint:))](UInt(11)) as? XUInt == 11)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint8:))](UInt8(22)) as? UInt8 == 22)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint16:))](UInt16(33)) as? UInt16 == 33)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint32:))](UInt32(44)) as? UInt32 == 44)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(uint64:))](UInt64(55)) as? UInt64 == 55)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(float:))](Float(12.34)) as? Float == 12.34)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(double:))](Double(-56.78)) as? Double == -56.78)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(unicode:))](UnicodeScalar(78)) as? Int32 == 78)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.echo(string:))]("abc") as? String == "abc")
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(int:))](Int(-11)) as? XInt, -11)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(int8:))](Int8(-22)) as? Int8, -22)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(int16:))](Int16(-33)) as? Int16, -33)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(int32:))](Int32(-44)) as? Int32, -44)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(int64:))](Int64(-55)) as? Int64, -55)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(uint:))](UInt(11)) as? XUInt, 11)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(uint8:))](UInt8(22)) as? UInt8, 22)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(uint16:))](UInt16(33)) as? UInt16, 33)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(uint32:))](UInt32(44)) as? UInt32, 44)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(uint64:))](UInt64(55)) as? UInt64, 55)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(float:))](Float(12.34)) as? Float, 12.34)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(double:))](Double(-56.78)) as? Double, -56.78)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(unicode:))](UnicodeScalar(78)) as? Int32, 78)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(string:))]("abc") as? String, "abc")
         let selector = #selector(InvocationTarget.echo(selector:))
-        XCTAssertTrue(inv[selector](selector) as? Selector == selector)
+        XCTAssertEqual(inv[selector](selector) as? Selector, selector)
         let cls = type(of: self)
         XCTAssertTrue(inv[ #selector(InvocationTarget.echo(class:))](cls) as? AnyClass === cls)
 
-        XCTAssertTrue(inv[ #selector(InvocationTarget.convert(_:))](UInt8(12)) as? XInt == 12)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.add(_:_:))](2, 3) as? XInt == 5)
-        XCTAssertTrue(inv[ #selector(InvocationTarget.concat(_:_:))]("ab", "cd") as? String == "abcd")
+        XCTAssertEqual(inv[ #selector(InvocationTarget.convert(_:))](UInt8(12)) as? XInt, 12)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.add(_:_:))](2, 3) as? XInt, 5)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.concat(_:_:))]("ab", "cd") as? String, "abcd")
     }
 
     func testProperty() {
-        XCTAssertTrue(inv["integer"] as? XInt == 123)
+        XCTAssertEqual(inv["integer"] as? XInt, 123)
         inv["integer"] = 321
-        XCTAssertTrue(inv["integer"] as? XInt == 321)
+        XCTAssertEqual(inv["integer"] as? XInt, 321)
     }
 
     func testNullable() {
-        XCTAssertTrue(inv[ #selector(InvocationTarget.nullable(_:))]("abc") as? String == "abc")
-        XCTAssertTrue(inv[ #selector(InvocationTarget.nullable(_:))](nil) == nil)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.nullable(_:))]("abc") as? String, "abc")
+        XCTAssertNil(inv[ #selector(InvocationTarget.nullable(_:))](nil))
     }
 
     func testLeak1() {
