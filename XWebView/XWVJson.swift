@@ -94,7 +94,6 @@ func jsonify(_ value: NSObject) -> String {
 func jsonify(_ value: Any!) -> String {
     switch (value) {
     case nil:                    return "undefined"
-    case let b as Bool:          return jsonify(b)
     case let i as Int:           return jsonify(i)
     case let i as Int8:          return jsonify(i)
     case let i as Int16:         return jsonify(i)
@@ -107,6 +106,7 @@ func jsonify(_ value: Any!) -> String {
     case let u as UInt64:        return jsonify(u)
     case let f as Float:         return jsonify(f)
     case let f as Double:        return jsonify(f)
+    case let b as Bool:          return jsonify(b)
     case let s as String:        return jsonify(s)
     case let v as NSObject:      return jsonify(v)
     case is Void:                return "undefined"
