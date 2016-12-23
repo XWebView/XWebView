@@ -85,7 +85,8 @@ final class XWVBindingObject : XWVScriptObject {
     private func syncProperties() {
         let script = channel.typeInfo.filter{ $1.isProperty }.reduce("") {
             let val: Any! = performSelector($1.1.getter!, with: nil)
-            return "\($0)\(namespace).$properties['\($1.0)'] = \(serialize(val));\n"
+            guard let json = jsonify(val) else { return "" }
+            return "\($0)\(namespace).$properties['\($1.0)'] = \(json);\n"
         }
         webView?.evaluateJavaScript(script, completionHandler: nil)
     }
@@ -140,14 +141,17 @@ final class XWVBindingObject : XWVScriptObject {
 
     // KVO for syncing properties
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        guard let webView = webView, var prop = keyPath else { return }
+        guard let webView = webView, var prop = keyPath, let change = change,
+              let json = jsonify(change[NSKeyValueChangeKey.newKey]) else {
+            return
+        }
         if channel.typeInfo[prop] == nil {
             if let scriptNameForKey = (type(of: object) as? XWVScripting.Type)?.scriptName(forKey:) {
                 prop = prop.withCString(scriptNameForKey) ?? prop
             }
             assert(channel.typeInfo[prop] != nil)
         }
-        let script = "\(namespace).$properties['\(prop)'] = \(serialize(change?[NSKeyValueChangeKey.newKey]))"
+        let script = "\(namespace).$properties['\(prop)'] = \(json)"
         webView.evaluateJavaScript(script, completionHandler: nil)
     }
 }

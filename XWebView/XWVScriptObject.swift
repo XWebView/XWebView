@@ -54,7 +54,7 @@ public class XWVScriptObject : XWVObject {
     }
 
     public func defineProperty(_ name: String, descriptor: [String:Any]) -> Any? {
-        let exp = "Object.defineProperty(\(namespace), \(name), \(serialize(descriptor)))"
+        let exp = "Object.defineProperty(\(namespace), \(name), \(jsonify(descriptor)!))"
         return try! evaluateExpression(exp)
     }
     public func deleteProperty(_ name: String) -> Bool {
@@ -70,13 +70,17 @@ public class XWVScriptObject : XWVObject {
         return try! evaluateExpression(scriptForFetchingProperty(name))
     }
     public func setValue(_ value: Any?, for name:String) {
-        webView?.evaluateJavaScript(scriptForUpdatingProperty(name, value: value), completionHandler: nil)
+        guard let json = jsonify(value) else { return }
+        let script = scriptForFetchingProperty(name) + " = " + json
+        webView?.evaluateJavaScript(script, completionHandler: nil)
     }
     public func value(at index: UInt) -> Any? {
         return try! evaluateExpression("\(namespace)[\(index)]")
     }
     public func setValue(_ value: Any?, at index: UInt) {
-        webView?.evaluateJavaScript("\(namespace)[\(index)] = \(serialize(value))", completionHandler: nil)
+        guard let json = jsonify(value) else { return }
+        let script = "\(namespace)[\(index)] = \(json)"
+        webView?.evaluateJavaScript(script, completionHandler: nil)
     }
 
     private func scriptForFetchingProperty(_ name: String?) -> String {
@@ -92,11 +96,8 @@ public class XWVScriptObject : XWVObject {
             return "\(namespace).\(name)"
         }
     }
-    private func scriptForUpdatingProperty(_ name: String?, value: Any?) -> String {
-        return scriptForFetchingProperty(name) + " = " + serialize(value)
-    }
     private func scriptForCallingMethod(_ name: String?, arguments: [Any]?) -> String {
-        let args = arguments?.map(serialize) ?? []
+        let args = arguments?.map{jsonify($0) ?? ""} ?? []
         return scriptForFetchingProperty(name) + "(" + args.joined(separator: ", ") + ")"
     }
 }

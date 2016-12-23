@@ -110,19 +110,10 @@ public class XWVObject : NSObject {
         }
         return object
     }
+}
 
-    func serialize(_ value: Any?) -> String {
-        switch value {
-        case let o as XWVObject:
-            return o.namespace
-        case let d as Date:
-            return "(new Date(\(d.timeIntervalSince1970 * 1000)))"
-        case let a as [Any?]:
-            return jsonify(a)
-        case let d as [String: Any?]:
-            return jsonify(d)
-        default:
-            return jsonify(value)
-        }
+extension XWVObject : CustomJSONStringable {
+    public var jsonString: String? {
+        return namespace
     }
 }
