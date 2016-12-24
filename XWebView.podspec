@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "XWebView"
-  s.version      = "0.11.0"
+  s.version      = "0.12.0"
   s.summary      = "An extensible WebView (based on WKWebView) for iOS."
 
   s.description  = <<-DESC
