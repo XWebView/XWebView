@@ -36,6 +36,28 @@ class XWebViewTests: XWVTestCase {
         waitForExpectations()
     }
 
+    func testSyncEvaluation() {
+        let expectation = super.expectation(description: "testSyncEvaluation")
+        loadHTML("") {
+            let result = try? $0.syncEvaluateJavaScript("1+2")
+            if let num = result as? Int, num == 3 {
+                expectation.fulfill()
+            }
+        }
+        waitForExpectations()
+    }
+
+    func testUndefined() {
+        let expectation = super.expectation(description: "testUndefined")
+        loadHTML("") {
+            let result = try? $0.syncEvaluateJavaScript("undefined")
+            if result is Undefined {
+                expectation.fulfill()
+            }
+        }
+        waitForExpectations()
+    }
+
     func testLoadPlugin() {
         if webview.loadPlugin(Plugin(), namespace: "xwvtest") == nil {
             XCTFail("testLoadPlugin Failed")

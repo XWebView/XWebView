@@ -64,10 +64,13 @@ class XWVTestCase : XCTestCase, WKNavigationDelegate {
         loadPlugin(object, namespace: namespace, script: script, onReady: nil)
     }
     func loadPlugin(_ object: NSObject, namespace: String, script: String, onReady: ((WKWebView)->Void)?) {
-        self.onReady = onReady
         webview.loadPlugin(object, namespace: namespace)
         let html = "<html><script type='text/javascript'>\(script)</script></html>"
-        webview.loadHTMLString(html, baseURL: nil)
+        loadHTML(html, onReady: onReady);
+    }
+    func loadHTML(_ content: String, onReady: ((WKWebView)->Void)?) {
+        self.onReady = onReady
+        webview.loadHTMLString(content, baseURL: nil)
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
