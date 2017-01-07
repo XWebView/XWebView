@@ -14,7 +14,12 @@
  limitations under the License.
 */
 
+#import <Foundation/Foundation.h>
+#if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
+#elif TARGET_OS_MAC
+#import <Cocoa/Cocoa.h>
+#endif
 
 //! Project version number for XWebView.
 FOUNDATION_EXPORT double XWebViewVersionNumber;
@@ -23,13 +28,3 @@ FOUNDATION_EXPORT double XWebViewVersionNumber;
 FOUNDATION_EXPORT const unsigned char XWebViewVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <XWebView/PublicHeader.h>
-
-NS_ASSUME_NONNULL_BEGIN
-
-// Special init which can't be reference directly in Swift, but cannot be a protocol either.
-@interface _InitSelector: NSObject
-// Init with script
-- (id)initByScriptWithArguments:(NSArray *)args;
-@end
-
-NS_ASSUME_NONNULL_END

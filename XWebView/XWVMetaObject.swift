@@ -125,7 +125,7 @@ class XWVMetaObject {
                 }
 
             case let .Initializer(selector, _):
-                if selector == #selector(_InitSelector.init(byScriptWithArguments:)) {
+                if selector == Selector(("initByScriptWithArguments:")) {
                     member = .Initializer(selector: selector, arity: -1)
                     name = ""
                 } else if let cls = plugin as? XWVScripting.Type {

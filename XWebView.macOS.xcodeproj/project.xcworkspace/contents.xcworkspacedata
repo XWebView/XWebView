@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:XWebView.xcodeproj">
+      location = "self:XWebView.macOS.xcodeproj">
    </FileRef>
 </Workspace>

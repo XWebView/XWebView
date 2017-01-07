@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
 
   s.name         = "XWebView"
   s.version      = "0.12.0"
-  s.summary      = "An extensible WebView (based on WKWebView) for iOS."
+  s.summary      = "An extensible WebView (based on WKWebView)"
 
   s.description  = <<-DESC
                    XWebView is an extensible WebView which is built on top of WKWebView,
@@ -65,11 +65,10 @@ Pod::Spec.new do |s|
   #
 
   # s.platform     = :ios
-  s.platform     = :ios, "9.0"
 
   #  When using multiple platforms
   s.ios.deployment_target = "9.0"
-  # s.osx.deployment_target = "10.7"
+  s.osx.deployment_target = "10.11"
 
 
   # ――― Source Location ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
