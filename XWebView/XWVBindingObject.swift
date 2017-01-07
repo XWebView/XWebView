@@ -44,7 +44,7 @@ final class XWVBindingObject : XWVScriptObject {
             promise = arguments.last as? XWVScriptObject
             arguments.removeLast()
         }
-        if selector == #selector(_InitSelector.init(byScriptWithArguments:)) {
+        if selector == Selector(("initByScriptWithArguments:")) {
             arguments = [arguments]
         }
 

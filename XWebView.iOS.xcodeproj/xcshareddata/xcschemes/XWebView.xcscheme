@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0800"
+   LastUpgradeVersion = "0820"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -9,15 +9,15 @@
          <BuildActionEntry
             buildForTesting = "YES"
             buildForRunning = "YES"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AB023E9F1A8C506600580A2A"
-               BuildableName = "XWebViewTests.xctest"
-               BlueprintName = "XWebViewTests"
-               ReferencedContainer = "container:XWebView.xcodeproj">
+               BlueprintIdentifier = "EE9BCB871E12EFE600206DC3"
+               BuildableName = "XWebView.framework"
+               BlueprintName = "XWebView"
+               ReferencedContainer = "container:XWebView.iOS.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,20 +32,20 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AB023E9F1A8C506600580A2A"
+               BlueprintIdentifier = "EE9BCB901E12EFE700206DC3"
                BuildableName = "XWebViewTests.xctest"
                BlueprintName = "XWebViewTests"
-               ReferencedContainer = "container:XWebView.xcodeproj">
+               ReferencedContainer = "container:XWebView.iOS.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AB023E9F1A8C506600580A2A"
-            BuildableName = "XWebViewTests.xctest"
-            BlueprintName = "XWebViewTests"
-            ReferencedContainer = "container:XWebView.xcodeproj">
+            BlueprintIdentifier = "EE9BCB871E12EFE600206DC3"
+            BuildableName = "XWebView.framework"
+            BlueprintName = "XWebView"
+            ReferencedContainer = "container:XWebView.iOS.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -64,10 +64,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AB023E9F1A8C506600580A2A"
-            BuildableName = "XWebViewTests.xctest"
-            BlueprintName = "XWebViewTests"
-            ReferencedContainer = "container:XWebView.xcodeproj">
+            BlueprintIdentifier = "EE9BCB871E12EFE600206DC3"
+            BuildableName = "XWebView.framework"
+            BlueprintName = "XWebView"
+            ReferencedContainer = "container:XWebView.iOS.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -82,10 +82,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AB023E9F1A8C506600580A2A"
-            BuildableName = "XWebViewTests.xctest"
-            BlueprintName = "XWebViewTests"
-            ReferencedContainer = "container:XWebView.xcodeproj">
+            BlueprintIdentifier = "EE9BCB871E12EFE600206DC3"
+            BuildableName = "XWebView.framework"
+            BlueprintName = "XWebView"
+            ReferencedContainer = "container:XWebView.iOS.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

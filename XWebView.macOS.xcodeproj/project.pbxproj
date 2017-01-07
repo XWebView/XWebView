@@ -1,0 +1,523 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		EE9BCB921E12EFE700206DC3 /* XWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE9BCB881E12EFE600206DC3 /* XWebView.framework */; };
+		EE9BCBB31E12F09D00206DC3 /* XWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = EE9BCBA31E12F09D00206DC3 /* XWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE9BCBB41E12F09D00206DC3 /* xwebview.js in Resources */ = {isa = PBXBuildFile; fileRef = EE9BCBA41E12F09D00206DC3 /* xwebview.js */; };
+		EE9BCBB51E12F09D00206DC3 /* XWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBA51E12F09D00206DC3 /* XWebView.swift */; };
+		EE9BCBB61E12F09D00206DC3 /* XWVBindingObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBA61E12F09D00206DC3 /* XWVBindingObject.swift */; };
+		EE9BCBB71E12F09D00206DC3 /* XWVChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBA71E12F09D00206DC3 /* XWVChannel.swift */; };
+		EE9BCBB81E12F09D00206DC3 /* XWVHttpConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBA81E12F09D00206DC3 /* XWVHttpConnection.swift */; };
+		EE9BCBB91E12F09D00206DC3 /* XWVHttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBA91E12F09D00206DC3 /* XWVHttpServer.swift */; };
+		EE9BCBBA1E12F09D00206DC3 /* XWVInvocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBAA1E12F09D00206DC3 /* XWVInvocation.swift */; };
+		EE9BCBBB1E12F09D00206DC3 /* XWVJson.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBAB1E12F09D00206DC3 /* XWVJson.swift */; };
+		EE9BCBBC1E12F09D00206DC3 /* XWVLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBAC1E12F09D00206DC3 /* XWVLogging.swift */; };
+		EE9BCBBD1E12F09D00206DC3 /* XWVMetaObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBAD1E12F09D00206DC3 /* XWVMetaObject.swift */; };
+		EE9BCBBE1E12F09D00206DC3 /* XWVObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBAE1E12F09D00206DC3 /* XWVObject.swift */; };
+		EE9BCBBF1E12F09D00206DC3 /* XWVScripting.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBAF1E12F09D00206DC3 /* XWVScripting.swift */; };
+		EE9BCBC01E12F09D00206DC3 /* XWVScriptObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBB01E12F09D00206DC3 /* XWVScriptObject.swift */; };
+		EE9BCBC11E12F09D00206DC3 /* XWVUserScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBB11E12F09D00206DC3 /* XWVUserScript.swift */; };
+		EE9BCBD81E12F36500206DC3 /* ConstructorPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBC21E12F20B00206DC3 /* ConstructorPlugin.swift */; };
+		EE9BCBD91E12F36900206DC3 /* FunctionPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBC31E12F20B00206DC3 /* FunctionPlugin.swift */; };
+		EE9BCBDA1E12F36D00206DC3 /* ObjectPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBC51E12F20B00206DC3 /* ObjectPlugin.swift */; };
+		EE9BCBDB1E12F37100206DC3 /* XWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBC71E12F20B00206DC3 /* XWebViewTests.swift */; };
+		EE9BCBDC1E12F37400206DC3 /* XWVInvocationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBC81E12F20B00206DC3 /* XWVInvocationTest.swift */; };
+		EE9BCBDD1E12F37900206DC3 /* XWVJsonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBC91E12F20B00206DC3 /* XWVJsonTests.swift */; };
+		EE9BCBDE1E12F37D00206DC3 /* XWVMetaObjectTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBCA1E12F20B00206DC3 /* XWVMetaObjectTest.swift */; };
+		EE9BCBDF1E12F38100206DC3 /* XWVScriptingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBCB1E12F20B00206DC3 /* XWVScriptingTest.swift */; };
+		EE9BCBE01E12F38500206DC3 /* XWVTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9BCBCC1E12F20B00206DC3 /* XWVTestCase.swift */; };
+		EE9BCBE41E12F4BE00206DC3 /* www in Resources */ = {isa = PBXBuildFile; fileRef = EE9BCBE21E12F4B700206DC3 /* www */; };
+		EE9BCBE71E12FB7600206DC3 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE9BCBE61E12FB7600206DC3 /* WebKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		EE9BCB931E12EFE700206DC3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE9BCB7F1E12EFE600206DC3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EE9BCB871E12EFE600206DC3;
+			remoteInfo = XWebView;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		EE9BCB881E12EFE600206DC3 /* XWebView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = XWebView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE9BCB911E12EFE700206DC3 /* XWebViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XWebViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE9BCBA21E12F09D00206DC3 /* Info.macOS.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.macOS.plist; sourceTree = "<group>"; };
+		EE9BCBA31E12F09D00206DC3 /* XWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XWebView.h; sourceTree = "<group>"; };
+		EE9BCBA41E12F09D00206DC3 /* xwebview.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = xwebview.js; sourceTree = "<group>"; };
+		EE9BCBA51E12F09D00206DC3 /* XWebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWebView.swift; sourceTree = "<group>"; };
+		EE9BCBA61E12F09D00206DC3 /* XWVBindingObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVBindingObject.swift; sourceTree = "<group>"; };
+		EE9BCBA71E12F09D00206DC3 /* XWVChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVChannel.swift; sourceTree = "<group>"; };
+		EE9BCBA81E12F09D00206DC3 /* XWVHttpConnection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVHttpConnection.swift; sourceTree = "<group>"; };
+		EE9BCBA91E12F09D00206DC3 /* XWVHttpServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVHttpServer.swift; sourceTree = "<group>"; };
+		EE9BCBAA1E12F09D00206DC3 /* XWVInvocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVInvocation.swift; sourceTree = "<group>"; };
+		EE9BCBAB1E12F09D00206DC3 /* XWVJson.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVJson.swift; sourceTree = "<group>"; };
+		EE9BCBAC1E12F09D00206DC3 /* XWVLogging.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVLogging.swift; sourceTree = "<group>"; };
+		EE9BCBAD1E12F09D00206DC3 /* XWVMetaObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVMetaObject.swift; sourceTree = "<group>"; };
+		EE9BCBAE1E12F09D00206DC3 /* XWVObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVObject.swift; sourceTree = "<group>"; };
+		EE9BCBAF1E12F09D00206DC3 /* XWVScripting.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVScripting.swift; sourceTree = "<group>"; };
+		EE9BCBB01E12F09D00206DC3 /* XWVScriptObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVScriptObject.swift; sourceTree = "<group>"; };
+		EE9BCBB11E12F09D00206DC3 /* XWVUserScript.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVUserScript.swift; sourceTree = "<group>"; };
+		EE9BCBC21E12F20B00206DC3 /* ConstructorPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstructorPlugin.swift; sourceTree = "<group>"; };
+		EE9BCBC31E12F20B00206DC3 /* FunctionPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FunctionPlugin.swift; sourceTree = "<group>"; };
+		EE9BCBC41E12F20B00206DC3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EE9BCBC51E12F20B00206DC3 /* ObjectPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjectPlugin.swift; sourceTree = "<group>"; };
+		EE9BCBC71E12F20B00206DC3 /* XWebViewTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWebViewTests.swift; sourceTree = "<group>"; };
+		EE9BCBC81E12F20B00206DC3 /* XWVInvocationTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVInvocationTest.swift; sourceTree = "<group>"; };
+		EE9BCBC91E12F20B00206DC3 /* XWVJsonTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVJsonTests.swift; sourceTree = "<group>"; };
+		EE9BCBCA1E12F20B00206DC3 /* XWVMetaObjectTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVMetaObjectTest.swift; sourceTree = "<group>"; };
+		EE9BCBCB1E12F20B00206DC3 /* XWVScriptingTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVScriptingTest.swift; sourceTree = "<group>"; };
+		EE9BCBCC1E12F20B00206DC3 /* XWVTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XWVTestCase.swift; sourceTree = "<group>"; };
+		EE9BCBE21E12F4B700206DC3 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		EE9BCBE61E12FB7600206DC3 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		EE9BCB841E12EFE600206DC3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE9BCBE71E12FB7600206DC3 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EE9BCB8E1E12EFE700206DC3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE9BCB921E12EFE700206DC3 /* XWebView.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		EE9BCB7E1E12EFE600206DC3 = {
+			isa = PBXGroup;
+			children = (
+				EE9BCB8A1E12EFE600206DC3 /* XWebView */,
+				EE9BCB951E12EFE700206DC3 /* XWebViewTests */,
+				EE9BCB891E12EFE600206DC3 /* Products */,
+				EE9BCBE51E12FB7600206DC3 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		EE9BCB891E12EFE600206DC3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EE9BCB881E12EFE600206DC3 /* XWebView.framework */,
+				EE9BCB911E12EFE700206DC3 /* XWebViewTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EE9BCB8A1E12EFE600206DC3 /* XWebView */ = {
+			isa = PBXGroup;
+			children = (
+				EE9BCBA21E12F09D00206DC3 /* Info.macOS.plist */,
+				EE9BCBA31E12F09D00206DC3 /* XWebView.h */,
+				EE9BCBA41E12F09D00206DC3 /* xwebview.js */,
+				EE9BCBA51E12F09D00206DC3 /* XWebView.swift */,
+				EE9BCBA61E12F09D00206DC3 /* XWVBindingObject.swift */,
+				EE9BCBA71E12F09D00206DC3 /* XWVChannel.swift */,
+				EE9BCBA81E12F09D00206DC3 /* XWVHttpConnection.swift */,
+				EE9BCBA91E12F09D00206DC3 /* XWVHttpServer.swift */,
+				EE9BCBAA1E12F09D00206DC3 /* XWVInvocation.swift */,
+				EE9BCBAB1E12F09D00206DC3 /* XWVJson.swift */,
+				EE9BCBAC1E12F09D00206DC3 /* XWVLogging.swift */,
+				EE9BCBAD1E12F09D00206DC3 /* XWVMetaObject.swift */,
+				EE9BCBAE1E12F09D00206DC3 /* XWVObject.swift */,
+				EE9BCBAF1E12F09D00206DC3 /* XWVScripting.swift */,
+				EE9BCBB01E12F09D00206DC3 /* XWVScriptObject.swift */,
+				EE9BCBB11E12F09D00206DC3 /* XWVUserScript.swift */,
+			);
+			path = XWebView;
+			sourceTree = "<group>";
+		};
+		EE9BCB951E12EFE700206DC3 /* XWebViewTests */ = {
+			isa = PBXGroup;
+			children = (
+				EE9BCBE21E12F4B700206DC3 /* www */,
+				EE9BCBC21E12F20B00206DC3 /* ConstructorPlugin.swift */,
+				EE9BCBC31E12F20B00206DC3 /* FunctionPlugin.swift */,
+				EE9BCBC41E12F20B00206DC3 /* Info.plist */,
+				EE9BCBC51E12F20B00206DC3 /* ObjectPlugin.swift */,
+				EE9BCBC71E12F20B00206DC3 /* XWebViewTests.swift */,
+				EE9BCBC81E12F20B00206DC3 /* XWVInvocationTest.swift */,
+				EE9BCBC91E12F20B00206DC3 /* XWVJsonTests.swift */,
+				EE9BCBCA1E12F20B00206DC3 /* XWVMetaObjectTest.swift */,
+				EE9BCBCB1E12F20B00206DC3 /* XWVScriptingTest.swift */,
+				EE9BCBCC1E12F20B00206DC3 /* XWVTestCase.swift */,
+			);
+			path = XWebViewTests;
+			sourceTree = "<group>";
+		};
+		EE9BCBE51E12FB7600206DC3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				EE9BCBE61E12FB7600206DC3 /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		EE9BCB851E12EFE600206DC3 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE9BCBB31E12F09D00206DC3 /* XWebView.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		EE9BCB871E12EFE600206DC3 /* XWebView */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EE9BCB9C1E12EFE700206DC3 /* Build configuration list for PBXNativeTarget "XWebView" */;
+			buildPhases = (
+				EE9BCB831E12EFE600206DC3 /* Sources */,
+				EE9BCB841E12EFE600206DC3 /* Frameworks */,
+				EE9BCB851E12EFE600206DC3 /* Headers */,
+				EE9BCB861E12EFE600206DC3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = XWebView;
+			productName = XWebView;
+			productReference = EE9BCB881E12EFE600206DC3 /* XWebView.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		EE9BCB901E12EFE700206DC3 /* XWebViewTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EE9BCB9F1E12EFE700206DC3 /* Build configuration list for PBXNativeTarget "XWebViewTests" */;
+			buildPhases = (
+				EE9BCB8D1E12EFE700206DC3 /* Sources */,
+				EE9BCB8E1E12EFE700206DC3 /* Frameworks */,
+				EE9BCB8F1E12EFE700206DC3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EE9BCB941E12EFE700206DC3 /* PBXTargetDependency */,
+			);
+			name = XWebViewTests;
+			productName = XWebViewTests;
+			productReference = EE9BCB911E12EFE700206DC3 /* XWebViewTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		EE9BCB7F1E12EFE600206DC3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0820;
+				LastUpgradeCheck = 0820;
+				ORGANIZATIONNAME = XWebView;
+				TargetAttributes = {
+					EE9BCB871E12EFE600206DC3 = {
+						CreatedOnToolsVersion = 8.2;
+						LastSwiftMigration = 0820;
+						ProvisioningStyle = Automatic;
+					};
+					EE9BCB901E12EFE700206DC3 = {
+						CreatedOnToolsVersion = 8.2;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = EE9BCB821E12EFE600206DC3 /* Build configuration list for PBXProject "XWebView.macOS" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = EE9BCB7E1E12EFE600206DC3;
+			productRefGroup = EE9BCB891E12EFE600206DC3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EE9BCB871E12EFE600206DC3 /* XWebView */,
+				EE9BCB901E12EFE700206DC3 /* XWebViewTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		EE9BCB861E12EFE600206DC3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE9BCBB41E12F09D00206DC3 /* xwebview.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EE9BCB8F1E12EFE700206DC3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE9BCBE41E12F4BE00206DC3 /* www in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		EE9BCB831E12EFE600206DC3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE9BCBBF1E12F09D00206DC3 /* XWVScripting.swift in Sources */,
+				EE9BCBC01E12F09D00206DC3 /* XWVScriptObject.swift in Sources */,
+				EE9BCBB71E12F09D00206DC3 /* XWVChannel.swift in Sources */,
+				EE9BCBBB1E12F09D00206DC3 /* XWVJson.swift in Sources */,
+				EE9BCBB61E12F09D00206DC3 /* XWVBindingObject.swift in Sources */,
+				EE9BCBC11E12F09D00206DC3 /* XWVUserScript.swift in Sources */,
+				EE9BCBBD1E12F09D00206DC3 /* XWVMetaObject.swift in Sources */,
+				EE9BCBB51E12F09D00206DC3 /* XWebView.swift in Sources */,
+				EE9BCBB81E12F09D00206DC3 /* XWVHttpConnection.swift in Sources */,
+				EE9BCBBE1E12F09D00206DC3 /* XWVObject.swift in Sources */,
+				EE9BCBB91E12F09D00206DC3 /* XWVHttpServer.swift in Sources */,
+				EE9BCBBA1E12F09D00206DC3 /* XWVInvocation.swift in Sources */,
+				EE9BCBBC1E12F09D00206DC3 /* XWVLogging.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EE9BCB8D1E12EFE700206DC3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE9BCBD91E12F36900206DC3 /* FunctionPlugin.swift in Sources */,
+				EE9BCBDF1E12F38100206DC3 /* XWVScriptingTest.swift in Sources */,
+				EE9BCBDE1E12F37D00206DC3 /* XWVMetaObjectTest.swift in Sources */,
+				EE9BCBDA1E12F36D00206DC3 /* ObjectPlugin.swift in Sources */,
+				EE9BCBDB1E12F37100206DC3 /* XWebViewTests.swift in Sources */,
+				EE9BCBD81E12F36500206DC3 /* ConstructorPlugin.swift in Sources */,
+				EE9BCBDC1E12F37400206DC3 /* XWVInvocationTest.swift in Sources */,
+				EE9BCBE01E12F38500206DC3 /* XWVTestCase.swift in Sources */,
+				EE9BCBDD1E12F37900206DC3 /* XWVJsonTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		EE9BCB941E12EFE700206DC3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EE9BCB871E12EFE600206DC3 /* XWebView */;
+			targetProxy = EE9BCB931E12EFE700206DC3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		EE9BCB9A1E12EFE700206DC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		EE9BCB9B1E12EFE700206DC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		EE9BCB9D1E12EFE700206DC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = XWebView/Info.macOS.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				OTHER_SWIFT_FLAGS = "-DDEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = org.xwebview.XWebView;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		EE9BCB9E1E12EFE700206DC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = XWebView/Info.macOS.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				OTHER_SWIFT_FLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = org.xwebview.XWebView;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
+		EE9BCBA01E12EFE700206DC3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = XWebViewTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = org.xwebview.XWebViewTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		EE9BCBA11E12EFE700206DC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = XWebViewTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = org.xwebview.XWebViewTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		EE9BCB821E12EFE600206DC3 /* Build configuration list for PBXProject "XWebView.macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EE9BCB9A1E12EFE700206DC3 /* Debug */,
+				EE9BCB9B1E12EFE700206DC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EE9BCB9C1E12EFE700206DC3 /* Build configuration list for PBXNativeTarget "XWebView" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EE9BCB9D1E12EFE700206DC3 /* Debug */,
+				EE9BCB9E1E12EFE700206DC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EE9BCB9F1E12EFE700206DC3 /* Build configuration list for PBXNativeTarget "XWebViewTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EE9BCBA01E12EFE700206DC3 /* Debug */,
+				EE9BCBA11E12EFE700206DC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = EE9BCB7F1E12EFE600206DC3 /* Project object */;
+}

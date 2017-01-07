@@ -81,11 +81,11 @@ class InvocationTests : XCTestCase {
 
     func testMethods() {
         XCTAssertTrue(inv[ #selector(InvocationTarget.dummy)]() is Void)
-        #if arch(x86_64) || arch(arm64)
+        #if arch(arm64) || (arch(x86_64) && os(iOS))
         XCTAssertEqual(inv[ #selector(InvocationTarget.echo(bool:))](Bool(true)) as? Bool, true)
         #else
         // http://stackoverflow.com/questions/26459754/bool-encoding-wrong-from-nsmethodsignature
-        XCTAssertEqual(inv[Selector("echoWithBool:")](Bool(true)) as? Int8, 1)
+        XCTAssertEqual(inv[ #selector(InvocationTarget.echo(bool:))](Bool(true)) as? Int8, 1)
         #endif
         XCTAssertEqual(inv[ #selector(InvocationTarget.echo(int:))](Int(-11)) as? XInt, -11)
         XCTAssertEqual(inv[ #selector(InvocationTarget.echo(int8:))](Int8(-22)) as? Int8, -22)

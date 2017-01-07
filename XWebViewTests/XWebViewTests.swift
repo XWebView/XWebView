@@ -64,20 +64,22 @@ class XWebViewTests: XWVTestCase {
         }
     }
 
-    @available(iOS 9.0, *)
+    #if !os(macOS)
+    @available(iOS 9.0, macOS 10.11, *)
     func testLoadFileURL() {
         _ = expectation(description: "loadFileURL")
         let bundle = Bundle(identifier:"org.xwebview.XWebViewTests")
-      
-        if let root = bundle?.bundleURL.appendingPathComponent("www") {
+
+        if let root = bundle?.resourceURL?.appendingPathComponent("www") {
             let url = root.appendingPathComponent("webviewTest.html")
             XCTAssert(try url.checkResourceIsReachable(), "HTML file not found")
             webview.loadFileURL(url, allowingReadAccessTo: root)
             waitForExpectations()
         }
     }
+    #endif
 
-    @available(iOS 9.0, *)
+    @available(iOS 9.0, macOS 10.11, *)
     func testLoadFileURLWithOverlay() {
         _ = expectation(description: "loadFileURLWithOverlay")
         let bundle = Bundle(identifier:"org.xwebview.XWebViewTests")
@@ -99,13 +101,15 @@ class XWebViewTests: XWVTestCase {
         }
     }
 
+    #if !os(macOS)
     func testLoadHTMLStringWithBaseURL() {
         _ = expectation(description: "loadHTMLStringWithBaseURL")
         let bundle = Bundle(identifier:"org.xwebview.XWebViewTests")
-        if let baseURL = bundle?.bundleURL.appendingPathComponent("www") {
+        if let baseURL = bundle?.resourceURL?.appendingPathComponent("www") {
             XCTAssert(try baseURL.checkResourceIsReachable(), "Directory not found")
             webview.loadHTMLString("<html><img id='image' onload='fulfill(\"loadHTMLStringWithBaseURL\")' src='image.png'></html>", baseURL: baseURL)
             waitForExpectations()
         }
     }
+    #endif
 }

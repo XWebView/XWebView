@@ -15,6 +15,7 @@
 */
 
 import Darwin
+import Foundation
 
 public typealias asl_object_t = OpaquePointer
 

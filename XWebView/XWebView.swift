@@ -104,7 +104,7 @@ extension WKWebView {
     }
 }
 
-@available(iOS 9.0, *)
+@available(iOS 9.0, macOS 10.11, *)
 extension WKWebView {
     // Overlay support for loading file URL
     public func loadFileURL(_ url: URL, overlayURLs: [URL]? = nil) -> WKNavigation? {
