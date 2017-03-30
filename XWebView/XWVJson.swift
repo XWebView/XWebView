@@ -91,7 +91,7 @@ func jsonify(_ value: NSObject) -> String {
     }
 }
 
-func jsonify(_ value: Any!) -> String {
+func jsonify(_ value: Any?) -> String {
     switch (value) {
     case nil:                    return "undefined"
     case let b as Bool:          return jsonify(b)
