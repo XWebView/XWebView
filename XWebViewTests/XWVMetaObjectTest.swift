@@ -105,6 +105,25 @@ class XWVMetaObjectTest: XCTestCase {
         XCTAssertTrue(meta["method"] == nil)
     }
 
+    func testForSpecialExclusion() {
+        class TestForExclusion: XWVScripting {
+            @objc deinit {
+                print("ensuring deinit is not optimized out")
+            }
+            @objc func copy() -> Any {
+                return TestForExclusion()
+            }
+            @objc func copy(with zone: NSZone? = nil) -> Any {
+                return TestForExclusion()
+            }
+            @objc func method() {}
+        }
+        let meta = XWVMetaObject(plugin: TestForExclusion.self)
+        XCTAssertTrue(meta["dealloc"] == nil)
+        XCTAssertTrue(meta["deinit"] == nil)
+        XCTAssertTrue(meta["copy"] == nil)
+    }
+
     func testForFunction() {
         class TestForFunction : XWVScripting {
             @objc func defaultMethod() {}
