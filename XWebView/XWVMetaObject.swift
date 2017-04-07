@@ -85,7 +85,6 @@ class XWVMetaObject {
         var methods = instanceMethods(forProtocol: XWVScripting.self)
         methods.remove(#selector(XWVScripting.invokeDefaultMethod(withArguments:)))
         return methods.union([
-            #selector(NSObject.deinit),
             #selector(NSObject.copy)
         ])
     }()
