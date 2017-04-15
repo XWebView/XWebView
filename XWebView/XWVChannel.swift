@@ -93,7 +93,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: id)
         userScript = nil
         identifier = nil
-        log("+Plugin object \(plugin) is unbound from \(namespace)")
+        log("+Plugin object \(plugin?.description ?? "unknown") is unbound from \(namespace)")
     }
 
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
