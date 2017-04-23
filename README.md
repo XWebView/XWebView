@@ -37,6 +37,7 @@ For more documents, please go to the project [Wiki](../../wiki).
 
 | Swift |  XWebView  |
 | ----- | ---------- |
+| 3.1   |   0.12.1   |
 | 3.0.2 |   0.12.0   |
 | 3     |   0.11.0   |
 | 2.3   |   0.10.0   |
