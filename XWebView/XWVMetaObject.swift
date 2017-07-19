@@ -190,7 +190,8 @@ class XWVMetaObject {
         if var method = methodList {
             defer { free(methodList) }
             while method.pointee != nil {
-                if let sel = method_getName(method.pointee), !known.contains(sel) && !sel.description.hasPrefix(".") {
+                let sel = method_getName(method.pointee)
+                if !known.contains(sel) && !sel.description.hasPrefix(".") {
                     let arity = Int32(method_getNumberOfArguments(method.pointee)) - 2
                     let member: Member
                     if sel.description.hasPrefix("init") {
@@ -200,7 +201,7 @@ class XWVMetaObject {
                     }
                     var name = sel.description
                     if let end = name.characters.index(of: ":") {
-                        name = name[name.startIndex ..< end]
+                        name = String(name[name.startIndex ..< end])
                     }
                     if !callback(name, member) {
                         return false
@@ -217,10 +218,17 @@ class XWVMetaObject {
     }
 }
 
-extension XWVMetaObject: Collection {
+extension XWVMetaObject: Collection{
+ 
     // IndexableBase
     typealias Index = DictionaryIndex<String, Member>
     typealias SubSequence = Slice<Dictionary<String, Member>>
+    typealias Element = (key: String, value: XWVMetaObject.Member)
+    
+    subscript(position: Dictionary<String, XWVMetaObject.Member>.Index) -> (key: String, value: XWVMetaObject.Member) {
+        return members[position]
+    }
+
     var startIndex: Index {
         return members.startIndex
     }

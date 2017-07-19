@@ -134,17 +134,17 @@ class XWVHttpServer : NSObject {
         close()
     }
 
-    func suspend(_: NSNotification!) {
+    @objc func suspend(_: NSNotification!) {
         close()
         log("+HTTP server is suspended")
     }
-    func resume(_: NSNotification!) {
+    @objc func resume(_: NSNotification!) {
         if listen(on: port) {
             log("+HTTP server is resumed")
         }
     }
 
-    func serverLoop(_: AnyObject) {
+    @objc func serverLoop(_: AnyObject) {
         let runLoop = CFRunLoopGetCurrent()
         let source = CFSocketCreateRunLoopSource(nil, socket, 0)
         CFRunLoopAddSource(runLoop, source, CFRunLoopMode.commonModes)
