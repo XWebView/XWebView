@@ -191,17 +191,17 @@ class XWVMetaObject {
             defer { free(methodList) }
             while method.pointee != nil {
                 let sel = method_getName(method.pointee)
-                if !known.contains(sel) && !sel.description.hasPrefix(".") {
+                if !known.contains(sel) && !(sel.description.hasPrefix(".")) {
                     let arity = Int32(method_getNumberOfArguments(method.pointee)) - 2
                     let member: Member
-                    if sel.description.hasPrefix("init") {
+                    if (sel.description.hasPrefix("init")) {
                         member = Member.Initializer(selector: sel, arity: arity)
                     } else {
                         member = Member.Method(selector: sel, arity: arity)
                     }
                     var name = sel.description
                     if let end = name.characters.index(of: ":") {
-                        name = String(name[name.startIndex ..< end])
+                        name = String(name[(name.startIndex) ..< end])
                     }
                     if !callback(name, member) {
                         return false
