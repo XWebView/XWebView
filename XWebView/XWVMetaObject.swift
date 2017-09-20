@@ -222,11 +222,15 @@ extension XWVMetaObject: Collection {
     // IndexableBase
     typealias Index = DictionaryIndex<String, Member>
     typealias SubSequence = Slice<Dictionary<String, Member>>
+    typealias Element = (key: String, value: XWVMetaObject.Member)
     var startIndex: Index {
         return members.startIndex
     }
     var endIndex: Index {
         return members.endIndex
+    }
+    subscript(position: Dictionary<String, XWVMetaObject.Member>.Index) -> (key: String, value: XWVMetaObject.Member) {
+        return members[position]
     }
     subscript (_ i: Index) -> (String, Member) {
         return members[i]
@@ -245,7 +249,7 @@ private func instanceMethods(forProtocol aProtocol: Protocol) -> Set<Selector> {
         let methodList = protocol_copyMethodDescriptionList(aProtocol.self, req, inst, nil)
         if var desc = methodList {
             while desc.pointee.name != nil {
-                selectors.insert(desc.pointee.name)
+				selectors.insert(desc.pointee.name!)
                 desc = desc.successor()
             }
             free(methodList)
