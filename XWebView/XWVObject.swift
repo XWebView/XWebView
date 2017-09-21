@@ -63,36 +63,72 @@ public class XWVObject : NSObject {
         } else {
             return
         }
-        webView.evaluateJavaScript(script, completionHandler: nil)
+		
+		DispatchQueue.main.sync {
+			webView.evaluateJavaScript(script, completionHandler: nil)
+		}
     }
+
+	private func dispatchMain(_ f: () throws -> (Any?)) throws -> Any? {
+		var result: Any?
+		var theError: Error?
+		DispatchQueue.main.sync {
+			do {
+				result = try f()
+				theError = nil
+			}
+			catch let error {
+				result = nil
+				theError = error
+			}
+		}
+		
+		if let error = theError {
+			throw error
+		}
+		else {
+        	return result
+		}
+	}
 
     // Evaluate JavaScript expression
     public func evaluateExpression(_ expression: String) throws -> Any? {
         guard let webView = webView else {
             throw webViewInvalidated
         }
-        return wrapScriptObject(try webView.evaluateJavaScript(scriptForRetaining(expression)))
+		
+		return wrapScriptObject(try dispatchMain {
+			try webView.evaluateJavaScript(scriptForRetaining(expression))
+		})
     }
     public func evaluateExpression(_ expression: String, error: ErrorPointer) -> Any? {
         guard let webView = webView else {
             error?.pointee = webViewInvalidated
             return nil
         }
-        return wrapScriptObject(webView.evaluateJavaScript(scriptForRetaining(expression), error: error))
+
+		var result: Any?
+		DispatchQueue.main.sync {
+			result = webView.evaluateJavaScript(scriptForRetaining(expression), error: error)
+		}
+		
+        return wrapScriptObject(result)
     }
     public func evaluateExpression(_ expression: String, completionHandler: ((Any?, Error?) -> Void)?) {
-        guard let webView = webView else {
-            completionHandler?(nil, webViewInvalidated)
-            return
-        }
-        guard let completionHandler = completionHandler else {
-            webView.evaluateJavaScript(expression, completionHandler: nil)
-            return
-        }
-        webView.evaluateJavaScript(scriptForRetaining(expression)) {
-            [weak self](result: Any?, error: Error?)->Void in
-            completionHandler(self?.wrapScriptObject(result) ?? result, error)
-        }
+		DispatchQueue.main.async {
+			guard let webView = self.webView else {
+				completionHandler?(nil, webViewInvalidated)
+				return
+			}
+			guard let completionHandler = completionHandler else {
+				webView.evaluateJavaScript(expression, completionHandler: nil)
+				return
+			}
+			webView.evaluateJavaScript(self.scriptForRetaining(expression)) {
+				[weak self](result: Any?, error: Error?)->Void in
+				completionHandler(self?.wrapScriptObject(result) ?? result, error)
+			}
+		}
     }
     private func scriptForRetaining(_ script: String) -> String {
         guard let origin = origin else { return script }
