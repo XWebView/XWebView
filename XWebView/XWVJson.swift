@@ -18,7 +18,7 @@ import Foundation
 
 // JSON Array
 public func jsonify<T: Collection>(_ array: T) -> String?
-        where T.Index: Integer {
+        where T.Index: BinaryInteger {
     // TODO: filter out values with negative index
     return "[" + array.map{jsonify($0) ?? ""}.joined(separator: ",") + "]"
 }
@@ -34,7 +34,7 @@ private func jsonify<T>(_ pair: (key: String, value: T)) -> String? {
 }
 
 // JSON Number
-public func jsonify<T: Integer>(_ integer: T) -> String? {
+public func jsonify<T: BinaryInteger>(_ integer: T) -> String? {
     return String(describing: integer)
 }
 public func jsonify<T: FloatingPoint>(_ float: T) -> String? {

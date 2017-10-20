@@ -51,18 +51,18 @@ var NSInvocation: NSInvocationProtocol.Type = {
 }()
 
 @discardableResult public func invoke(_ selector: Selector, of target: AnyObject, with arguments: [Any?] = [], on thread: Thread? = nil, waitUntilDone wait: Bool = true) -> Any! {
-    let method = class_getInstanceMethod(type(of: target), selector)
+    let method = class_getInstanceMethod(Swift.type(of: target), selector)
     guard method != nil else {
         target.doesNotRecognizeSelector?(selector)
         fatalError("Unrecognized selector -[\(target) \(selector)]")
     }
 
-    let sig = NSMethodSignature.signature(objCTypes: method_getTypeEncoding(method))
+    let sig = NSMethodSignature.signature(objCTypes: method_getTypeEncoding(method!)!)
     let inv = NSInvocation.invocation(methodSignature: sig)
 
     // Setup arguments
-    precondition(arguments.count + 2 <= Int(method_getNumberOfArguments(method)),
-                 "Too many arguments for calling -[\(type(of: target)) \(selector)]")
+    precondition(arguments.count + 2 <= Int(method_getNumberOfArguments(method!)),
+                 "Too many arguments for calling -[\(Swift.type(of: target)) \(selector)]")
     var args = [[Int]](repeating: [], count: arguments.count)
     for i in 0 ..< arguments.count {
         if let arg: Any = arguments[i] {
@@ -78,7 +78,7 @@ var NSInvocation: NSInvocationProtocol.Type = {
                 // prevent to promot float type to double
                 args[i] = _encodeBitsAsWords(float)
             } else if var val = arg as? CVarArg {
-                if (type(of: arg) as? AnyClass)?.isSubclass(of: NSNumber.self) == true {
+                if (Swift.type(of: arg) as? AnyClass)?.isSubclass(of: NSNumber.self) == true {
                     // argument is an NSNumber object
                     if let v = (arg as! NSNumber).value(as: type) {
                         val = v
@@ -87,7 +87,7 @@ var NSInvocation: NSInvocationProtocol.Type = {
                 args[i] = val._cVarArgEncoding
             } else {
                 let type = String(cString: code)
-                fatalError("Unable to convert argument \(i) from Swift type \(type(of: arg)) to ObjC type '\(type)'")
+                fatalError("Unable to convert argument \(i) from Swift type \(Swift.type(of: arg)) to ObjC type '\(type)'")
             }
         } else {
             // nil

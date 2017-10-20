@@ -144,11 +144,13 @@ class XWVMetaObject {
         var known = selectors
 
         // enumerate properties
-        let propertyList = class_copyPropertyList(plugin, nil)
+        var prop_count : UInt32 = 0
+        let propertyList = class_copyPropertyList(plugin, &prop_count)
         if var prop = propertyList {
             defer { free(propertyList) }
-            while prop.pointee != nil {
-                let name = String(cString: property_getName(prop.pointee))
+            for _ in 0...prop_count-1 {
+                var str = property_getName(prop.pointee)
+                let name = String(cString: str)
                 // get getter
                 var attr = property_copyAttributeValue(prop.pointee, "G")
                 let getter = Selector(attr == nil ? name : String(cString: attr!))
@@ -158,7 +160,7 @@ class XWVMetaObject {
                     continue
                 }
                 known.insert(getter)
-
+                
                 // get setter if readwrite
                 var setter: Selector? = nil
                 attr = property_copyAttributeValue(prop.pointee, "R")
@@ -176,7 +178,7 @@ class XWVMetaObject {
                     }
                 }
                 free(attr)
-
+                
                 let info = Member.Property(getter: getter, setter: setter)
                 if !callback(name, info) {
                     return false
@@ -184,23 +186,25 @@ class XWVMetaObject {
                 prop = prop.successor()
             }
         }
-
+        
         // enumerate methods
-        let methodList = class_copyMethodList(plugin, nil)
+        prop_count = 0;
+        let methodList = class_copyMethodList(plugin, &prop_count)
         if var method = methodList {
             defer { free(methodList) }
-            while method.pointee != nil {
-                if let sel = method_getName(method.pointee), !known.contains(sel) && !sel.description.hasPrefix(".") {
+            for _ in 0...prop_count-1 {
+                let sel = method_getName(method.pointee)
+                if !known.contains(sel) && !(sel.description.hasPrefix(".")) {
                     let arity = Int32(method_getNumberOfArguments(method.pointee)) - 2
                     let member: Member
-                    if sel.description.hasPrefix("init") {
+                    if (sel.description.hasPrefix("init")) {
                         member = Member.Initializer(selector: sel, arity: arity)
                     } else {
                         member = Member.Method(selector: sel, arity: arity)
                     }
                     var name = sel.description
                     if let end = name.characters.index(of: ":") {
-                        name = name[name.startIndex ..< end]
+                        name = String(name[(name.startIndex) ..< end])
                     }
                     if !callback(name, member) {
                         return false
@@ -211,16 +215,23 @@ class XWVMetaObject {
         }
         return true
     }
-
+    
     subscript (name: String) -> Member? {
         return members[name]
     }
 }
 
-extension XWVMetaObject: Collection {
+extension XWVMetaObject: Collection{
+ 
     // IndexableBase
     typealias Index = DictionaryIndex<String, Member>
     typealias SubSequence = Slice<Dictionary<String, Member>>
+    typealias Element = (key: String, value: XWVMetaObject.Member)
+    
+    subscript(position: Dictionary<String, XWVMetaObject.Member>.Index) -> (key: String, value: XWVMetaObject.Member) {
+        return members[position]
+    }
+
     var startIndex: Index {
         return members.startIndex
     }
@@ -244,7 +255,7 @@ private func instanceMethods(forProtocol aProtocol: Protocol) -> Set<Selector> {
         let methodList = protocol_copyMethodDescriptionList(aProtocol.self, req, inst, nil)
         if var desc = methodList {
             while desc.pointee.name != nil {
-                selectors.insert(desc.pointee.name)
+                selectors.insert(desc.pointee.name!)
                 desc = desc.successor()
             }
             free(methodList)

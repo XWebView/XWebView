@@ -194,7 +194,7 @@ private extension String {
                 repeat {
                     end = index(before: end)
                 } while predicate(self[end])
-                self = self[start ... end]
+                self = String(self[start ... end])
             } else {
                 self = ""
             }
@@ -251,12 +251,12 @@ private extension URLRequest {
             // parse header field
             guard let colon = line.characters.index(of: ":") else { return nil }
             let name = line[line.startIndex ..< colon]
-            var value = line[line.index(after: colon) ..< line.endIndex]
+            var value = String(line[line.index(after: colon) ..< line.endIndex])
             value.trim { $0 == " " || $0 == "\t" }
-            if self.value(forHTTPHeaderField: name) != nil {
-                addValue(value, forHTTPHeaderField:name)
+            if self.value(forHTTPHeaderField: String(name)) != nil {
+                addValue(value, forHTTPHeaderField:String(name))
             } else {
-                setValue(value, forHTTPHeaderField:name)
+                setValue(value, forHTTPHeaderField:String(name))
             }
             cursor = end + 2
         }
