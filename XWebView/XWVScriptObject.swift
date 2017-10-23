@@ -71,7 +71,7 @@ public class XWVScriptObject : XWVObject {
     public func setValue(_ value: Any?, for name:String) {
         guard let json = jsonify(value) else { return }
         let script = expression(forProperty: name) + " = " + json
-        webView?.evaluateJavaScript(script, completionHandler: nil)
+        webView?.asyncEvaluateJavaScript(script, completionHandler: nil)
     }
     public func value(at index: UInt) throws -> Any {
         return try evaluateExpression("\(namespace)[\(index)]")
@@ -79,7 +79,7 @@ public class XWVScriptObject : XWVObject {
     public func setValue(_ value: Any?, at index: UInt) {
         guard let json = jsonify(value) else { return }
         let script = "\(namespace)[\(index)] = \(json)"
-        webView?.evaluateJavaScript(script, completionHandler: nil)
+        webView?.asyncEvaluateJavaScript(script, completionHandler: nil)
     }
 
     // expression generation

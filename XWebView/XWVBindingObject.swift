@@ -152,7 +152,7 @@ final class XWVBindingObject : XWVScriptObject {
             assert(channel.typeInfo[prop] != nil)
         }
         let script = "\(namespace).$properties['\(prop)'] = \(json)"
-        webView.evaluateJavaScript(script, completionHandler: nil)
+        webView.asyncEvaluateJavaScript(script, completionHandler: nil)
     }
 }
 
