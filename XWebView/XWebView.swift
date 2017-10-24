@@ -55,6 +55,17 @@ extension WKWebView {
         return XWebView.undefined
     }
 
+    open func asyncEvaluateJavaScript(_ script: String, completionHandler handler: ((Any?, Error?) -> Swift.Void)? = nil) {
+        if Thread.isMainThread {
+            evaluateJavaScript(script, completionHandler: handler)
+        } else {
+            DispatchQueue.main.async() {
+                [weak self] in
+                self?.evaluateJavaScript(script, completionHandler: handler)
+            }
+        }
+    }
+
     // Synchronized evaluateJavaScript
     open func syncEvaluateJavaScript(_ script: String) throws -> Any {
         var result: Any?

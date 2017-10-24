@@ -218,20 +218,21 @@ class XWVMetaObject {
 }
 
 extension XWVMetaObject: Collection {
-    // IndexableBase
+    typealias Element = (key: String, value: Member)
     typealias Index = DictionaryIndex<String, Member>
     typealias SubSequence = Slice<Dictionary<String, Member>>
+
     var startIndex: Index {
         return members.startIndex
     }
     var endIndex: Index {
         return members.endIndex
     }
-    subscript (_ i: Index) -> (String, Member) {
-        return members[i]
+    subscript (position: Index) -> Element {
+        return members[position]
     }
-    subscript (_ range: Range<Index>) -> SubSequence {
-        return members[range]
+    subscript (bounds: Range<Index>) -> SubSequence {
+        return members[bounds]
     }
     func index(after i: Index) -> Index {
         return members.index(after: i)
@@ -243,8 +244,8 @@ private func instanceMethods(forProtocol aProtocol: Protocol) -> Set<Selector> {
     for (req, inst) in [(true, true), (false, true)] {
         let methodList = protocol_copyMethodDescriptionList(aProtocol.self, req, inst, nil)
         if var desc = methodList {
-            while desc.pointee.name != nil {
-                selectors.insert(desc.pointee.name)
+            while let sel = desc.pointee.name {
+                selectors.insert(sel)
                 desc = desc.successor()
             }
             free(methodList)

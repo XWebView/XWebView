@@ -63,7 +63,7 @@ public class XWVObject : NSObject {
         } else {
             return
         }
-        webView.evaluateJavaScript(script, completionHandler: nil)
+        webView.asyncEvaluateJavaScript(script, completionHandler: nil)
     }
 
     // Evaluate JavaScript expression
@@ -81,10 +81,10 @@ public class XWVObject : NSObject {
             return
         }
         guard let completionHandler = completionHandler else {
-            webView.evaluateJavaScript(expression, completionHandler: nil)
+            webView.asyncEvaluateJavaScript(expression, completionHandler: nil)
             return
         }
-        webView.evaluateJavaScript(scriptForRetaining(expression)) {
+        webView.asyncEvaluateJavaScript(scriptForRetaining(expression)) {
             [weak self](result: Any?, error: Error?)->Void in
             if let error = error {
                 completionHandler(nil, error)

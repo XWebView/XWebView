@@ -69,8 +69,7 @@ class ObjectPlugin : XWVTestCase {
         loadPlugin(object, namespace: namespace, script: "\(namespace).property = 321") {
             $0.evaluateJavaScript("\(self.namespace).property") {
                 (obj: Any?, err: Error?)->Void in
-                //if (obj as? NSNumber)?.intValue == 321 && object.property == 321 {
-                if obj as? Bool == true && object.property == 321 {
+                if (obj as? NSNumber)?.intValue == 321 && object.property == 321 {
                     exp.fulfill()
                 }
             }
@@ -84,8 +83,7 @@ class ObjectPlugin : XWVTestCase {
             object.property = 321
             $0.evaluateJavaScript("\(self.namespace).property") {
                 (obj: Any?, err: Error?)->Void in
-                //if (obj as? NSNumber)?.intValue == 321 {
-                if obj as? Bool == true {
+                if (obj as? NSNumber)?.intValue == 321 {
                     exp.fulfill()
                 }
             }

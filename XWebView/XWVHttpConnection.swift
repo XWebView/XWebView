@@ -97,9 +97,10 @@ extension XWVHttpConnection : StreamDelegate {
             }
 
         case Stream.Event.hasBytesAvailable:
+            let count = inputBuffer.count
             let bytesReaded = inputBuffer.withUnsafeMutableBytes {
                 (base: UnsafeMutablePointer<UInt8>) -> Int in
-                input.read(base.advanced(by: cursor), maxLength: inputBuffer.count - cursor)
+                input.read(base.advanced(by: cursor), maxLength: count - cursor)
             }
             guard bytesReaded > 0 else { break }
             cursor += bytesReaded
