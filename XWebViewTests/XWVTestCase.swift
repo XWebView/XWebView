@@ -56,7 +56,7 @@ class XWVTestCase : XCTestCase, WKNavigationDelegate {
         webview.loadPlugin(e, namespace: "\(namespaceForExpectation).\(description)")
         return e
     }
-    override func waitForExpectations(timeout: TimeInterval = 9, handler: XCWaitCompletionHandler? = nil) {
+    override func waitForExpectations(timeout: TimeInterval = 15, handler: XCWaitCompletionHandler? = nil) {
         super.waitForExpectations(timeout: timeout, handler: handler)
     }
 

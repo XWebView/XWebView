@@ -20,28 +20,28 @@ import XWebView
 
 class ObjectPlugin : XWVTestCase {
     class Plugin : NSObject {
-        dynamic var property = 123
+        @objc dynamic var property = 123
         private var expectation: XCTestExpectation?;
-        func method() {
+        @objc func method() {
             expectation?.fulfill()
         }
-        func method(argument: Any?) {
+        @objc func method(argument: Any?) {
             if argument as? String == "Yes" {
                 expectation?.fulfill()
             }
         }
-        func method(Integer: Int) {
+        @objc func method(Integer: Int) {
             if Integer == 789 {
                 expectation?.fulfill()
             }
         }
-        func method(callback: XWVScriptObject) {
+        @objc func method(callback: XWVScriptObject) {
             callback.call(arguments: nil, completionHandler: nil)
         }
-        func method(promiseObject: XWVScriptObject) {
+        @objc func method(promiseObject: XWVScriptObject) {
             promiseObject.callMethod("resolve", with: nil, completionHandler: nil)
         }
-        func method1() {
+        @objc func method1() {
             guard let bindingObject = XWVScriptObject.bindingObject else { return }
             property = 456
             //if (bindingObject["property"] as? NSNumber)?.intValue == 456 {

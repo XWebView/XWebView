@@ -20,7 +20,7 @@ import XWebView
 class InvocationTarget: NSObject {
     class LeakTest: NSObject {
         let expectation: XCTestExpectation
-        init(expectation: XCTestExpectation) {
+        @objc init(expectation: XCTestExpectation) {
             self.expectation = expectation
         }
         deinit {
@@ -28,33 +28,33 @@ class InvocationTarget: NSObject {
         }
     }
 
-    var integer: Int = 123
+    @objc dynamic var integer: Int = 123
 
-    func dummy() {}
-    func nullable(_ v: Any?) -> Any? { return v }
-    func echo(bool b: Bool) -> Bool { return b }
-    func echo(int i: Int) -> Int { return i }
-    func echo(int8 i8: Int8) -> Int8 { return i8 }
-    func echo(int16 i16: Int16) -> Int16 { return i16 }
-    func echo(int32 i32: Int32) -> Int32 { return i32 }
-    func echo(int64 i64: Int64) -> Int64 { return i64 }
-    func echo(uint u: UInt) -> UInt { return u }
-    func echo(uint8 u8: UInt8) -> UInt8 { return u8 }
-    func echo(uint16 u16: UInt16) -> UInt16 { return u16 }
-    func echo(uint32 u32: UInt32) -> UInt32 { return u32 }
-    func echo(uint64 u64: UInt64) -> UInt64 { return u64 }
-    func echo(float f: Float) -> Float { return f }
-    func echo(double d: Double) -> Double { return d }
-    func echo(unicode u: UnicodeScalar) -> UnicodeScalar { return u }
-    func echo(string s: String) -> String { return s }
-    func echo(selector s: Selector) -> Selector { return s }
-    func echo(`class` c: AnyClass) -> AnyClass { return c }
+    @objc func dummy() {}
+    @objc func nullable(_ v: Any?) -> Any? { return v }
+    @objc func echo(bool b: Bool) -> Bool { return b }
+    @objc func echo(int i: Int) -> Int { return i }
+    @objc func echo(int8 i8: Int8) -> Int8 { return i8 }
+    @objc func echo(int16 i16: Int16) -> Int16 { return i16 }
+    @objc func echo(int32 i32: Int32) -> Int32 { return i32 }
+    @objc func echo(int64 i64: Int64) -> Int64 { return i64 }
+    @objc func echo(uint u: UInt) -> UInt { return u }
+    @objc func echo(uint8 u8: UInt8) -> UInt8 { return u8 }
+    @objc func echo(uint16 u16: UInt16) -> UInt16 { return u16 }
+    @objc func echo(uint32 u32: UInt32) -> UInt32 { return u32 }
+    @objc func echo(uint64 u64: UInt64) -> UInt64 { return u64 }
+    @objc func echo(float f: Float) -> Float { return f }
+    @objc func echo(double d: Double) -> Double { return d }
+    @objc func echo(unicode u: UnicodeScalar) -> UnicodeScalar { return u }
+    @objc func echo(string s: String) -> String { return s }
+    @objc func echo(selector s: Selector) -> Selector { return s }
+    @objc func echo(`class` c: AnyClass) -> AnyClass { return c }
 
-    func add(_ a: Int, _ b: Int) -> Int { return a + b }
-    func concat(_ a: String, _ b: String) -> String { return a + b }
-    func convert(_ num: NSNumber) -> Int { return num.intValue }
+    @objc func add(_ a: Int, _ b: Int) -> Int { return a + b }
+    @objc func concat(_ a: String, _ b: String) -> String { return a + b }
+    @objc func convert(_ num: NSNumber) -> Int { return num.intValue }
 
-    func _new(_ expectation: XCTestExpectation) -> LeakTest {
+    @objc func _new(_ expectation: XCTestExpectation) -> LeakTest {
         return LeakTest(expectation: expectation)
     }
 }

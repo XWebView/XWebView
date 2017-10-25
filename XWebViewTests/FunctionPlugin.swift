@@ -20,12 +20,12 @@ import XWebView
 
 class FunctionPlugin : XWVTestCase {
     class Plugin : NSObject, XWVScripting {
-        dynamic var property = 123
+        @objc dynamic var property = 123
         private var expectation: XCTestExpectation?
         init(expectation: XCTestExpectation?) {
             self.expectation = expectation
         }
-        func defaultMethod() {
+        @objc func defaultMethod() {
             expectation?.fulfill()
         }
         class func scriptName(for selector: Selector) -> String? {

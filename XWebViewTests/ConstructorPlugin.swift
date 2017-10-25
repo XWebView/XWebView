@@ -20,7 +20,7 @@ import XWebView
 
 class ConstructorPlugin : XWVTestCase {
     class Plugin0 : NSObject, XWVScripting {
-        init(expectation: Any?) {
+        @objc init(expectation: Any?) {
             if let e = expectation as? XWVScriptObject {
                 e.callMethod("fulfill", with: nil, completionHandler: nil)
             }
@@ -30,8 +30,8 @@ class ConstructorPlugin : XWVTestCase {
         }
     }
     class Plugin1 : NSObject, XWVScripting {
-        dynamic var property: Int
-        init(value: Int) {
+        @objc dynamic var property: Int
+        @objc init(value: Int) {
             property = value
         }
         class func scriptName(for selector: Selector) -> String? {
@@ -40,7 +40,7 @@ class ConstructorPlugin : XWVTestCase {
     }
     class Plugin2 : NSObject, XWVScripting {
         private let expectation: XWVScriptObject?
-        init(expectation: Any?) {
+        @objc init(expectation: Any?) {
             self.expectation = expectation as? XWVScriptObject
         }
         func finalizeForScript() {

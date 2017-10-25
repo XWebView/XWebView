@@ -102,8 +102,8 @@ public class XWVLogging : XWVScripting {
     public func log(_ message: String, level: Level? = nil) {
         var msg = message
         var lvl = level ?? .Debug
-        if level == nil, let ch = msg.characters.first, let l = Level(symbol: ch) {
-            msg = String(msg.characters.dropFirst())
+        if level == nil, let ch = msg.first, let l = Level(symbol: ch) {
+            msg = String(msg.dropFirst())
             lvl = l
         }
         log(msg, level: lvl)
