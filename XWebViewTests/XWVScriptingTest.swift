@@ -21,7 +21,7 @@ import XWebView
 class XWVScriptingTest : XWVTestCase {
     class Plugin : NSObject, XWVScripting {
         let expectation: XCTestExpectation?
-        init(expectation: XCTestExpectation?) {
+        @objc init(expectation: XCTestExpectation?) {
             self.expectation = expectation
         }
         func rewriteStub(_ stub: String, forKey key: String) -> String {

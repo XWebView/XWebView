@@ -24,8 +24,8 @@ import CoreServices
 
 class XWVHttpServer : NSObject {
     fileprivate var socket: CFSocket!
-    fileprivate var connections = Set<XWVHttpConnection>()
-    fileprivate let overlays: [URL]
+    private var connections = Set<XWVHttpConnection>()
+    private let overlays: [URL]
     private(set) var port: in_port_t = 0
 
     var rootURL: URL {
@@ -134,17 +134,17 @@ class XWVHttpServer : NSObject {
         close()
     }
 
-    func suspend(_: NSNotification!) {
+    @objc func suspend(_: NSNotification!) {
         close()
         log("+HTTP server is suspended")
     }
-    func resume(_: NSNotification!) {
+    @objc func resume(_: NSNotification!) {
         if listen(on: port) {
             log("+HTTP server is resumed")
         }
     }
 
-    func serverLoop(_: AnyObject) {
+    @objc func serverLoop(_: AnyObject) {
         let runLoop = CFRunLoopGetCurrent()
         let source = CFSocketCreateRunLoopSource(nil, socket, 0)
         CFRunLoopAddSource(runLoop, source, CFRunLoopMode.commonModes)
@@ -176,7 +176,7 @@ extension XWVHttpServer : XWVHttpConnectionDelegate {
             log("?Bad request")
         } else if let request = request, request.httpMethod == "GET" || request.httpMethod == "HEAD" {
             let fileManager = FileManager.default
-            let relativePath = String(request.url!.path.characters.dropFirst())
+            let relativePath = String(request.url!.path.dropFirst())
             for baseURL in overlays {
                 var isDirectory: ObjCBool = false
                 var url = URL(string: relativePath, relativeTo: baseURL)!

@@ -80,7 +80,7 @@ class XWVMetaObject {
     }
 
     let plugin: AnyClass
-    fileprivate var members = [String: Member]()
+    private var members = [String: Member]()
     private static let exclusion: Set<Selector> = {
         var methods = instanceMethods(forProtocol: XWVScripting.self)
         methods.remove(#selector(XWVScripting.invokeDefaultMethod(withArguments:)))
@@ -107,7 +107,7 @@ class XWVMetaObject {
                     } else {
                         name = cls.scriptName?(for: selector) ?? name
                     }
-                } else if name.characters.first == "_" {
+                } else if name.first == "_" {
                     return true
                 }
 
@@ -119,7 +119,7 @@ class XWVMetaObject {
                     if let scriptNameForKey = cls.scriptName(forKey:) {
                         name = name.withCString(scriptNameForKey) ?? name
                     }
-                } else if name.characters.first == "_" {
+                } else if name.first == "_" {
                     return true
                 }
 
@@ -142,30 +142,34 @@ class XWVMetaObject {
 
     private func enumerate(excluding selectors: Set<Selector>, callback: (String, Member)->Bool) -> Bool {
         var known = selectors
+        var count: UInt32 = 0
 
         // enumerate properties
-        let propertyList = class_copyPropertyList(plugin, nil)
-        if var prop = propertyList {
+        if let propertyList = class_copyPropertyList(plugin, &count) {
             defer { free(propertyList) }
-            while prop.pointee != nil {
-                let name = String(cString: property_getName(prop.pointee))
+            for i in 0 ..< Int(count) {
+                let name = String(cString: property_getName(propertyList[i]))
                 // get getter
-                var attr = property_copyAttributeValue(prop.pointee, "G")
-                let getter = Selector(attr == nil ? name : String(cString: attr!))
-                free(attr)
+                let getter: Selector
+                if let attr = property_copyAttributeValue(propertyList[i], "G") {
+                    getter = Selector(String(cString: attr))
+                    free(attr)
+                } else {
+                    getter = Selector(name)
+                }
                 if known.contains(getter) {
-                    prop = prop.successor()
                     continue
                 }
                 known.insert(getter)
 
                 // get setter if readwrite
                 var setter: Selector? = nil
-                attr = property_copyAttributeValue(prop.pointee, "R")
+                var attr = property_copyAttributeValue(propertyList[i], "R")
                 if attr == nil {
-                    attr = property_copyAttributeValue(prop.pointee, "S")
+                    attr = property_copyAttributeValue(propertyList[i], "S")
                     if attr == nil {
-                        setter = Selector("set\(String(name[name.startIndex]).uppercased())\(String(name.characters.dropFirst())):")
+                        setter = Selector("set\(name.prefix(1).uppercased())\(name.dropFirst()):")
+                        print(setter!.description)
                     } else {
                         setter = Selector(String(cString: attr!))
                     }
@@ -181,32 +185,27 @@ class XWVMetaObject {
                 if !callback(name, info) {
                     return false
                 }
-                prop = prop.successor()
             }
         }
 
         // enumerate methods
-        let methodList = class_copyMethodList(plugin, nil)
-        if var method = methodList {
+        if let methodList = class_copyMethodList(plugin, &count) {
             defer { free(methodList) }
-            while method.pointee != nil {
-                if let sel = method_getName(method.pointee), !known.contains(sel) && !sel.description.hasPrefix(".") {
-                    let arity = Int32(method_getNumberOfArguments(method.pointee)) - 2
+            for i in 0 ..< Int(count) {
+                let sel = method_getName(methodList[i])
+                if !known.contains(sel) && !sel.description.hasPrefix(".") {
+                    let arity = Int32(method_getNumberOfArguments(methodList[i])) - 2
                     let member: Member
                     if sel.description.hasPrefix("init") {
                         member = Member.Initializer(selector: sel, arity: arity)
                     } else {
                         member = Member.Method(selector: sel, arity: arity)
                     }
-                    var name = sel.description
-                    if let end = name.characters.index(of: ":") {
-                        name = name[name.startIndex ..< end]
-                    }
-                    if !callback(name, member) {
+                    let name = sel.description.prefix(while: {$0 != ":"})
+                    if !callback(String(name), member) {
                         return false
                     }
                 }
-                method = method.successor()
             }
         }
         return true

@@ -24,21 +24,21 @@ protocol XWVHttpConnectionDelegate {
 
 final class XWVHttpConnection : NSObject {
     private let handle: CFSocketNativeHandle
-    fileprivate let delegate: XWVHttpConnectionDelegate
-    fileprivate var input: InputStream!
-    fileprivate var output: OutputStream!
-    fileprivate let bufferMaxSize = 64 * 1024
+    private let delegate: XWVHttpConnectionDelegate
+    private var input: InputStream!
+    private var output: OutputStream!
+    private let bufferMaxSize = 64 * 1024
 
     // input state
-    fileprivate var requestQueue = [URLRequest?]()
-    fileprivate var inputBuffer: Data!
-    fileprivate var cursor: Int = 0
+    private var requestQueue = [URLRequest?]()
+    private var inputBuffer: Data!
+    private var cursor: Int = 0
 
     // output state
-    fileprivate var outputBuffer: Data!
-    fileprivate var bytesRemained: Int = 0
-    fileprivate var fileHandle: FileHandle!
-    fileprivate var fileSize: Int = 0
+    private var outputBuffer: Data!
+    private var bytesRemained: Int = 0
+    private var fileHandle: FileHandle!
+    private var fileSize: Int = 0
 
     init(handle: CFSocketNativeHandle, delegate: XWVHttpConnectionDelegate) {
         self.handle = handle
@@ -195,7 +195,7 @@ private extension String {
                 repeat {
                     end = index(before: end)
                 } while predicate(self[end])
-                self = self[start ... end]
+                self = String(self[start ... end])
             } else {
                 self = ""
             }
@@ -227,7 +227,7 @@ private extension URLRequest {
 
         // parse request line
         if let line = String(data: data.subdata(in: 0..<cursor), encoding: String.Encoding.ascii),
-            let fields = Optional(line.characters.split(separator: " ")), fields.count == 3,
+            let fields = Optional(line.split(separator: " ")), fields.count == 3,
             let method = Method(rawValue: String(fields[0])),
             let url = URL(string: String(fields[1])),
             let _ = Version(rawValue: String(fields[2])) {
@@ -250,9 +250,9 @@ private extension URLRequest {
             }
 
             // parse header field
-            guard let colon = line.characters.index(of: ":") else { return nil }
-            let name = line[line.startIndex ..< colon]
-            var value = line[line.index(after: colon) ..< line.endIndex]
+            guard let colon = line.index(of: ":") else { return nil }
+            let name = String(line.prefix(upTo: colon))
+            var value = String(line.suffix(from: line.index(after: colon)))
             value.trim { $0 == " " || $0 == "\t" }
             if self.value(forHTTPHeaderField: name) != nil {
                 addValue(value, forHTTPHeaderField:name)

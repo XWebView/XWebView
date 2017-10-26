@@ -40,7 +40,7 @@ final class XWVBindingObject : XWVScriptObject {
 
         var arguments = arguments?.map(wrapScriptObject) ?? []
         var promise: XWVScriptObject?
-        if arity == Int32(arguments.count) - 1 || arity < 0 {
+        if arity == arguments.count - 1 || arity < 0 {
             promise = arguments.last as? XWVScriptObject
             arguments.removeLast()
         }
@@ -168,7 +168,7 @@ extension XWVBindingObject {
         guard ptr != nil else { return nil }
         return unsafeBitCast(ptr, to: XWVBindingObject.self)
     }
-    fileprivate func performSelector(_ selector: Selector, with arguments: [Any]?, waitUntilDone wait: Bool = true) -> Any? {
+    private func performSelector(_ selector: Selector, with arguments: [Any]?, waitUntilDone wait: Bool = true) -> Any? {
         var result: Any? = undefined
         let trampoline : () -> Void = {
             [weak self] in

@@ -18,7 +18,7 @@ import Foundation
 import ObjectiveC
 
 @objc protocol NSMethodSignatureProtocol {
-    static func signature(objCTypes: UnsafePointer<CChar>) -> NSMethodSignatureProtocol
+    static func signature(objCTypes: UnsafePointer<CChar>!) -> NSMethodSignatureProtocol?
     func getArgumentType(atIndex idx: UInt) -> UnsafePointer<CChar>
     var numberOfArguments: UInt { get }
     var frameLength: UInt { get }
@@ -29,7 +29,7 @@ import ObjectiveC
 @objc protocol NSInvocationProtocol {
     static func invocation(methodSignature: AnyObject) -> NSInvocationProtocol
     var selector: Selector { get set }
-    var target: AnyObject { get set }
+    var target: AnyObject? { get set }
     func setArgument(_ argumentLocation: UnsafeMutableRawPointer, atIndex idx: Int)
     func getArgument(_ argumentLocation: UnsafeMutableRawPointer, atIndex idx: Int)
     var argumentsRetained: ObjCBool { get }
@@ -51,43 +51,41 @@ var NSInvocation: NSInvocationProtocol.Type = {
 }()
 
 @discardableResult public func invoke(_ selector: Selector, of target: AnyObject, with arguments: [Any?] = [], on thread: Thread? = nil, waitUntilDone wait: Bool = true) -> Any! {
-    let method = class_getInstanceMethod(type(of: target), selector)
-    guard method != nil else {
+    guard let method = class_getInstanceMethod(type(of: target), selector),
+        let sig = NSMethodSignature.signature(objCTypes: method_getTypeEncoding(method)) else {
         target.doesNotRecognizeSelector?(selector)
         fatalError("Unrecognized selector -[\(target) \(selector)]")
     }
-
-    let sig = NSMethodSignature.signature(objCTypes: method_getTypeEncoding(method))
     let inv = NSInvocation.invocation(methodSignature: sig)
 
     // Setup arguments
-    precondition(arguments.count + 2 <= Int(method_getNumberOfArguments(method)),
+    precondition(arguments.count + 2 <= method_getNumberOfArguments(method),
                  "Too many arguments for calling -[\(type(of: target)) \(selector)]")
     var args = [[Int]](repeating: [], count: arguments.count)
     for i in 0 ..< arguments.count {
         if let arg: Any = arguments[i] {
             let code = sig.getArgumentType(atIndex: UInt(i) + 2)
-            let type = ObjCType(code: code)
-            if type == .object {
+            let octype = ObjCType(code: code)
+            if octype == .object {
                 let obj: AnyObject = _bridgeAnythingToObjectiveC(arg)
                 _autorelease(obj)
                 args[i] = _encodeBitsAsWords(obj)
-            } else if type == .clazz, let cls = arg as? AnyClass {
+            } else if octype == .clazz, let cls = arg as? AnyClass {
                 args[i] = _encodeBitsAsWords(cls)
-            } else if type == .float, let float = arg as? Float {
+            } else if octype == .float, let float = arg as? Float {
                 // prevent to promot float type to double
                 args[i] = _encodeBitsAsWords(float)
             } else if var val = arg as? CVarArg {
                 if (type(of: arg) as? AnyClass)?.isSubclass(of: NSNumber.self) == true {
                     // argument is an NSNumber object
-                    if let v = (arg as! NSNumber).value(as: type) {
+                    if let v = (arg as! NSNumber).value(as: octype) {
                         val = v
                     }
                 }
                 args[i] = val._cVarArgEncoding
             } else {
-                let type = String(cString: code)
-                fatalError("Unable to convert argument \(i) from Swift type \(type(of: arg)) to ObjC type '\(type)'")
+                let octype = String(cString: code)
+                fatalError("Unable to convert argument \(i) from Swift type \(type(of: arg)) to ObjC type '\(octype)'")
             }
         } else {
             // nil
@@ -118,16 +116,16 @@ var NSInvocation: NSInvocationProtocol.Type = {
     // Fetch the return value
     let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(sig.methodReturnLength))
     inv.getReturnValue(buffer)
-    let type = ObjCType(code: sig.methodReturnType)
+    let octype = ObjCType(code: sig.methodReturnType)
     defer {
-        if type == .object && selector.returnsRetained {
+        if octype == .object && selector.returnsRetained {
             // To balance the retained return value
             let obj = UnsafeRawPointer(buffer).load(as: AnyObject.self)
             Unmanaged.passUnretained(obj).release()
         }
         buffer.deallocate(capacity: Int(sig.methodReturnLength))
     }
-    return type.loadValue(from: buffer)
+    return octype.loadValue(from: buffer)
 }
 
 public func createInstance(of class: AnyClass, by initializer: Selector = #selector(NSObject.init), with arguments: [Any?] = []) -> AnyObject? {
@@ -352,7 +350,7 @@ extension XWVInvocation {
         if attr == nil {
             attr = property_copyAttributeValue(property, "S")
             if attr == nil {
-                setter = Selector("set\(String(name[name.startIndex]).uppercased())\(String(name.characters.dropFirst())):")
+                setter = Selector("set\(name.prefix(1).uppercased())\(name.dropFirst()):")
             } else {
                 // The property defines a custom setter selector name.
                 setter = Selector(String(cString: attr!))
