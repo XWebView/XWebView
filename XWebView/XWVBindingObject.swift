@@ -44,7 +44,7 @@ final class XWVBindingObject : XWVScriptObject {
             promise = arguments.last as? XWVScriptObject
             arguments.removeLast()
         }
-        if selector == #selector(_InitSelector.init(byScriptWithArguments:)) {
+        if selector == Selector(("initByScriptWithArguments:")) {
             arguments = [arguments]
         }
 
@@ -85,7 +85,8 @@ final class XWVBindingObject : XWVScriptObject {
     private func syncProperties() {
         let script = channel.typeInfo.filter{ $1.isProperty }.reduce("") {
             let val: Any! = performSelector($1.1.getter!, with: nil)
-            return "\($0)\(namespace).$properties['\($1.0)'] = \(serialize(val));\n"
+            guard let json = jsonify(val) else { return "" }
+            return "\($0)\(namespace).$properties['\($1.0)'] = \(json);\n"
         }
         webView?.evaluateJavaScript(script, completionHandler: nil)
     }
@@ -108,7 +109,7 @@ final class XWVBindingObject : XWVScriptObject {
     }
 
     // override methods of XWVScriptObject
-    override func callMethod(_ name: String, with arguments: [Any]?, completionHandler: ((Any?, Error?) -> Void)?) {
+    override func callMethod(_ name: String, with arguments: [Any]?, completionHandler: Handler) {
         if let selector = channel.typeInfo[name]?.selector {
             let result: Any! = performSelector(selector, with: arguments)
             completionHandler?(result, nil)
@@ -116,17 +117,17 @@ final class XWVBindingObject : XWVScriptObject {
             super.callMethod(name, with: arguments, completionHandler: completionHandler)
         }
     }
-    override func callMethod(_ name: String, with arguments: [Any]?) throws -> Any? {
+    override func callMethod(_ name: String, with arguments: [Any]?) throws -> Any {
         if let selector = channel.typeInfo[name]?.selector {
-            return performSelector(selector, with: arguments)
+            return performSelector(selector, with: arguments) ?? NSNull()
         }
         return try super.callMethod(name, with: arguments)
     }
-    override func value(for name: String) -> Any? {
+    override func value(for name: String) throws -> Any {
         if let getter = channel.typeInfo[name]?.getter {
-            return performSelector(getter, with: nil)
+            return performSelector(getter, with: nil) ?? NSNull()
         }
-        return super.value(for: name)
+        return try super.value(for: name)
     }
     override func setValue(_ value: Any?, for name: String) {
         if let setter = channel.typeInfo[name]?.setter {
@@ -140,15 +141,18 @@ final class XWVBindingObject : XWVScriptObject {
 
     // KVO for syncing properties
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        guard let webView = webView, var prop = keyPath else { return }
+        guard let webView = webView, var prop = keyPath, let change = change,
+              let json = jsonify(change[NSKeyValueChangeKey.newKey]) else {
+            return
+        }
         if channel.typeInfo[prop] == nil {
             if let scriptNameForKey = (type(of: object) as? XWVScripting.Type)?.scriptName(forKey:) {
                 prop = prop.withCString(scriptNameForKey) ?? prop
             }
             assert(channel.typeInfo[prop] != nil)
         }
-        let script = "\(namespace).$properties['\(prop)'] = \(serialize(change?[NSKeyValueChangeKey.newKey]))"
-        webView.evaluateJavaScript(script, completionHandler: nil)
+        let script = "\(namespace).$properties['\(prop)'] = \(json)"
+        webView.asyncEvaluateJavaScript(script, completionHandler: nil)
     }
 }
 
@@ -164,8 +168,8 @@ extension XWVBindingObject {
         guard ptr != nil else { return nil }
         return unsafeBitCast(ptr, to: XWVBindingObject.self)
     }
-    fileprivate func performSelector(_ selector: Selector, with arguments: [Any]?, waitUntilDone wait: Bool = true) -> Any! {
-        var result: Any! = ()
+    fileprivate func performSelector(_ selector: Selector, with arguments: [Any]?, waitUntilDone wait: Bool = true) -> Any? {
+        var result: Any? = undefined
         let trampoline : () -> Void = {
             [weak self] in
             guard let plugin = self?.plugin else { return }
@@ -187,9 +191,11 @@ extension XWVBindingObject {
             if wait && CFRunLoopGetCurrent() === runLoop {
                 trampoline()
             } else {
+                struct Unsolved {}
+                result = Unsolved()
                 CFRunLoopPerformBlock(runLoop, CFRunLoopMode.defaultMode.rawValue, trampoline)
                 CFRunLoopWakeUp(runLoop)
-                while wait && result is Void {
+                while wait && result is Unsolved {
                     let reason = CFRunLoopRunInMode(CFRunLoopMode.defaultMode, 3.0, true)
                     if reason != CFRunLoopRunResult.handledSource {
                         break

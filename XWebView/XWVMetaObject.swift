@@ -85,7 +85,6 @@ class XWVMetaObject {
         var methods = instanceMethods(forProtocol: XWVScripting.self)
         methods.remove(#selector(XWVScripting.invokeDefaultMethod(withArguments:)))
         return methods.union([
-//            #selector(NSObject.deinit),
             #selector(NSObject.copy)
         ])
     }()
@@ -125,7 +124,7 @@ class XWVMetaObject {
                 }
 
             case let .Initializer(selector, _):
-                if selector == #selector(_InitSelector.init(byScriptWithArguments:)) {
+                if selector == Selector(("initByScriptWithArguments:")) {
                     member = .Initializer(selector: selector, arity: -1)
                     name = ""
                 } else if let cls = plugin as? XWVScripting.Type {
@@ -191,7 +190,8 @@ class XWVMetaObject {
         if var method = methodList {
             defer { free(methodList) }
             while method.pointee != nil {
-                if let sel = method_getName(method.pointee), !known.contains(sel) && !sel.description.hasPrefix(".") {
+                let sel = method_getName(method.pointee)
+                if !known.contains(sel) && !sel.description.hasPrefix(".") {
                     let arity = Int32(method_getNumberOfArguments(method.pointee)) - 2
                     let member: Member
                     if sel.description.hasPrefix("init") {
@@ -201,7 +201,7 @@ class XWVMetaObject {
                     }
                     var name = sel.description
                     if let end = name.characters.index(of: ":") {
-                        name = name[name.startIndex ..< end]
+                        name = String(name[name.startIndex ..< end])
                     }
                     if !callback(name, member) {
                         return false
@@ -223,14 +223,16 @@ extension XWVMetaObject: Collection {
     typealias Index = DictionaryIndex<String, Member>
     typealias SubSequence = Slice<Dictionary<String, Member>>
     typealias Element = (key: String, value: XWVMetaObject.Member)
+
+    subscript(position: Dictionary<String, XWVMetaObject.Member>.Index) -> (key: String, value: XWVMetaObject.Member) {
+        return members[position]
+    }
+
     var startIndex: Index {
         return members.startIndex
     }
     var endIndex: Index {
         return members.endIndex
-    }
-    subscript(position: Dictionary<String, XWVMetaObject.Member>.Index) -> (key: String, value: XWVMetaObject.Member) {
-        return members[position]
     }
     subscript (_ i: Index) -> (String, Member) {
         return members[i]
@@ -249,7 +251,7 @@ private func instanceMethods(forProtocol aProtocol: Protocol) -> Set<Selector> {
         let methodList = protocol_copyMethodDescriptionList(aProtocol.self, req, inst, nil)
         if var desc = methodList {
             while desc.pointee.name != nil {
-				selectors.insert(desc.pointee.name!)
+                selectors.insert(desc.pointee.name!)
                 desc = desc.successor()
             }
             free(methodList)

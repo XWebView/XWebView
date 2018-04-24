@@ -63,7 +63,9 @@ class XWVUserScript {
 
         if webView.url != nil, let cleanup = cleanup {
             // clean up in current context
-            webView.evaluateJavaScript(cleanup, completionHandler: nil)
+            DispatchQueue.main.async {
+                webView.evaluateJavaScript(cleanup, completionHandler: nil)
+            }
         }
     }
 }

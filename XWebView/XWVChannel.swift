@@ -93,7 +93,7 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: id)
         userScript = nil
         identifier = nil
-		log("+Plugin object \(String(describing: plugin)) is unbound from \(namespace)")
+        log("+Plugin object \(plugin?.description ?? "unknown") is unbound from \(namespace)")
     }
 
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -157,9 +157,8 @@ public class XWVChannel : NSObject, WKScriptMessageHandler {
             if member.isMethod && !key.isEmpty {
                 let method = generateMethod("\(key)\(member.type)", this: prebind ? "exports" : "this", prebind: prebind)
                 stub = "exports.\(key) = \(method)"
-            } else if member.isProperty {
-                let value = principal.serialize(principal[key])
-                stub = "XWVPlugin.defineProperty(exports, '\(key)', \(value), \(member.setter != nil));"
+            } else if member.isProperty, let json = jsonify(principal[key]) {
+                stub = "XWVPlugin.defineProperty(exports, '\(key)', \(json), \(member.setter != nil));"
             } else {
                 return $0
             }

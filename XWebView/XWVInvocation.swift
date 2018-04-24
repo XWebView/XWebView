@@ -51,30 +51,24 @@ var NSInvocation: NSInvocationProtocol.Type = {
 }()
 
 @discardableResult public func invoke(_ selector: Selector, of target: AnyObject, with arguments: [Any?] = [], on thread: Thread? = nil, waitUntilDone wait: Bool = true) -> Any! {
-    let method = class_getInstanceMethod(type(of: target), selector)
-    guard method != nil else {
+    guard let method = class_getInstanceMethod(Swift.type(of: target), selector) else {
         target.doesNotRecognizeSelector?(selector)
         fatalError("Unrecognized selector -[\(target) \(selector)]")
     }
 
-    let sig = NSMethodSignature.signature(objCTypes: method_getTypeEncoding(method))
+    let sig = NSMethodSignature.signature(objCTypes: method_getTypeEncoding(method)!)
     let inv = NSInvocation.invocation(methodSignature: sig)
 
     // Setup arguments
     precondition(arguments.count + 2 <= Int(method_getNumberOfArguments(method)),
-                 "Too many arguments for calling -[\(type(of: target)) \(selector)]")
+                 "Too many arguments for calling -[\(Swift.type(of: target)) \(selector)]")
     var args = [[Int]](repeating: [], count: arguments.count)
     for i in 0 ..< arguments.count {
         if let arg: Any = arguments[i] {
             let code = sig.getArgumentType(atIndex: UInt(i) + 2)
             let type = ObjCType(code: code)
             if type == .object {
-                let obj: AnyObject
-                if let val = arg as? NSNumberConvertible {
-                    obj = NSNumber(value: val)
-                } else {
-                    obj = _bridgeAnythingToObjectiveC(arg)
-                }
+                let obj: AnyObject = _bridgeAnythingToObjectiveC(arg)
                 _autorelease(obj)
                 args[i] = _encodeBitsAsWords(obj)
             } else if type == .clazz, let cls = arg as? AnyClass {
@@ -83,7 +77,7 @@ var NSInvocation: NSInvocationProtocol.Type = {
                 // prevent to promot float type to double
                 args[i] = _encodeBitsAsWords(float)
             } else if var val = arg as? CVarArg {
-                if (type(of: arg) as? AnyClass)?.isSubclass(of: NSNumber.self) == true {
+                if (Swift.type(of: arg) as? AnyClass)?.isSubclass(of: NSNumber.self) == true {
                     // argument is an NSNumber object
                     if let v = (arg as! NSNumber).value(as: type) {
                         val = v
@@ -92,7 +86,7 @@ var NSInvocation: NSInvocationProtocol.Type = {
                 args[i] = val._cVarArgEncoding
             } else {
                 let type = String(cString: code)
-                fatalError("Unable to convert argument \(i) from Swift type \(type(of: arg)) to ObjC type '\(type)'")
+                fatalError("Unable to convert argument \(i) from Swift type \(Swift.type(of: arg)) to ObjC type '\(type)'")
             }
         } else {
             // nil
@@ -203,22 +197,6 @@ private enum ObjCType : CChar {
     }
 }
 
-private protocol NSNumberConvertible {}
-extension Int: NSNumberConvertible {}
-extension Int8: NSNumberConvertible {}
-extension Int16: NSNumberConvertible {}
-extension Int32: NSNumberConvertible {}
-extension Int64: NSNumberConvertible {}
-extension UInt: NSNumberConvertible {}
-extension UInt8: NSNumberConvertible {}
-extension UInt16: NSNumberConvertible {}
-extension UInt32: NSNumberConvertible {}
-extension UInt64: NSNumberConvertible {}
-extension Bool: NSNumberConvertible {}
-extension Double: NSNumberConvertible {}
-extension Float: NSNumberConvertible {}
-extension UnicodeScalar: NSNumberConvertible {}
-
 private extension NSNumber {
     func value(as type: ObjCType) -> CVarArg? {
         switch type {
@@ -236,26 +214,6 @@ private extension NSNumber {
         case .float:     return self.floatValue
         case .double:    return self.doubleValue
         default:         return nil
-        }
-    }
-
-    convenience init(value: NSNumberConvertible) {
-        switch value {
-        case let v as Int:     self.init(value: v)
-        case let v as Int8:    self.init(value: v)
-        case let v as Int16:   self.init(value: v)
-        case let v as Int32:   self.init(value: v)
-        case let v as Int64:   self.init(value: v)
-        case let v as UInt:    self.init(value: v)
-        case let v as UInt8:   self.init(value: v)
-        case let v as UInt16:  self.init(value: v)
-        case let v as UInt32:  self.init(value: v)
-        case let v as UInt64:  self.init(value: v)
-        case let v as Bool:    self.init(value: v)
-        case let v as Double:  self.init(value: v)
-        case let v as Float:   self.init(value: v)
-        case let v as UnicodeScalar: self.init(value: v.value)
-        default: fatalError("never reach here")
         }
     }
 }

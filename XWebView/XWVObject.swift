@@ -63,72 +63,37 @@ public class XWVObject : NSObject {
         } else {
             return
         }
-		
-		DispatchQueue.main.sync {
-			webView.evaluateJavaScript(script, completionHandler: nil)
-		}
+        webView.asyncEvaluateJavaScript(script, completionHandler: nil)
     }
 
-	private func dispatchMain(_ f: () throws -> (Any?)) throws -> Any? {
-		var result: Any?
-		var theError: Error?
-		DispatchQueue.main.sync {
-			do {
-				result = try f()
-				theError = nil
-			}
-			catch let error {
-				result = nil
-				theError = error
-			}
-		}
-		
-		if let error = theError {
-			throw error
-		}
-		else {
-        	return result
-		}
-	}
-
     // Evaluate JavaScript expression
-    public func evaluateExpression(_ expression: String) throws -> Any? {
+    public func evaluateExpression(_ expression: String) throws -> Any {
         guard let webView = webView else {
             throw webViewInvalidated
         }
-		
-		return wrapScriptObject(try dispatchMain {
-			try webView.evaluateJavaScript(scriptForRetaining(expression))
-		})
-    }
-    public func evaluateExpression(_ expression: String, error: ErrorPointer) -> Any? {
-        guard let webView = webView else {
-            error?.pointee = webViewInvalidated
-            return nil
-        }
-
-		var result: Any?
-		DispatchQueue.main.sync {
-			result = webView.evaluateJavaScript(scriptForRetaining(expression), error: error)
-		}
-		
+        let result = try webView.syncEvaluateJavaScript(scriptForRetaining(expression))
         return wrapScriptObject(result)
     }
-    public func evaluateExpression(_ expression: String, completionHandler: ((Any?, Error?) -> Void)?) {
-		DispatchQueue.main.async {
-			guard let webView = self.webView else {
-				completionHandler?(nil, webViewInvalidated)
-				return
-			}
-			guard let completionHandler = completionHandler else {
-				webView.evaluateJavaScript(expression, completionHandler: nil)
-				return
-			}
-			webView.evaluateJavaScript(self.scriptForRetaining(expression)) {
-				[weak self](result: Any?, error: Error?)->Void in
-				completionHandler(self?.wrapScriptObject(result) ?? result, error)
-			}
-		}
+    public typealias Handler = ((Any?, Error?) -> Void)?
+    public func evaluateExpression(_ expression: String, completionHandler: Handler) {
+        guard let webView = webView else {
+            completionHandler?(nil, webViewInvalidated)
+            return
+        }
+        guard let completionHandler = completionHandler else {
+            webView.asyncEvaluateJavaScript(expression, completionHandler: nil)
+            return
+        }
+        webView.asyncEvaluateJavaScript(scriptForRetaining(expression)) {
+            [weak self](result: Any?, error: Error?)->Void in
+            if let error = error {
+                completionHandler(nil, error)
+            } else if let result = result {
+                completionHandler(self?.wrapScriptObject(result) ?? result, nil)
+            } else {
+                completionHandler(undefined, error)
+            }
+        }
     }
     private func scriptForRetaining(_ script: String) -> String {
         guard let origin = origin else { return script }
@@ -146,19 +111,10 @@ public class XWVObject : NSObject {
         }
         return object
     }
+}
 
-    func serialize(_ value: Any?) -> String {
-        switch value {
-        case let o as XWVObject:
-            return o.namespace
-        case let d as Date:
-            return "(new Date(\(d.timeIntervalSince1970 * 1000)))"
-        case let a as [Any?]:
-            return jsonify(a)
-        case let d as [String: Any?]:
-            return jsonify(d)
-        default:
-            return jsonify(value)
-        }
+extension XWVObject : CustomJSONStringable {
+    public var jsonString: String? {
+        return namespace
     }
 }

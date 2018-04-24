@@ -17,37 +17,38 @@
 import Foundation
 
 // JSON Array
-func jsonify<T: Collection>(_ array: T) -> String where T.Index == Int {
-    return "[" + array.map(jsonify).joined(separator: ", ") + "]"
+public func jsonify<T: Collection>(_ array: T) -> String?
+    where T.Index: BinaryInteger {
+    // TODO: filter out values with negative index
+    return "[" + array.map{jsonify($0) ?? ""}.joined(separator: ",") + "]"
 }
 
 // JSON Object
-func jsonify<T: Collection, V>(_ object: T) -> String where T.Iterator.Element == (key: String, value: V) {
-    return "{" + object.map(jsonify).joined(separator: ", ") + "}"
+public func jsonify<T: Collection, V>(_ object: T) -> String?
+        where T.Iterator.Element == (key: String, value: V) {
+    return "{" + object.flatMap(jsonify).joined(separator: ",") + "}"
 }
-private func jsonify<T>(_ pair: (key: String, value: T)) -> String {
-    return jsonify(pair.key) + ":" + jsonify(pair.value)
+private func jsonify<T>(_ pair: (key: String, value: T)) -> String? {
+    guard let val = jsonify(pair.value) else { return nil }
+    return jsonify(pair.key)! + ":" + val
 }
 
 // JSON Number
-func jsonify<T: Integer>(_ integer: T) -> String {
+public func jsonify<T: BinaryInteger>(_ integer: T) -> String? {
     return String(describing: integer)
 }
-func jsonify<T: FloatingPoint>(_ float: T) -> String {
+public func jsonify<T: FloatingPoint>(_ float: T) -> String? {
     return String(describing: float)
 }
 
 // JSON Boolean
-func jsonify(_ bool: Bool) -> String {
+public func jsonify(_ bool: Bool) -> String? {
     return String(describing: bool)
 }
 
 // JSON String
-func jsonify(_ string: String) -> String {
+public func jsonify(_ string: String) -> String? {
     return string.unicodeScalars.reduce("\"") { $0 + $1.jsonEscaped } + "\""
-}
-func jsonify(_ char: Character) -> String {
-    return jsonify(String(char))
 }
 private extension UnicodeScalar {
     var jsonEscaped: String {
@@ -64,54 +65,73 @@ private extension UnicodeScalar {
     }
 }
 
-func jsonify(_ value: NSObject) -> String {
+
+@objc public protocol ObjCJSONStringable {
+    var jsonString: String? { get }
+}
+public protocol CustomJSONStringable {
+    var jsonString: String? { get }
+}
+
+extension CustomJSONStringable where Self: RawRepresentable {
+    public var jsonString: String? {
+        return jsonify(rawValue)
+    }
+}
+
+public func jsonify(_ value: Any?) -> String? {
+    guard let value = value else { return "null" }
+
     switch (value) {
-    case _ as NSNull:
+    case is Void:
+        return "undefined"
+    case is NSNull:
         return "null"
-    case let s as NSString:
-        return jsonify(String(s))
+    case let s as String:
+        return jsonify(s)
     case let n as NSNumber:
         if CFGetTypeID(n) == CFBooleanGetTypeID() {
             return n.boolValue.description
         }
         return n.stringValue
+    case let a as Array<Any?>:
+        return jsonify(a)
+    case let d as Dictionary<String, Any?>:
+        return jsonify(d)
+    case let s as CustomJSONStringable:
+        return s.jsonString
+    case let o as ObjCJSONStringable:
+        return o.jsonString
     case let d as Data:
         return d.withUnsafeBytes {
-            (ptr: UnsafePointer<UInt8>) -> String in
-            jsonify(UnsafeBufferPointer<UInt8>(start: ptr, count: d.count))
+            (base: UnsafePointer<UInt8>) -> String? in
+            jsonify(UnsafeBufferPointer<UInt8>(start: base, count: d.count))
         }
-	case let a as [Any?]:
-		return jsonify(a)
-	case let d as [String : Any?]:
-		return jsonify(d)
     default:
-        //fatalError("Unsupported type \(type(of: value))")
-        print("Unsupported type \(type(of: value))")
-        return "undefined"
+        let mirror = Mirror(reflecting: value)
+        guard let style = mirror.displayStyle else { return nil }
+        switch style {
+        case .optional:  // nested optional
+            return jsonify(mirror.children.first?.value)
+        case .collection, .set, .tuple:  // array-like type
+            return jsonify(mirror.children.map{$0.value})
+        case .class, .dictionary, .struct:
+            return "{" + mirror.children.flatMap(jsonify).joined(separator: ",") + "}"
+        case .enum:
+            return jsonify(String(describing: value))
+        }
     }
 }
-
-func jsonify(_ value: Any?) -> String {
-    switch (value) {
-    case nil:                    return "undefined"
-    case let b as Bool:          return jsonify(b)
-    case let i as Int:           return jsonify(i)
-    case let i as Int8:          return jsonify(i)
-    case let i as Int16:         return jsonify(i)
-    case let i as Int32:         return jsonify(i)
-    case let i as Int64:         return jsonify(i)
-    case let u as UInt:          return jsonify(u)
-    case let u as UInt8:         return jsonify(u)
-    case let u as UInt16:        return jsonify(u)
-    case let u as UInt32:        return jsonify(u)
-    case let u as UInt64:        return jsonify(u)
-    case let f as Float:         return jsonify(f)
-    case let f as Double:        return jsonify(f)
-    case let s as String:        return jsonify(s)
-    case let v as NSObject:      return jsonify(v)
-    case is Void:                return "undefined"
-    case let o as Optional<Any>:
-        guard case let .some(v) = o else { return "null" }
-        fatalError("Unsupported type \(type(of: v)) (of value \(v))")
+private func jsonify(_ child: Mirror.Child) -> String? {
+    if let key = child.label {
+        return jsonify((key: key, value: child.value))
     }
+
+    let m = Mirror(reflecting: child.value)
+    guard m.children.count == 2, m.displayStyle == .tuple,
+        let key = m.children.first!.value as? String else {
+        return nil
+    }
+    let val = m.children[m.children.index(after: m.children.startIndex)].value
+    return jsonify((key: key, value: val))
 }
