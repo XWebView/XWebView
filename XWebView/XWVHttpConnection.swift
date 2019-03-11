@@ -50,8 +50,8 @@ final class XWVHttpConnection : NSObject {
         let ptr1 = UnsafeMutablePointer<Unmanaged<CFReadStream>?>.allocate(capacity: 1)
         let ptr2 = UnsafeMutablePointer<Unmanaged<CFWriteStream>?>.allocate(capacity: 1)
         defer {
-            ptr1.deallocate(capacity: 1)
-            ptr2.deallocate(capacity: 1)
+            ptr1.deallocate()
+            ptr2.deallocate()
         }
         CFStreamCreatePairWithSocket(nil, handle, ptr1, ptr2)
         guard ptr1.pointee != nil && ptr2.pointee != nil else {
@@ -65,8 +65,8 @@ final class XWVHttpConnection : NSObject {
 
         input.delegate = self
         output.delegate = self
-        input.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-        output.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+      input.schedule(in: RunLoop.current, forMode: RunLoop.Mode.default)
+      output.schedule(in: RunLoop.current, forMode: RunLoop.Mode.default)
         input.open()
         output.open()
         delegate.didOpenConnection(self)
