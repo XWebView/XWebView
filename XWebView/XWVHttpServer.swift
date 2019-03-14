@@ -28,12 +28,14 @@ class XWVHttpServer : NSObject {
     private let overlays: [URL]
     private(set) var port: in_port_t = 0
 
+    #if os(iOS)
     #if swift(>=4.2)
     let appDidEnterBackgroundNotificationName = UIApplication.didEnterBackgroundNotification
     let appWillEnterForegroundNotificationName = UIApplication.willEnterForegroundNotification
     #else
     let appDidEnterBackgroundNotificationName = NSNotification.Name.UIApplicationDidEnterBackground
     let appWillEnterForegroundNotificationName = NSNotification.Name.UIApplicationWillEnterForeground
+    #endif
     #endif
     
     var rootURL: URL {
