@@ -67,8 +67,8 @@ class JsonTests : XCTestCase {
     }
 
     func testData() {
-        var value = Double(42.13)
-        let data = withUnsafePointer(to: &value) {
+        let value = Double(42.13)
+        let data = withUnsafePointer(to: value) {
             Data(bytes: UnsafePointer($0), count: MemoryLayout.size(ofValue: value))
         }
         XCTAssertEqual(jsonify(data), "[113,61,10,215,163,16,69,64]")

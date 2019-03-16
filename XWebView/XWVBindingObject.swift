@@ -50,7 +50,7 @@ final class XWVBindingObject : XWVScriptObject {
 
         plugin = invoke(#selector(NSProxy.alloc), of: cls) as AnyObject
         if plugin != nil {
-            plugin = performSelector(selector, with: arguments) as AnyObject!
+            plugin = performSelector(selector, with: arguments) as AnyObject
         }
         guard plugin != nil else {
             log("!Failed to create instance for plugin class \(cls)")

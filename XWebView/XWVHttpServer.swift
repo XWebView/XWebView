@@ -28,6 +28,16 @@ class XWVHttpServer : NSObject {
     private let overlays: [URL]
     private(set) var port: in_port_t = 0
 
+    #if os(iOS)
+    #if swift(>=4.2)
+    let appDidEnterBackgroundNotificationName = UIApplication.didEnterBackgroundNotification
+    let appWillEnterForegroundNotificationName = UIApplication.willEnterForegroundNotification
+    #else
+    let appDidEnterBackgroundNotificationName = NSNotification.Name.UIApplicationDidEnterBackground
+    let appWillEnterForegroundNotificationName = NSNotification.Name.UIApplicationWillEnterForeground
+    #endif
+    #endif
+    
     var rootURL: URL {
         return overlays.last!
     }
@@ -74,7 +84,7 @@ class XWVHttpServer : NSObject {
             sin_addr: in_addr(s_addr: UInt32(0x7f000001).bigEndian),
             sin_zero: (0, 0, 0, 0, 0, 0, 0, 0))
         let data = Data(bytes: &sockaddr, count: MemoryLayout<sockaddr_in>.size)
-        guard CFSocketSetAddress(socket, data as CFData!) == CFSocketError.success else {
+        guard CFSocketSetAddress(socket, data as CFData) == CFSocketError.success else {
             log("!Failed to listen on port \(port) \(String(cString: strerror(errno)))")
             CFSocketInvalidate(socket)
             return false
@@ -113,13 +123,14 @@ class XWVHttpServer : NSObject {
         guard self.port != 0 else { return false }
 
         #if os(iOS)
+        
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(XWVHttpServer.suspend(_:)),
-                                               name: NSNotification.Name.UIApplicationDidEnterBackground,
+                                               name: appDidEnterBackgroundNotificationName,
                                                object: nil)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(XWVHttpServer.resume(_:)),
-                                               name: NSNotification.Name.UIApplicationWillEnterForeground,
+                                               name: appWillEnterForegroundNotificationName,
                                                object: nil)
         #endif
         return true
@@ -127,8 +138,8 @@ class XWVHttpServer : NSObject {
 
     func stop() {
         #if os(iOS)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
+        NotificationCenter.default.removeObserver(self, name: appDidEnterBackgroundNotificationName, object: nil)
+        NotificationCenter.default.removeObserver(self, name: appWillEnterForegroundNotificationName, object: nil)
         #endif
         port = 0
         close()
