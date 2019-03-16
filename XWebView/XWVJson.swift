@@ -26,8 +26,14 @@ public func jsonify<T: Collection>(_ array: T) -> String?
 // JSON Object
 public func jsonify<T: Collection, V>(_ object: T) -> String?
         where T.Iterator.Element == (key: String, value: V) {
+          
+    #if swift(>=4.2)
     return "{" + object.compactMap(jsonify).joined(separator: ",") + "}"
+    #else
+    return "{" + object.flatMap(jsonify).joined(separator: ",") + "}"
+    #endif
 }
+          
 private func jsonify<T>(_ pair: (key: String, value: T)) -> String? {
     guard let val = jsonify(pair.value) else { return nil }
     return jsonify(pair.key)! + ":" + val
@@ -116,7 +122,11 @@ public func jsonify(_ value: Any?) -> String? {
         case .collection, .set, .tuple:  // array-like type
             return jsonify(mirror.children.map{$0.value})
         case .class, .dictionary, .struct:
+            #if swift(>=4.2)
             return "{" + mirror.children.compactMap(jsonify).joined(separator: ",") + "}"
+            #else
+            return "{" + mirror.children.flatMap(jsonify).joined(separator: ",") + "}"
+            #endif
         case .enum:
             return jsonify(String(describing: value))
         }
